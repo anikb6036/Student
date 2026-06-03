@@ -1,0 +1,9 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Default locked rule since we're currently only using Firebase Auth
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

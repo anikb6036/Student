@@ -60,6 +60,8 @@ import {
 import { motion, AnimatePresence } from 'motion/react';
 import { COUNTRY_PHONE_CONFIGS } from './countryPhoneData';
 import { GEO_COUNTRIES, getSmartPostOffices } from './geoAddressData';
+import { auth } from './firebase';
+import { RecaptchaVerifier, signInWithPhoneNumber, createUserWithEmailAndPassword, sendEmailVerification, checkActionCode, applyActionCode, ConfirmationResult } from 'firebase/auth';
 
 // Auto-detect and perform a one-time clean-up migration of old dummy/simulation storage data
 if (typeof window !== 'undefined' && !localStorage.getItem('db-migrated-to-real-v5')) {
@@ -77,6 +79,12 @@ if (typeof window !== 'undefined' && !localStorage.getItem('db-migrated-to-real-
 const generateUniqueId = (prefix: string) => {
   return `${prefix}-${Date.now()}-${Math.floor(Math.random() * 100000000)}`;
 };
+
+declare global {
+  interface Window {
+    recaptchaVerifier: any;
+  }
+}
 
 function AppContent() {
   const { isDark, toggleTheme } = useTheme();
@@ -147,7 +155,7 @@ function AppContent() {
   const [fastPhone, setFastPhone] = useState('');
   const [fastInstructorId, setFastInstructorId] = useState('');
   const [fastFatherName, setFastFatherName] = useState('');
-  const [fastFatherPhone, setFastFatherPhone] = useState('');
+  const [fastAddress, setFastAddress] = useState('');
   const [fastCourse, setFastCourse] = useState('');
 
 
@@ -156,6 +164,7 @@ function AppContent() {
   const [fastGenderError, setFastGenderError] = useState('');
   const [fastDobError, setFastDobError] = useState('');
   const [fastFatherNameError, setFastFatherNameError] = useState('');
+  const [fastAddressError, setFastAddressError] = useState('');
   const [fastLastQualificationError, setFastLastQualificationError] = useState('');
   const [fastCourseError, setFastCourseError] = useState('');
   const [fastLastQualification, setFastLastQualification] = useState('');
@@ -181,8 +190,14 @@ function AppContent() {
   // Phone country verification states
   const [fastPhonePrefix, setFastPhonePrefix] = useState('+91');
   const [fastPhoneError, setFastPhoneError] = useState('');
-  const [fastFatherPhonePrefix, setFastFatherPhonePrefix] = useState('+91');
-  const [fastFatherPhoneError, setFastFatherPhoneError] = useState('');
+
+  // Firebase Verification States
+  const [phoneVerified, setPhoneVerified] = useState(false);
+  const [emailVerified, setEmailVerified] = useState(false);
+  const [phoneVerState, setPhoneVerState] = useState<'idle' | 'sending' | 'sent' | 'verifying'>('idle');
+  const [emailVerState, setEmailVerState] = useState<'idle' | 'sending' | 'sent' | 'verifying'>('idle');
+  const [otpCode, setOtpCode] = useState('');
+  const [confirmationResult, setConfirmationResult] = useState<ConfirmationResult | null>(null);
 
   const [fastRegSuccess, setFastRegSuccess] = useState<RegistrationRequest | null>(null);
 
@@ -259,6 +274,87 @@ function AppContent() {
     saveState('db-courses', courses);
   }, [courses]);
 
+  // Firebase Verification Logic
+  const handleSendPhoneOTP = async () => {
+    if (!fastPhone) {
+      setFastPhoneError("Please enter phone number first.");
+      return;
+    }
+    setPhoneVerState('sending');
+    setFastPhoneError('');
+    try {
+      const calculatedPhone = `${fastPhonePrefix}${fastPhone}`;
+      if (!window.recaptchaVerifier) {
+        window.recaptchaVerifier = new RecaptchaVerifier(auth, 'recaptcha-container', {
+          'size': 'invisible'
+        });
+      }
+      const result = await signInWithPhoneNumber(auth, calculatedPhone, window.recaptchaVerifier);
+      setConfirmationResult(result);
+      setPhoneVerState('sent');
+      triggerToast({ id: generateUniqueId('notif'), title: 'Verification', message: 'SMS verification code sent.', timestamp: new Date().toISOString(), read: false, type: 'general', channel: 'system' });
+    } catch (error: any) {
+      console.error(error);
+      setPhoneVerState('error');
+      setFastPhoneError(error.message || 'Error sending OTP');
+      if (window.recaptchaVerifier) {
+         window.recaptchaVerifier.clear();
+         window.recaptchaVerifier = null;
+      }
+    }
+  };
+
+  const handleVerifyPhoneOTP = async () => {
+    if (!otpCode || !confirmationResult) return;
+    setPhoneVerState('verifying');
+    setFastPhoneError('');
+    try {
+      await confirmationResult.confirm(otpCode);
+      setPhoneVerified(true);
+      setPhoneVerState('verified');
+      triggerToast({ id: generateUniqueId('notif'), title: 'Verification', message: 'Phone number verified successfully.', timestamp: new Date().toISOString(), read: false, type: 'general', channel: 'system' });
+    } catch (error: any) {
+      console.error(error);
+      setPhoneVerState('error');
+      setFastPhoneError(error.message || 'Invalid OTP code');
+    }
+  };
+
+  const handleSendEmailLink = async () => {
+     if (!fastEmail) {
+       setFastEmailError("Please enter email first.");
+       return;
+     }
+     setEmailVerState('sending');
+     setFastEmailError('');
+     try {
+        const tempPass = generateUniqueId('pwd');
+        const userCredential = await createUserWithEmailAndPassword(auth, fastEmail, tempPass);
+        await sendEmailVerification(userCredential.user);
+        setEmailVerState('sent');
+        triggerToast({ id: generateUniqueId('notif'), title: 'Verification', message: 'Verification link sent to email.', timestamp: new Date().toISOString(), read: false, type: 'general', channel: 'system' });
+     } catch (error: any) {
+        console.error(error);
+        if (error.code === 'auth/email-already-in-use') {
+           setFastEmailError('Email involves an existing Firebase account.');
+        } else {
+           setFastEmailError(error.message || 'Error sending email verification');
+        }
+        setEmailVerState('error');
+     }
+  };
+
+  const handleCheckEmailVerified = async () => {
+    if (!auth.currentUser) return;
+    await auth.currentUser.reload();
+    if (auth.currentUser.emailVerified) {
+      setEmailVerified(true);
+      setEmailVerState('verified');
+      triggerToast({ id: generateUniqueId('notif'), title: 'Verification', message: 'Email address verified successfully.', timestamp: new Date().toISOString(), read: false, type: 'general', channel: 'system' });
+    } else {
+      setFastEmailError('Email is not verified yet. Please check your inbox.');
+    }
+  };
 
   // Push Notice trigger helper
   const triggerToast = (n: AppNotification) => {
@@ -851,7 +947,7 @@ function AppContent() {
     setFastFatherNameError('');
     setFastLastQualificationError('');
     setFastPhoneError('');
-    setFastFatherPhoneError('');
+    setFastAddressError('');
 
     let hasError = false;
 
@@ -864,6 +960,9 @@ function AppContent() {
     // Check Email
     if (!fastEmail.trim()) {
       setFastEmailError('Email address is required');
+      hasError = true;
+    } else if (!emailVerified) {
+      setFastEmailError('Please verify your email address to proceed.');
       hasError = true;
     }
 
@@ -925,20 +1024,18 @@ function AppContent() {
       if (fastPhone.length !== reqLen) {
         setFastPhoneError(`Phone number must be exactly ${reqLen} digits for ${fastPhonePrefix}`);
         hasError = true;
+      } else if (!phoneVerified) {
+        setFastPhoneError('Please verify your phone number to proceed.');
+        hasError = true;
       }
     }
 
-    // Check Father Phone number length
-    if (!fastFatherPhone) {
-      setFastFatherPhoneError("Father's phone number is required");
+    // Check Full Address
+    if (!fastAddress.trim()) {
+      setFastAddressError('Full resident address is required');
       hasError = true;
     } else {
-      const fConfig = COUNTRY_PHONE_CONFIGS.find(c => c.code === fastFatherPhonePrefix);
-      const fReqLen = fConfig ? fConfig.length : 10;
-      if (fastFatherPhone.length !== fReqLen) {
-        setFastFatherPhoneError(`Father's phone number must be exactly ${fReqLen} digits for ${fastFatherPhonePrefix}`);
-        hasError = true;
-      }
+      setFastAddressError('');
     }
 
     if (hasError) {
@@ -946,9 +1043,7 @@ function AppContent() {
     }
 
     const calculatedPhone = `${fastPhonePrefix} ${fastPhone}`;
-    const calculatedFatherPhone = `${fastFatherPhonePrefix} ${fastFatherPhone}`;
-
-    const assembledAddress = '';
+    const assembledAddress = fastAddress.trim();
 
     const req = handleCreateRegistrationRequest(
       fastName, 
@@ -956,7 +1051,7 @@ function AppContent() {
       calculatedPhone, 
       fastInstructorId,
       fastFatherName,
-      calculatedFatherPhone,
+      undefined, // fatherPhone removed
       assembledAddress,
       fastLastQualification,
       fastGender,
@@ -974,9 +1069,8 @@ function AppContent() {
     setFastPhoneError('');
     setFastInstructorId('');
     setFastFatherName('');
-    setFastFatherPhone('');
-    setFastFatherPhonePrefix('+91');
-    setFastFatherPhoneError('');
+    setFastAddress('');
+    setFastAddressError('');
     setFastCourse('');
     setFastCourseError('');
     
@@ -990,6 +1084,11 @@ function AppContent() {
     setFastDob('');
     setFastAvatarUrl('');
     setFastAvatarError('');
+    setPhoneVerified(false);
+    setEmailVerified(false);
+    setPhoneVerState('idle');
+    setEmailVerState('idle');
+    setOtpCode('');
   };
 
   const handleCredentialsLogin = (e: React.FormEvent) => {
@@ -1437,6 +1536,22 @@ function AppContent() {
                             {fastEmailError && (
                               <p className="text-[10px] text-rose-500 mt-1 font-semibold">{fastEmailError}</p>
                             )}
+                            <div className="flex items-center gap-2 mt-2">
+                               {emailVerified ? (
+                                  <span className="text-xs text-emerald-500 font-bold flex items-center gap-1"><Check className="w-4 h-4"/> Email Verified</span>
+                               ) : (
+                                  <>
+                                     <button type="button" onClick={handleSendEmailLink} disabled={emailVerState === 'sending' || !fastEmail} className="px-3 py-1.5 bg-blue-500 hover:bg-blue-600 text-white text-[10px] uppercase font-bold rounded-lg disabled:opacity-50">
+                                       {emailVerState === 'sending' ? 'Sending...' : emailVerState === 'sent' ? 'Resend Verification' : 'Verify Email'}
+                                     </button>
+                                     {emailVerState === 'sent' && (
+                                        <button type="button" onClick={handleCheckEmailVerified} className="px-3 py-1.5 bg-green-500 hover:bg-green-600 text-white text-[10px] uppercase font-bold rounded-lg disabled:opacity-50">
+                                           I've Verified (Check)
+                                        </button>
+                                     )}
+                                  </>
+                               )}
+                            </div>
                           </div>
 
                           <div className="space-y-1.5">
@@ -1484,6 +1599,34 @@ function AppContent() {
                             {fastPhoneError && (
                               <p className="text-[10px] text-rose-500 mt-1 font-semibold">{fastPhoneError}</p>
                             )}
+                            <div className="flex items-center gap-2 mt-2">
+                               {phoneVerified ? (
+                                  <span className="text-xs text-emerald-500 font-bold flex items-center gap-1"><Check className="w-4 h-4"/> Phone Verified</span>
+                               ) : (
+                                  <div className="flex flex-col gap-2">
+                                    <div className="flex gap-2">
+                                      <button type="button" id="send-otp-btn" onClick={handleSendPhoneOTP} disabled={phoneVerState === 'sending' || !fastPhone} className="px-3 py-1.5 bg-indigo-500 hover:bg-indigo-600 text-white text-[10px] uppercase font-bold rounded-lg disabled:opacity-50">
+                                        {phoneVerState === 'sending' ? 'Sending...' : phoneVerState === 'sent' ? 'Resend OTP' : 'Verify Phone'}
+                                      </button>
+                                      <div id="recaptcha-container"></div>
+                                    </div>
+                                    {phoneVerState === 'sent' && (
+                                      <div className="flex gap-2">
+                                        <input
+                                          type="text"
+                                          placeholder="Enter OTP"
+                                          value={otpCode}
+                                          onChange={e => setOtpCode(e.target.value)}
+                                          className="px-3 py-1.5 w-24 text-xs bg-slate-50 dark:bg-[#070708] rounded-lg border border-slate-200 dark:border-white/5 focus:outline-none font-mono"
+                                        />
+                                        <button type="button" onClick={handleVerifyPhoneOTP} disabled={phoneVerState === 'verifying' || !otpCode} className="px-3 py-1.5 bg-green-500 hover:bg-green-600 text-white text-[10px] uppercase font-bold rounded-lg disabled:opacity-50">
+                                           {phoneVerState === 'verifying' ? 'Verifying...' : 'Confirm'}
+                                        </button>
+                                      </div>
+                                    )}
+                                  </div>
+                               )}
+                            </div>
                           </div>
                         </div>
 
@@ -1557,49 +1700,25 @@ function AppContent() {
                           </div>
 
                           <div className="space-y-1.5">
-                            <label className="text-[10px] font-mono uppercase text-slate-400 dark:text-gray-500 block font-bold tracking-wider">Father's Phone Number *</label>
-                            <div className="flex gap-2">
-                              <select
-                                value={fastFatherPhonePrefix}
-                                onChange={e => {
-                                  setFastFatherPhonePrefix(e.target.value);
-                                  setFastFatherPhone('');
-                                  setFastFatherPhoneError('');
-                                }}
-                                className="px-3 py-2.5 text-xs bg-slate-50 dark:bg-[#070708] rounded-xl border border-slate-200 dark:border-white/5 focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 text-slate-855 dark:text-gray-100 font-sans"
-                              >
-                                {COUNTRY_PHONE_CONFIGS.map(c => (
-                                  <option key={`${c.name}-${c.code}`} value={c.code}>{c.flag} {c.code}</option>
-                                ))}
-                              </select>
-                              <div className="relative flex-1">
-                                <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
-                                  <Smartphone className="h-4 w-4 text-slate-400 dark:text-gray-500" />
-                                </div>
-                                <input
-                                  type="text"
-                                  required
-                                  placeholder={COUNTRY_PHONE_CONFIGS.find(c => c.code === fastFatherPhonePrefix)?.placeholder || '9876543210'}
-                                  value={fastFatherPhone}
-                                  maxLength={COUNTRY_PHONE_CONFIGS.find(c => c.code === fastFatherPhonePrefix)?.length || 10}
-                                  onChange={e => {
-                                    const raw = e.target.value.replace(/\D/g, '');
-                                    setFastFatherPhone(raw);
-                                    const len = COUNTRY_PHONE_CONFIGS.find(c => c.code === fastFatherPhonePrefix)?.length || 10;
-                                    if (!raw) {
-                                      setFastFatherPhoneError("Father's phone number is required");
-                                    } else if (raw.length !== len) {
-                                      setFastFatherPhoneError(`Must be exactly ${len} digits`);
-                                    } else {
-                                      setFastFatherPhoneError('');
-                                    }
-                                  }}
-                                  className={`w-full pl-10 pr-3 py-2.5 text-xs bg-slate-50 dark:bg-[#070708] rounded-xl border ${fastFatherPhoneError ? 'border-rose-500' : 'border-slate-200 dark:border-white/5'} focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 text-slate-855 dark:text-gray-100 placeholder-slate-400 dark:placeholder-gray-650 transition-all font-mono`}
-                                />
+                            <label className="text-[10px] font-mono uppercase text-slate-400 dark:text-gray-500 block font-bold tracking-wider">Full Address *</label>
+                            <div className="relative">
+                              <div className="absolute top-3 left-0 pl-3.5 flex items-start pointer-events-none">
+                                <MapPin className="h-4 w-4 text-slate-400 dark:text-gray-500" />
                               </div>
+                              <textarea
+                                required
+                                placeholder="Enter full residential address"
+                                value={fastAddress}
+                                onChange={e => {
+                                  setFastAddress(e.target.value);
+                                  if (e.target.value.trim()) setFastAddressError('');
+                                }}
+                                rows={3}
+                                className={`w-full pl-10 pr-3 py-2.5 text-xs bg-slate-50 dark:bg-[#070708] rounded-xl border ${fastAddressError ? 'border-rose-500' : 'border-slate-200 dark:border-white/5'} focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 text-slate-855 dark:text-gray-100 placeholder-slate-400 dark:placeholder-gray-600 transition-all font-sans resize-none`}
+                              />
                             </div>
-                            {fastFatherPhoneError && (
-                              <p className="text-[10px] text-rose-500 mt-1 font-semibold">{fastFatherPhoneError}</p>
+                            {fastAddressError && (
+                              <p className="text-[10px] text-rose-500 mt-1 font-semibold">{fastAddressError}</p>
                             )}
                           </div>
                         </div>

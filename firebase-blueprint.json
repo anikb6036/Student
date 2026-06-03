@@ -1,0 +1,14 @@
+{
+  "entities": {
+    "User": {
+      "title": "User",
+      "description": "Represents an authenticated user for verification purposes.",
+      "type": "object",
+      "properties": {
+        "email": { "type": "string" },
+        "phone": { "type": "string" }
+      }
+    }
+  },
+  "firestore": {}
+}
