@@ -1,10 +1,10 @@
 {
-  "projectId": "acoustic-phoenix-207pf",
-  "appId": "1:509813992931:web:0ac93ab74ad9255fc344d6",
-  "apiKey": "AIzaSyB5jnrxZH88ck9sy8JY6yKKlupDDhLbV7c",
-  "authDomain": "acoustic-phoenix-207pf.firebaseapp.com",
+  "projectId": "my-app-b0a81",
+  "appId": "1:67419556113:web:bccc92b89ce405166aa4b0",
+  "apiKey": "AIzaSyA6hT6v157XWGLLpEAcUouLABicQQh74Us",
+  "authDomain": "my-app-b0a81.firebaseapp.com",
   "firestoreDatabaseId": "ai-studio-384d86e5-5f79-424a-abbb-33bfb7406874",
-  "storageBucket": "acoustic-phoenix-207pf.firebasestorage.app",
-  "messagingSenderId": "509813992931",
+  "storageBucket": "my-app-b0a81.firebasestorage.app",
+  "messagingSenderId": "67419556113",
   "measurementId": ""
 }
