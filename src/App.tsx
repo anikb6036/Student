@@ -191,9 +191,9 @@ function AppContent() {
   const [fastPhonePrefix, setFastPhonePrefix] = useState('+91');
   const [fastPhoneError, setFastPhoneError] = useState('');
 
-  // Firebase Verification States
-  const [phoneVerified, setPhoneVerified] = useState(false);
-  const [emailVerified, setEmailVerified] = useState(false);
+  // Firebase Verification States - bypassed by user request
+  const [phoneVerified, setPhoneVerified] = useState(true);
+  const [emailVerified, setEmailVerified] = useState(true);
   const [phoneVerState, setPhoneVerState] = useState<'idle' | 'sending' | 'sent' | 'verifying'>('idle');
   const [emailVerState, setEmailVerState] = useState<'idle' | 'sending' | 'sent' | 'verifying'>('idle');
   const [otpCode, setOtpCode] = useState('');
@@ -961,9 +961,6 @@ function AppContent() {
     if (!fastEmail.trim()) {
       setFastEmailError('Email address is required');
       hasError = true;
-    } else if (!emailVerified) {
-      setFastEmailError('Please verify your email address to proceed.');
-      hasError = true;
     }
 
     // Check Gender
@@ -1024,9 +1021,6 @@ function AppContent() {
       if (fastPhone.length !== reqLen) {
         setFastPhoneError(`Phone number must be exactly ${reqLen} digits for ${fastPhonePrefix}`);
         hasError = true;
-      } else if (!phoneVerified) {
-        setFastPhoneError('Please verify your phone number to proceed.');
-        hasError = true;
       }
     }
 
@@ -1084,8 +1078,8 @@ function AppContent() {
     setFastDob('');
     setFastAvatarUrl('');
     setFastAvatarError('');
-    setPhoneVerified(false);
-    setEmailVerified(false);
+    setPhoneVerified(true);
+    setEmailVerified(true);
     setPhoneVerState('idle');
     setEmailVerState('idle');
     setOtpCode('');
@@ -1536,22 +1530,6 @@ function AppContent() {
                             {fastEmailError && (
                               <p className="text-[10px] text-rose-500 mt-1 font-semibold">{fastEmailError}</p>
                             )}
-                            <div className="flex items-center gap-2 mt-2">
-                               {emailVerified ? (
-                                  <span className="text-xs text-emerald-500 font-bold flex items-center gap-1"><Check className="w-4 h-4"/> Email Verified</span>
-                               ) : (
-                                  <>
-                                     <button type="button" onClick={handleSendEmailLink} disabled={emailVerState === 'sending' || !fastEmail} className="px-3 py-1.5 bg-blue-500 hover:bg-blue-600 text-white text-[10px] uppercase font-bold rounded-lg disabled:opacity-50">
-                                       {emailVerState === 'sending' ? 'Sending...' : emailVerState === 'sent' ? 'Resend Verification' : 'Verify Email'}
-                                     </button>
-                                     {emailVerState === 'sent' && (
-                                        <button type="button" onClick={handleCheckEmailVerified} className="px-3 py-1.5 bg-green-500 hover:bg-green-600 text-white text-[10px] uppercase font-bold rounded-lg disabled:opacity-50">
-                                           I've Verified (Check)
-                                        </button>
-                                     )}
-                                  </>
-                               )}
-                            </div>
                           </div>
 
                           <div className="space-y-1.5">
@@ -1599,34 +1577,6 @@ function AppContent() {
                             {fastPhoneError && (
                               <p className="text-[10px] text-rose-500 mt-1 font-semibold">{fastPhoneError}</p>
                             )}
-                            <div className="flex items-center gap-2 mt-2">
-                               {phoneVerified ? (
-                                  <span className="text-xs text-emerald-500 font-bold flex items-center gap-1"><Check className="w-4 h-4"/> Phone Verified</span>
-                               ) : (
-                                  <div className="flex flex-col gap-2">
-                                    <div className="flex gap-2">
-                                      <button type="button" id="send-otp-btn" onClick={handleSendPhoneOTP} disabled={phoneVerState === 'sending' || !fastPhone} className="px-3 py-1.5 bg-indigo-500 hover:bg-indigo-600 text-white text-[10px] uppercase font-bold rounded-lg disabled:opacity-50">
-                                        {phoneVerState === 'sending' ? 'Sending...' : phoneVerState === 'sent' ? 'Resend OTP' : 'Verify Phone'}
-                                      </button>
-                                      <div id="recaptcha-container"></div>
-                                    </div>
-                                    {phoneVerState === 'sent' && (
-                                      <div className="flex gap-2">
-                                        <input
-                                          type="text"
-                                          placeholder="Enter OTP"
-                                          value={otpCode}
-                                          onChange={e => setOtpCode(e.target.value)}
-                                          className="px-3 py-1.5 w-24 text-xs bg-slate-50 dark:bg-[#070708] rounded-lg border border-slate-200 dark:border-white/5 focus:outline-none font-mono"
-                                        />
-                                        <button type="button" onClick={handleVerifyPhoneOTP} disabled={phoneVerState === 'verifying' || !otpCode} className="px-3 py-1.5 bg-green-500 hover:bg-green-600 text-white text-[10px] uppercase font-bold rounded-lg disabled:opacity-50">
-                                           {phoneVerState === 'verifying' ? 'Verifying...' : 'Confirm'}
-                                        </button>
-                                      </div>
-                                    )}
-                                  </div>
-                               )}
-                            </div>
                           </div>
                         </div>
 
