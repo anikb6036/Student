@@ -25,6 +25,8 @@ import ReportingDashboard from './components/ReportingDashboard';
 import CloudBackup from './components/CloudBackup';
 import MailboxManager from './components/MailboxManager';
 import ProfileSettings from './components/ProfileSettings';
+import HomePage from './components/HomePage';
+import Logo from './components/Logo';
 import {
   LayoutDashboard,
   Users,
@@ -55,7 +57,8 @@ import {
   Trash2,
   Upload,
   X,
-  AlertCircle
+  AlertCircle,
+  ChevronLeft
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { COUNTRY_PHONE_CONFIGS } from './countryPhoneData';
@@ -87,7 +90,7 @@ declare global {
 }
 
 function AppContent() {
-  const { isDark, toggleTheme } = useTheme();
+  const { isDark } = useTheme();
 
   // Root states synchronized with LocalStorage
   const [currentUser, setCurrentUser] = useState<UserAccount | null>(() => {
@@ -137,19 +140,15 @@ function AppContent() {
   // Navigation tab state
   const [activeTab, setActiveTab] = useState<'dashboard' | 'enrollments' | 'schedule' | 'progress' | 'reports' | 'backup' | 'inbox' | 'profile'>('dashboard');
 
-  // Sidebar expand/collapse and hover active state checks (persisted in LocalStorage)
-  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState<boolean>(() => {
-    return getSavedState<boolean>('db-sidebar-collapsed', false);
-  });
+  // Sidebar expand/collapse and hover active state checks
+  const [isSidebarCollapsed] = useState<boolean>(true);
   const [isSidebarHovered, setIsSidebarHovered] = useState<boolean>(false);
   const [ignoreHover, setIgnoreHover] = useState<boolean>(false);
 
-  useEffect(() => {
-    saveState('db-sidebar-collapsed', isSidebarCollapsed);
-  }, [isSidebarCollapsed]);
-  
   // Onboarding screens and fast registration workflow states
   const [onboardingTab, setOnboardingTab] = useState<'fastReg' | 'authLogin' | 'adminLogin'>('authLogin');
+  const [currentRegStep, setCurrentRegStep] = useState<number>(1);
+  const [showPortal, setShowPortal] = useState<boolean>(false);
   const [fastName, setFastName] = useState('');
   const [fastEmail, setFastEmail] = useState('');
   const [fastPhone, setFastPhone] = useState('');
@@ -228,12 +227,14 @@ function AppContent() {
     saveState('active-user', currentUser);
   }, [currentUser]);
 
-  // If currently logged in user is removed/deleted from the database, invalidate session immediately
+  // Synchronize state of currently logged-in user with active database records or invalidate if deleted
   useEffect(() => {
     if (currentUser && currentUser.id !== 'admin-1') {
-      const exists = users.some(u => u.id === currentUser.id);
-      if (!exists) {
+      const dbUser = users.find(u => u.id === currentUser.id);
+      if (!dbUser) {
         setCurrentUser(null);
+      } else if (JSON.stringify(dbUser) !== JSON.stringify(currentUser)) {
+        setCurrentUser(dbUser);
       }
     }
   }, [users, currentUser]);
@@ -455,7 +456,12 @@ function AppContent() {
   };
 
   const handleRemoveInstructor = (instructorId: string) => {
-    setUsers(prev => prev.filter(u => u.id !== instructorId));
+    setUsers(prev => prev.map(u => {
+      if (u.role === 'student' && u.assignedInstructorId === instructorId) {
+        return { ...u, assignedInstructorId: undefined };
+      }
+      return u;
+    }).filter(u => u.id !== instructorId));
     setSchedules(prev => prev.map(s => s.instructorId === instructorId ? { ...s, instructorId: '' } : s));
     if (currentUser && currentUser.id === instructorId) {
       setCurrentUser(null);
@@ -781,7 +787,7 @@ function AppContent() {
     const username = `${usernamePrefix}_${randomNum}`;
     
     const titleName = cleanName.split(' ')[0] || 'Student';
-    const password = `Prism@${titleName}${randomNum}`;
+    const password = `Learn@${titleName}${randomNum}`;
   
     const newRequest: RegistrationRequest = {
       id: generateUniqueId('req'),
@@ -851,9 +857,9 @@ function AppContent() {
     const newEmail: SimulatedEmail = {
       id: generateUniqueId('mail'),
       to: r.email,
-      from: 'admissions@prismcoaching.edu',
-      subject: 'PrismCoaching Enrollment Accepted! - Your Credentials Enclosed',
-      body: `Dear ${r.name},\n\nWe are absolutely delighted to inform you that your Enrollment & Fast Student Registration Request has been reviewed and APPROVED by our Administration panel!\n\nYour profile has been fully instantiated into our student information database. You can now log in using the newly auto-generated security credentials enclosed below:\n\n-----------------------------\nUSERNAME: ${r.username}\nPASSWORD: ${r.password}\n-----------------------------\n\nPlease keep these credentials secure. Once signed in, you will be able to enroll into classes, audit tutor feedback records, and track your ongoing learning achievements.\n\nBest regards,\nAnik Baidya,\nHead Administrator, PrismCoaching Institute`,
+      from: 'admissions@learnora.edu',
+      subject: 'Learnora Enrollment Accepted! - Your Credentials Enclosed',
+      body: `Dear ${r.name},\n\nWe are absolutely delighted to inform you that your Enrollment & Fast Student Registration Request has been reviewed and APPROVED by our Administration panel!\n\nYour profile has been fully instantiated into our student information database. You can now log in using the newly auto-generated security credentials enclosed below:\n\n-----------------------------\nUSERNAME: ${r.username}\nPASSWORD: ${r.password}\n-----------------------------\n\nPlease keep these credentials secure. Once signed in, you will be able to enroll into classes, audit tutor feedback records, and track your ongoing learning achievements.\n\nBest regards,\nAnik Baidya,\nHead Administrator, Learnora Institute`,
       timestamp: new Date().toISOString()
     };
 
@@ -889,9 +895,9 @@ function AppContent() {
     const newEmail: SimulatedEmail = {
       id: generateUniqueId('mail'),
       to: r.email,
-      from: 'admissions@prismcoaching.edu',
-      subject: 'PrismCoaching Registration Status Update',
-      body: `Dear ${r.name},\n\nThank you for submitting your Fast Student Registration Request with PrismCoaching.\n\nAfter reviewing your application coordinates, we regret to inform you that our classes are currently at maximum capacity, and we cannot approve your enrollment at this time.\n\nWe have retained your interest profile on our priority waiting list. Should seats open up in upcoming sessions, we will reach out immediately.\n\nBest regards,\nCenter Administration,\nPrismCoaching Institute`,
+      from: 'admissions@learnora.edu',
+      subject: 'Learnora Registration Status Update',
+      body: `Dear ${r.name},\n\nThank you for submitting your Fast Student Registration Request with Learnora.\n\nAfter reviewing your application coordinates, we regret to inform you that our classes are currently at maximum capacity, and we cannot approve your enrollment at this time.\n\nWe have retained your interest profile on our priority waiting list. Should seats open up in upcoming sessions, we will reach out immediately.\n\nBest regards,\nCenter Administration,\nLearnora Institute`,
       timestamp: new Date().toISOString()
     };
 
@@ -934,6 +940,73 @@ function AppContent() {
       setNotifications(n => [notif, ...n]);
       triggerToast(notif);
     }
+  };
+
+  const validateStep = (step: number): boolean => {
+    if (step === 1) {
+      let err = false;
+      setFastNameError('');
+      setFastCourseError('');
+      setFastAvatarError('');
+
+      if (!fastName.trim()) {
+        setFastNameError('Full legal name is required');
+        err = true;
+      }
+      if (!fastCourse) {
+        setFastCourseError('Please select a course program');
+        err = true;
+      }
+      if (fastAvatarError) {
+        err = true;
+      } else if (!fastAvatarUrl) {
+        setFastAvatarError('Please upload a profile photo under 150KB');
+        err = true;
+      }
+      return !err;
+    }
+
+    if (step === 2) {
+      let err = false;
+      setFastEmailError('');
+      setFastPhoneError('');
+      setFastGenderError('');
+      setFastDobError('');
+
+      if (!fastEmail.trim()) {
+        setFastEmailError('Email address is required');
+        err = true;
+      } else if (!/\S+@\S+\.\S+/.test(fastEmail)) {
+        setFastEmailError('Please enter a valid email address');
+        err = true;
+      }
+
+      if (!fastPhone) {
+        setFastPhoneError('Phone number is required');
+        err = true;
+      } else {
+        const config = COUNTRY_PHONE_CONFIGS.find(c => c.code === fastPhonePrefix);
+        const reqLen = config ? config.length : 10;
+        if (fastPhone.length !== reqLen) {
+          setFastPhoneError(`Phone number must be exactly ${reqLen} digits for ${fastPhonePrefix}`);
+          err = true;
+        }
+      }
+
+      if (!fastGender) {
+        setFastGenderError('Gender selection is required');
+        err = true;
+      }
+
+      if (!fastDob) {
+        setFastDobError('Date of birth is required');
+        err = true;
+      }
+
+      return !err;
+    }
+
+    return true;
   };
 
   const handleFastStudentSubmit = (e: React.FormEvent) => {
@@ -1083,6 +1156,7 @@ function AppContent() {
     setPhoneVerState('idle');
     setEmailVerState('idle');
     setOtpCode('');
+    setCurrentRegStep(1);
   };
 
   const handleCredentialsLogin = (e: React.FormEvent) => {
@@ -1251,112 +1325,132 @@ function AppContent() {
       </AnimatePresence>
 
       {!currentUser ? (
-        /* Dynamic Role-Based Sandbox Access & Create Account Page */
-        <div className="min-h-screen flex flex-col justify-center items-center py-12 px-4 bg-slate-100 dark:bg-[#0A0A0B] dark:text-gray-200">
-          <div className="max-w-5xl w-full grid grid-cols-1 md:grid-cols-12 gap-8 items-stretch bg-white dark:bg-[#0F0F11] border border-slate-150/80 dark:border-white/5 rounded-3xl p-6 md:p-10 shadow-xl relative overflow-hidden">
-            
-            {/* Ambient branding ornament */}
-            <div className="absolute top-0 right-0 h-40 w-40 bg-gradient-to-bl from-amber-500/10 to-transparent rounded-full pointer-events-none" />
+        showPortal ? (
+          /* Dynamic Role-Based Sandbox Access & Create Account Page */
+          <div className="min-h-screen flex flex-col justify-center items-center py-12 px-4 bg-slate-100 dark:bg-[#0A0A0B] dark:text-gray-200 animate-fadeIn font-sans">
+            <div className={`w-full bg-white dark:bg-[#0F0F11] border border-slate-150/80 dark:border-white/5 rounded-3xl p-6 md:p-10 shadow-xl relative overflow-hidden transition-all duration-300 ${
+              onboardingTab === 'fastReg' ? 'max-w-2xl' : 'max-w-5xl grid grid-cols-1 lg:grid-cols-12 gap-8 items-stretch'
+            }`}>
+              
+              {/* Ambient branding ornament */}
+              <div className="absolute top-0 right-0 h-40 w-40 bg-gradient-to-bl from-amber-500/10 to-transparent rounded-full pointer-events-none" />
 
-            {/* Left section: Sandbox switch, quick profiles accounts, and student mail client */}
-            <div className="md:col-span-12 lg:col-span-5 space-y-6 flex flex-col justify-between">
-              <div className="space-y-6">
-                <div>
-                  <h1 className="text-3xl font-serif italic text-amber-500 font-bold tracking-tight">
-                    PrismCoaching
-                  </h1>
-                  <p className="text-xs text-slate-500 dark:text-gray-400 mt-2 pr-2 leading-relaxed">
-                    Interactive educational control center. Experience our multi-role workflows: student registers, administrators review/accept, and credentials dispatch automatically.
-                  </p>
-                </div>
-
-
-              </div>
-
-              {/* Simulated Mail Client Mini-App */}
-              <div className="p-4 rounded-2xl bg-slate-500/5 dark:bg-[#161618] border border-slate-200 dark:border-white/5 space-y-3 mt-6">
-                <div className="flex items-center gap-2">
-                  <span className="relative flex h-2 w-2">
-                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75 animate-duration-1000"></span>
-                    <span className="relative inline-flex rounded-full h-2 w-2 bg-amber-500"></span>
-                  </span>
-                  <p className="text-xs font-bold text-slate-800 dark:text-gray-200 flex items-center gap-1.5">
-                    📧 Student Mailbox Simulator
-                  </p>
-                </div>
-                <p className="text-[10.5px] text-slate-500 dark:text-gray-400 leading-snug">
-                  Inspect secure admissions emails containing login details. Type any registered email (e.g. <b>samantha.wilson@demo.com</b> or your newly registered email) and click Open.
-                </p>
-                
-                <div className="flex gap-1.5">
-                  <input
-                    type="email"
-                    placeholder="student.email@demo.com"
-                    value={mailSearchEmail}
-                    onChange={(e) => setMailSearchEmail(e.target.value)}
-                    className="flex-1 px-3 py-1.5 text-xs bg-white dark:bg-[#0F0F11] border border-slate-250 dark:border-white/5 rounded-xl text-slate-900 dark:text-gray-200 focus:outline-none placeholder-slate-400 dark:placeholder-gray-600 font-mono"
-                  />
+              {/* Standalone Header for Admission form when Left column is hidden */}
+              {onboardingTab === 'fastReg' && (
+                <div className="flex items-center justify-between gap-4 border-b border-slate-100 dark:border-white/5 pb-4 mb-6">
+                  <div className="flex items-center gap-2">
+                    <div className="hidden sm:block scale-90 origin-left text-slate-800 dark:invert">
+                       <Logo size="sm" withStrapline={false} />
+                    </div>
+                    <span className="sm:hidden font-mono uppercase tracking-widest text-[#102b5c] dark:text-gray-300 font-bold text-xs mt-1">Learnora</span>
+                    <h1 className="text-lg font-serif italic text-slate-600 dark:text-gray-400 font-semibold tracking-tight ml-2 border-l border-amber-500/20 pl-3">Admissions</h1>
+                  </div>
                   <button
                     type="button"
-                    onClick={() => {
-                      if (mailSearchEmail.trim()) {
-                        setActiveMailboxEmail(mailSearchEmail.trim().toLowerCase());
-                        setShowMailbox(true);
-                      }
-                    }}
-                    className="px-3 py-1.5 bg-amber-500 hover:bg-amber-600 text-amber-950 font-bold rounded-xl text-xs transition cursor-pointer"
+                    onClick={() => setShowPortal(false)}
+                    className="text-[10px] font-mono font-extrabold uppercase tracking-wider text-slate-500 dark:text-gray-400 hover:text-amber-500 transition-colors cursor-pointer flex items-center gap-1.5 bg-slate-100 hover:bg-slate-200 dark:bg-white/5 dark:hover:bg-white/10 p-1.5 px-3 rounded-xl border border-slate-200 dark:border-white/5 shadow-sm"
                   >
-                    Open Mail
+                    ← Back To Home
                   </button>
                 </div>
-              </div>
-            </div>
+              )}
 
-            {/* Right section: Signup workspace and authentication */}
-            <div className="md:col-span-12 lg:col-span-7 bg-white dark:bg-[#111112] p-8 rounded-3xl border border-slate-150 dark:border-white/5 space-y-6 flex flex-col justify-start shadow-xl relative animate-fadeIn">
-              <div className="absolute top-0 right-0 h-32 w-32 bg-radial-gradient from-amber-500/10 to-transparent rounded-full pointer-events-none" />
-              
-              {/* Onboarding Mode Selection Tabs */}
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-1.5 p-1 bg-slate-50 dark:bg-[#070708] rounded-2xl border border-slate-150 dark:border-white/5">
-                <button
-                  type="button"
-                  onClick={() => { setOnboardingTab('fastReg'); setLoginError(''); }}
-                  className={`py-3 px-3 rounded-xl text-center font-bold text-xs transition-all duration-300 cursor-pointer flex items-center justify-center gap-2 ${
-                    onboardingTab === 'fastReg'
-                      ? 'bg-white dark:bg-[#1C1C1E] text-amber-500 dark:text-amber-500 shadow-md border border-slate-100 dark:border-white/5 scale-[1.02]'
-                      : 'text-slate-500 dark:text-gray-400 hover:text-amber-500 hover:bg-slate-50/50 dark:hover:bg-white/5'
-                  }`}
-                >
-                  <Sparkles className="w-3.5 h-3.5" />
-                  Admission
-                </button>
-                <button
-                  type="button"
-                  onClick={() => { setOnboardingTab('authLogin'); setLoginError(''); }}
-                  className={`py-3 px-3 rounded-xl text-center font-bold text-xs transition-all duration-300 cursor-pointer flex items-center justify-center gap-2 ${
-                    onboardingTab === 'authLogin'
-                      ? 'bg-white dark:bg-[#1C1C1E] text-amber-500 dark:text-amber-500 shadow-md border border-slate-100 dark:border-white/5 scale-[1.02]'
-                      : 'text-slate-500 dark:text-gray-400 hover:text-amber-500 hover:bg-slate-50/50 dark:hover:bg-white/5'
-                  }`}
-                >
-                  <Lock className="w-3.5 h-3.5" />
-                  Approved Sign In
-                </button>
-                <button
-                  type="button"
-                  onClick={() => { setOnboardingTab('adminLogin'); setLoginError(''); }}
-                  className={`py-3 px-3 rounded-xl text-center font-bold text-xs transition-all duration-300 cursor-pointer flex items-center justify-center gap-2 ${
-                    onboardingTab === 'adminLogin'
-                      ? 'bg-white dark:bg-[#1C1C1E] text-amber-500 dark:text-amber-500 shadow-md border border-slate-100 dark:border-white/5 scale-[1.02]'
-                      : 'text-slate-500 dark:text-gray-400 hover:text-amber-500 hover:bg-slate-50/50 dark:hover:bg-white/5'
-                  }`}
-                >
-                  <Shield className="w-3.5 h-3.5" />
-                  Admin Sign In
-                </button>
-              </div>
+              {/* Left section: Sandbox switch, quick profiles accounts, and student mail client */}
+              {onboardingTab !== 'fastReg' && (
+                <div className="md:col-span-12 lg:col-span-5 space-y-6 flex flex-col justify-between">
+                  <div className="space-y-6">
+                    <div className="flex items-center justify-between gap-4">
+                      <div className="text-slate-800 dark:invert mb-2 origin-left scale-90 sm:scale-100">
+                        <Logo size="md" />
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => setShowPortal(false)}
+                        className="text-[10px] font-mono font-extrabold uppercase tracking-wider text-slate-500 dark:text-gray-400 hover:text-amber-500 transition-colors cursor-pointer flex items-center gap-1.5 bg-slate-100 hover:bg-slate-200 dark:bg-white/5 dark:hover:bg-white/10 p-1.5 px-3 rounded-xl border border-slate-200 dark:border-white/5 shadow-sm"
+                      >
+                        ← Back To Home
+                      </button>
+                    </div>
+                    <p className="text-xs text-slate-500 dark:text-gray-400 mt-2 pr-2 leading-relaxed">
+                      Interactive educational control center. Experience our multi-role workflows: student registers, administrators review/accept, and credentials dispatch automatically.
+                    </p>
+                  </div>
 
-              {/* Form 1: Fast Student Registration */}
+                  {/* Simulated Mail Client Mini-App */}
+                  <div className="p-4 rounded-2xl bg-slate-500/5 dark:bg-[#161618] border border-slate-200 dark:border-white/5 space-y-3 mt-6">
+                    <div className="flex items-center gap-2">
+                      <span className="relative flex h-2 w-2">
+                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75 animate-duration-1000"></span>
+                        <span className="relative inline-flex rounded-full h-2 w-2 bg-amber-500"></span>
+                      </span>
+                      <p className="text-xs font-bold text-slate-800 dark:text-gray-200 flex items-center gap-1.5">
+                        📧 Student Mailbox Simulator
+                      </p>
+                    </div>
+                    <p className="text-[10.5px] text-slate-500 dark:text-gray-400 leading-snug">
+                      Inspect secure admissions emails containing login details. Type any registered email (e.g. <b>samantha.wilson@demo.com</b> or your newly registered email) and click Open.
+                    </p>
+                    
+                    <div className="flex gap-1.5">
+                      <input
+                        type="email"
+                        placeholder="student.email@demo.com"
+                        value={mailSearchEmail}
+                        onChange={(e) => setMailSearchEmail(e.target.value)}
+                        className="flex-1 px-3 py-1.5 text-xs bg-white dark:bg-[#0F0F11] border border-slate-250 dark:border-white/5 rounded-xl text-slate-900 dark:text-gray-200 focus:outline-none placeholder-slate-400 dark:placeholder-gray-600 font-mono"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => {
+                          if (mailSearchEmail.trim()) {
+                            setActiveMailboxEmail(mailSearchEmail.trim().toLowerCase());
+                            setShowMailbox(true);
+                          }
+                        }}
+                        className="px-3 py-1.5 bg-amber-500 hover:bg-amber-600 text-amber-950 font-bold rounded-xl text-xs transition cursor-pointer font-sans"
+                      >
+                        Open Mail
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Right section: Signup workspace and authentication */}
+              <div className={onboardingTab === 'fastReg' ? 'w-full' : 'md:col-span-12 lg:col-span-7 bg-white dark:bg-[#111112] p-8 rounded-3xl border border-slate-150 dark:border-white/5 space-y-6 flex flex-col justify-start shadow-xl relative animate-fadeIn'}>
+                <div className="absolute top-0 right-0 h-32 w-32 bg-radial-gradient from-amber-500/10 to-transparent rounded-full pointer-events-none" />
+                
+                {/* Onboarding Mode Selection Tabs */}
+                {onboardingTab !== 'fastReg' && (
+                  <div className="grid grid-cols-2 gap-1.5 p-1 bg-slate-50 dark:bg-[#070708] rounded-2xl border border-slate-150 dark:border-white/5">
+                    <button
+                      type="button"
+                      onClick={() => { setOnboardingTab('authLogin'); setLoginError(''); }}
+                      className={`py-3 px-3 rounded-xl text-center font-bold text-xs transition-all duration-300 cursor-pointer flex items-center justify-center gap-2 ${
+                        onboardingTab === 'authLogin'
+                          ? 'bg-white dark:bg-[#1C1C1E] text-amber-500 dark:text-amber-500 shadow-md border border-slate-100 dark:border-white/5 scale-[1.02]'
+                          : 'text-slate-500 dark:text-gray-400 hover:text-amber-500 hover:bg-slate-50/50 dark:hover:bg-white/5'
+                      }`}
+                    >
+                      <Lock className="w-3.5 h-3.5" />
+                      Approved Sign In
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => { setOnboardingTab('adminLogin'); setLoginError(''); }}
+                      className={`py-3 px-3 rounded-xl text-center font-bold text-xs transition-all duration-300 cursor-pointer flex items-center justify-center gap-2 ${
+                        onboardingTab === 'adminLogin'
+                          ? 'bg-white dark:bg-[#1C1C1E] text-amber-500 dark:text-amber-500 shadow-md border border-slate-100 dark:border-white/5 scale-[1.02]'
+                          : 'text-slate-500 dark:text-gray-400 hover:text-amber-500 hover:bg-slate-50/50 dark:hover:bg-white/5'
+                      }`}
+                    >
+                      <Shield className="w-3.5 h-3.5" />
+                      Admin Sign In
+                    </button>
+                  </div>
+                )}
+
+                           {/* Form 1: Fast Student Registration */}
               {onboardingTab === 'fastReg' && (
                 <div className="space-y-5 flex-1 flex flex-col justify-between">
                   <div className="space-y-4">
@@ -1382,427 +1476,565 @@ function AppContent() {
                         <p className="leading-relaxed text-slate-650 dark:text-gray-300">
                           The admissions queue ticket for student <b className="text-slate-800 dark:text-white">{fastRegSuccess.name}</b> has been securely enqueued in the active admin ledger.
                         </p>
-                        <div className="p-4 bg-slate-900/90 dark:bg-[#070708] rounded-xl border border-emerald-500/10 space-y-2.5 font-mono text-[10.5px] text-gray-300 leading-relaxed shadow-sm">
-                          <p className="font-bold text-amber-500 flex items-center gap-1.5 uppercase tracking-wider text-[9.5px]">
-                            <Sparkles className="w-3.5 h-3.5" /> Simulation Step-by-Step Guide:
-                          </p>
-                          <p className="flex items-start gap-1">
-                            <span className="text-amber-550 font-bold">1.</span>
-                            <span>Switch simulator role to <b>Anik Baidya (Admin)</b> using the left panel.</span>
-                          </p>
-                          <p className="flex items-start gap-1">
-                            <span className="text-amber-550 font-bold">2.</span>
-                            <span>Open the <b>Student Profiles Registry</b> dashboard tab.</span>
-                          </p>
-                          <p className="flex items-start gap-1">
-                            <span className="text-amber-550 font-bold">3.</span>
-                            <span>Locate the entry for <b>{fastRegSuccess.name}</b> and click <b>Accept & Enroll</b>.</span>
-                          </p>
-                          <p className="flex items-start gap-1">
-                            <span className="text-amber-555 font-bold">4.</span>
-                            <span>Use the <b>Simulated Mail Client</b> on the left to read credentials generated for <b className="text-amber-555">{fastRegSuccess.email}</b>.</span>
-                          </p>
-                        </div>
                         <button
                           type="button"
-                          onClick={() => setFastRegSuccess(null)}
+                          onClick={() => {
+                            setFastRegSuccess(null);
+                            setCurrentRegStep(1);
+                          }}
                           className="text-[11px] font-bold text-emerald-500 hover:text-emerald-400 hover:underline cursor-pointer block transition-all"
                         >
                           Submit another fast onboarding request &rarr;
                         </button>
                       </motion.div>
                     ) : (
-                      <form onSubmit={handleFastStudentSubmit} className="space-y-4" noValidate>
-                        {/* Profile Photo Upload */}
-                        <div className="space-y-2">
-                          <label className="text-[10px] font-mono uppercase text-slate-400 dark:text-gray-500 block font-bold tracking-wider">Profile Photo (Maximum 150KB) *</label>
-                          <div className="flex flex-col sm:flex-row items-center gap-4 p-4 bg-slate-50 dark:bg-[#070708] rounded-xl border border-dashed border-slate-200 dark:border-white/5">
-                            {fastAvatarUrl ? (
-                              <div className="relative group/avatar">
-                                <img 
-                                  src={fastAvatarUrl} 
-                                  alt="Preview" 
-                                  className="w-14 h-14 rounded-full object-cover border-2 border-amber-500 shadow-sm"
-                                  referrerPolicy="no-referrer"
-                                />
+                      <div className="space-y-6">
+                        {/* Elegant Progress Indicator */}
+                        <div className="relative pt-2 pb-4">
+                          <div className="flex items-center justify-between mb-2">
+                            <span className="text-[10px] font-mono uppercase tracking-wider font-bold text-amber-500">
+                              Step {currentRegStep} of 3
+                            </span>
+                            <span className="text-[10px] font-mono uppercase tracking-wider font-bold text-slate-400 dark:text-gray-500">
+                              {currentRegStep === 1 && "Personal identification"}
+                              {currentRegStep === 2 && "Contact validation"}
+                              {currentRegStep === 3 && "academic & Address file"}
+                            </span>
+                          </div>
+                          
+                          {/* Segmented step buttons */}
+                          <div className="grid grid-cols-3 gap-2">
+                            {[
+                              { label: 'Profile', desc: 'Step 1' },
+                              { label: 'Contact', desc: 'Step 2' },
+                              { label: 'Background', desc: 'Step 3' }
+                            ].map((s, idx) => {
+                              const stepNum = idx + 1;
+                              const isActive = currentRegStep === stepNum;
+                              const isCompleted = currentRegStep > stepNum;
+                              return (
                                 <button
+                                  key={stepNum}
                                   type="button"
                                   onClick={() => {
-                                    setFastAvatarUrl('');
-                                    setFastAvatarError('');
-                                  }}
-                                  className="absolute -top-1 -right-1 bg-rose-500 text-white rounded-full p-1 hover:bg-rose-600 transition shadow cursor-pointer"
-                                  title="Remove Photo"
-                                >
-                                  <Trash2 className="w-3 h-3" />
-                                </button>
-                              </div>
-                            ) : (
-                              <div className="w-14 h-14 rounded-full bg-slate-100 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 flex items-center justify-center text-slate-400 dark:text-slate-600">
-                                <Camera className="w-5 h-5" />
-                              </div>
-                            )}
-                            <div className="flex-1 space-y-1 text-center sm:text-left">
-                              <input
-                                type="file"
-                                id="fast-student-avatar-upload"
-                                accept="image/*"
-                                onChange={(e) => {
-                                  const file = e.target.files?.[0];
-                                  if (!file) return;
-                                  const limit = 150 * 1024;
-                                  if (file.size > limit) {
-                                    setFastAvatarError("photo size more then 150kb please upload photo under 150kb");
-                                    setFastAvatarUrl('');
-                                    e.target.value = '';
-                                    return;
-                                  }
-                                  setFastAvatarError('');
-                                  const reader = new FileReader();
-                                  reader.onloadend = () => {
-                                    setFastAvatarUrl(reader.result as string);
-                                  };
-                                  reader.readAsDataURL(file);
-                                }}
-                                className="hidden"
-                              />
-                              <label
-                                htmlFor="fast-student-avatar-upload"
-                                className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-amber-500/10 hover:bg-amber-500/20 text-amber-500 text-[10.5px] font-bold rounded-lg border border-amber-500/20 transition cursor-pointer"
-                              >
-                                <Upload className="w-3 h-3" />
-                                {fastAvatarUrl ? 'Change Photo' : 'Upload Photo'}
-                              </label>
-                              <p className="text-[9.5px] text-slate-400 dark:text-gray-500 leading-none">
-                                Supports JPEG, PNG, WebP. Maximum size 150KB.
-                              </p>
-                              {fastAvatarError && (
-                                <p className="text-[10.5px] text-rose-500 dark:text-rose-400 font-bold leading-tight mt-1">
-                                  {fastAvatarError}
-                                </p>
-                              )}
-                            </div>
-                          </div>
-                        </div>
-
-                        <div className="space-y-1.5">
-                          <label className="text-[10px] font-mono uppercase text-slate-400 dark:text-gray-500 block font-bold tracking-wider">Full Legal Name *</label>
-                          <div className="relative">
-                            <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
-                              <User className="h-4 w-4 text-slate-400 dark:text-gray-500" />
-                            </div>
-                            <input
-                              type="text"
-                              required
-                              placeholder="e.g. Samuel Wilson"
-                              value={fastName}
-                              onChange={e => {
-                                setFastName(e.target.value);
-                                if (e.target.value.trim()) setFastNameError('');
-                              }}
-                              className={`w-full pl-10 pr-3 py-2.5 text-xs bg-slate-50 dark:bg-[#070708] rounded-xl border ${fastNameError ? 'border-rose-500' : 'border-slate-200 dark:border-white/5'} focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 text-slate-850 dark:text-gray-100 placeholder-slate-400 dark:placeholder-gray-600 transition-all font-sans`}
-                            />
-                          </div>
-                          {fastNameError && (
-                            <p className="text-[10px] text-rose-500 mt-1 font-semibold">{fastNameError}</p>
-                          )}
-                        </div>
-
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                          <div className="space-y-1.5">
-                            <label className="text-[10px] font-mono uppercase text-slate-400 dark:text-gray-500 block font-bold tracking-wider">Email Address *</label>
-                            <div className="relative">
-                              <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
-                                <Mail className="h-4 w-4 text-slate-400 dark:text-gray-500" />
-                              </div>
-                              <input
-                                type="email"
-                                required
-                                placeholder="sam@example.com"
-                                value={fastEmail}
-                                onChange={e => {
-                                  setFastEmail(e.target.value);
-                                  if (e.target.value.trim()) setFastEmailError('');
-                                }}
-                                className={`w-full pl-10 pr-3 py-2.5 text-xs bg-slate-50 dark:bg-[#070708] rounded-xl border ${fastEmailError ? 'border-rose-500' : 'border-slate-200 dark:border-white/5'} focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 text-slate-855 dark:text-gray-100 placeholder-slate-400 dark:placeholder-gray-600 transition-all font-sans`}
-                              />
-                            </div>
-                            {fastEmailError && (
-                              <p className="text-[10px] text-rose-500 mt-1 font-semibold">{fastEmailError}</p>
-                            )}
-                          </div>
-
-                          <div className="space-y-1.5">
-                            <label className="text-[10px] font-mono uppercase text-slate-400 dark:text-gray-500 block font-bold tracking-wider">Phone Number *</label>
-                            <div className="flex gap-2">
-                              <select
-                                value={fastPhonePrefix}
-                                onChange={e => {
-                                  setFastPhonePrefix(e.target.value);
-                                  setFastPhone('');
-                                  setFastPhoneError('');
-                                }}
-                                className="px-3 py-2.5 text-xs bg-slate-50 dark:bg-[#070708] rounded-xl border border-slate-200 dark:border-white/5 focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 text-slate-855 dark:text-gray-100 font-sans"
-                              >
-                                {COUNTRY_PHONE_CONFIGS.map(c => (
-                                  <option key={`${c.name}-${c.code}`} value={c.code}>{c.flag} {c.code}</option>
-                                ))}
-                              </select>
-                              <div className="relative flex-1">
-                                <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
-                                  <Smartphone className="h-4 w-4 text-slate-400 dark:text-gray-500" />
-                                </div>
-                                <input
-                                  type="text"
-                                  required
-                                  placeholder={COUNTRY_PHONE_CONFIGS.find(c => c.code === fastPhonePrefix)?.placeholder || '9876543210'}
-                                  value={fastPhone}
-                                  maxLength={COUNTRY_PHONE_CONFIGS.find(c => c.code === fastPhonePrefix)?.length || 10}
-                                  onChange={e => {
-                                    const raw = e.target.value.replace(/\D/g, '');
-                                    setFastPhone(raw);
-                                    const len = COUNTRY_PHONE_CONFIGS.find(c => c.code === fastPhonePrefix)?.length || 10;
-                                    if (!raw) {
-                                      setFastPhoneError('Phone number is required');
-                                    } else if (raw.length !== len) {
-                                      setFastPhoneError(`Must be exactly ${len} digits`);
-                                    } else {
-                                      setFastPhoneError('');
+                                    // Let user navigate backwards or to steps they have validated
+                                    if (stepNum < currentRegStep) {
+                                      setCurrentRegStep(stepNum);
+                                    } else if (stepNum === 2 && validateStep(1)) {
+                                      setCurrentRegStep(2);
+                                    } else if (stepNum === 3 && validateStep(1) && validateStep(2)) {
+                                      setCurrentRegStep(3);
                                     }
                                   }}
-                                  className={`w-full pl-10 pr-3 py-2.5 text-xs bg-slate-50 dark:bg-[#070708] rounded-xl border ${fastPhoneError ? 'border-rose-500' : 'border-slate-200 dark:border-white/5'} focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 text-slate-855 dark:text-gray-100 placeholder-slate-400 dark:placeholder-gray-600 transition-all font-mono`}
-                                />
-                              </div>
-                            </div>
-                            {fastPhoneError && (
-                              <p className="text-[10px] text-rose-500 mt-1 font-semibold">{fastPhoneError}</p>
-                            )}
+                                  className={`p-2.5 rounded-xl border text-left transition-all duration-300 relative overflow-hidden group cursor-pointer ${
+                                    isActive
+                                      ? 'bg-amber-500/10 border-amber-500 text-amber-600 dark:text-amber-500'
+                                      : isCompleted
+                                      ? 'bg-emerald-500/5 dark:bg-emerald-500/[0.02] border-emerald-500/30 text-emerald-600 dark:text-emerald-500'
+                                      : 'bg-slate-50 dark:bg-[#070708] border-slate-200 dark:border-white/5 text-slate-400 dark:text-gray-500'
+                                  }`}
+                                >
+                                  {isCompleted && (
+                                    <div className="absolute top-1.5 right-1.5">
+                                      <Check className="w-3 h-3 text-emerald-500" />
+                                    </div>
+                                  )}
+                                  <div className="text-[10px] font-mono font-bold uppercase tracking-wide">
+                                    {s.desc}
+                                  </div>
+                                  <div className="text-xs font-bold leading-tight mt-0.5">
+                                    {s.label}
+                                  </div>
+                                </button>
+                              );
+                            })}
+                          </div>
+                          
+                          {/* Top mini progress line */}
+                          <div className="h-1 bg-slate-100 dark:bg-white/5 rounded-full mt-4 overflow-hidden">
+                            <div 
+                              className="h-full bg-amber-500 transition-all duration-300 rounded-full"
+                              style={{ width: `${(currentRegStep / 3) * 100}%` }}
+                            />
                           </div>
                         </div>
 
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                          <div className="space-y-1.5">
-                            <label className="text-[10px] font-mono uppercase text-slate-400 dark:text-gray-500 block font-bold tracking-wider">Gender *</label>
-                            <div className="relative">
-                              <select
-                                required
-                                value={fastGender}
-                                onChange={e => {
-                                  setFastGender(e.target.value);
-                                  if (e.target.value) setFastGenderError('');
-                                }}
-                                className={`w-full px-3 py-2.5 text-xs bg-slate-50 dark:bg-[#070708] rounded-xl border ${fastGenderError ? 'border-rose-500' : 'border-slate-200 dark:border-white/5'} focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 text-slate-855 dark:text-gray-100 transition-all font-sans`}
-                              >
-                                <option value="" disabled>Select Gender</option>
-                                <option value="Male">Male</option>
-                                <option value="Female">Female</option>
-                                <option value="Non-Binary">Non-Binary</option>
-                                <option value="Prefer not to say">Prefer not to say</option>
-                              </select>
-                            </div>
-                            {fastGenderError && (
-                              <p className="text-[10px] text-rose-500 mt-1 font-semibold">{fastGenderError}</p>
-                            )}
-                          </div>
-
-                          <div className="space-y-1.5">
-                            <label className="text-[10px] font-mono uppercase text-slate-400 dark:text-gray-500 block font-bold tracking-wider">Date of Birth *</label>
-                            <div className="relative">
-                              <input
-                                type="date"
-                                required
-                                value={fastDob}
-                                onChange={e => {
-                                  setFastDob(e.target.value);
-                                  if (e.target.value) setFastDobError('');
-                                }}
-                                className={`w-full px-3 py-2.5 text-xs bg-slate-50 dark:bg-[#070708] rounded-xl border ${fastDobError ? 'border-rose-500' : 'border-slate-200 dark:border-white/5'} focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 text-slate-855 dark:text-gray-100 transition-all font-sans select-none`}
-                              />
-                            </div>
-                            {fastDobError && (
-                              <p className="text-[10px] text-rose-500 mt-1 font-semibold">{fastDobError}</p>
-                            )}
-                          </div>
-                        </div>
-
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                          <div className="space-y-1.5">
-                            <label className="text-[10px] font-mono uppercase text-slate-400 dark:text-gray-500 block font-bold tracking-wider">Father's Name *</label>
-                            <div className="relative">
-                              <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
-                                <User className="h-4 w-4 text-slate-400 dark:text-gray-500" />
-                              </div>
-                              <input
-                                type="text"
-                                required
-                                placeholder="e.g. Arthur Wilson"
-                                value={fastFatherName}
-                                onChange={e => {
-                                  setFastFatherName(e.target.value);
-                                  if (e.target.value.trim()) setFastFatherNameError('');
-                                }}
-                                className={`w-full pl-10 pr-3 py-2.5 text-xs bg-slate-50 dark:bg-[#070708] rounded-xl border ${fastFatherNameError ? 'border-rose-500' : 'border-slate-200 dark:border-white/5'} focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 text-slate-855 dark:text-gray-100 placeholder-slate-400 dark:placeholder-gray-600 transition-all font-sans`}
-                              />
-                            </div>
-                            {fastFatherNameError && (
-                              <p className="text-[10px] text-rose-500 mt-1 font-semibold">{fastFatherNameError}</p>
-                            )}
-                          </div>
-
-                          <div className="space-y-1.5">
-                            <label className="text-[10px] font-mono uppercase text-slate-400 dark:text-gray-500 block font-bold tracking-wider">Full Address *</label>
-                            <div className="relative">
-                              <div className="absolute top-3 left-0 pl-3.5 flex items-start pointer-events-none">
-                                <MapPin className="h-4 w-4 text-slate-400 dark:text-gray-500" />
-                              </div>
-                              <textarea
-                                required
-                                placeholder="Enter full residential address"
-                                value={fastAddress}
-                                onChange={e => {
-                                  setFastAddress(e.target.value);
-                                  if (e.target.value.trim()) setFastAddressError('');
-                                }}
-                                rows={3}
-                                className={`w-full pl-10 pr-3 py-2.5 text-xs bg-slate-50 dark:bg-[#070708] rounded-xl border ${fastAddressError ? 'border-rose-500' : 'border-slate-200 dark:border-white/5'} focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 text-slate-855 dark:text-gray-100 placeholder-slate-400 dark:placeholder-gray-600 transition-all font-sans resize-none`}
-                              />
-                            </div>
-                            {fastAddressError && (
-                              <p className="text-[10px] text-rose-500 mt-1 font-semibold">{fastAddressError}</p>
-                            )}
-                          </div>
-                        </div>
-
-                                           <div className="space-y-1.5">
-                          <label className="text-[10px] font-mono uppercase text-slate-400 dark:text-gray-500 block font-bold tracking-wider">Last Qualification *</label>
-                          <div className="grid grid-cols-2 gap-2">
-                            <button
-                              type="button"
-                              onClick={() => {
-                                setLastQualificationCategory('school');
-                                setFastLastQualificationError('');
-                              }}
-                              className={`py-2 px-3 text-xs rounded-xl font-bold border transition-all flex items-center justify-center gap-2 cursor-pointer ${
-                                lastQualificationCategory === 'school'
-                                  ? 'bg-amber-500/10 border-amber-500/40 text-amber-500 shadow-sm'
-                                  : 'bg-slate-50 dark:bg-[#070708] border-slate-200 dark:border-white/5 text-slate-600 dark:text-gray-400 hover:bg-slate-100/50 dark:hover:bg-white/5'
-                              }`}
+                        {/* Interactive Steps Form Fields */}
+                        <form onSubmit={(e) => {
+                          e.preventDefault();
+                          if (currentRegStep < 3) {
+                            if (validateStep(currentRegStep)) {
+                              setCurrentRegStep(currentRegStep + 1);
+                            }
+                          } else {
+                            handleFastStudentSubmit(e);
+                          }
+                        }} className="space-y-4" noValidate>
+                        
+                          {/* STEP 1: Personal Identification & Target Program */}
+                          {currentRegStep === 1 && (
+                            <motion.div
+                              initial={{ opacity: 0, x: -10 }}
+                              animate={{ opacity: 1, x: 0 }}
+                              exit={{ opacity: 0, x: 10 }}
+                              className="space-y-4 animate-fadeIn"
                             >
-                              <GraduationCap className="h-4 w-4" />
-                              School
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => {
-                                setLastQualificationCategory('college');
-                                setFastLastQualificationError('');
-                              }}
-                              className={`py-2 px-3 text-xs rounded-xl font-bold border transition-all flex items-center justify-center gap-2 cursor-pointer ${
-                                lastQualificationCategory === 'college'
-                                  ? 'bg-amber-500/10 border-amber-500/40 text-amber-500 shadow-sm'
-                                  : 'bg-slate-50 dark:bg-[#070708] border-slate-200 dark:border-white/5 text-slate-600 dark:text-gray-400 hover:bg-slate-100/50 dark:hover:bg-white/5'
-                              }`}
-                            >
-                              <GraduationCap className="h-4 w-4" />
-                              College
-                            </button>
-                          </div>
+                              {/* Profile Photo Upload */}
+                              <div className="space-y-2 p-4 bg-slate-50 dark:bg-[#080809] rounded-2xl border border-slate-200/60 dark:border-white/5">
+                                <label className="text-[10px] font-mono uppercase text-slate-400 dark:text-gray-500 block font-bold tracking-wider">Profile Photo Asset (Maximum 150KB) *</label>
+                                <div className="flex flex-col sm:flex-row items-center gap-4">
+                                  {fastAvatarUrl ? (
+                                    <div className="relative group/avatar">
+                                      <img 
+                                        src={fastAvatarUrl} 
+                                        alt="Preview" 
+                                        className="w-16 h-16 rounded-full object-cover border-2 border-amber-500 shadow-md transition-transform group-hover/avatar:scale-105"
+                                        referrerPolicy="no-referrer"
+                                      />
+                                      <button
+                                        type="button"
+                                        onClick={() => {
+                                          setFastAvatarUrl('');
+                                          setFastAvatarError('');
+                                        }}
+                                        className="absolute -top-1 -right-1 bg-rose-500 hover:bg-rose-600 text-white rounded-full p-1 transition shadow-md cursor-pointer active:scale-90"
+                                        title="Remove Photo"
+                                      >
+                                        <Trash2 className="w-3 h-3" />
+                                      </button>
+                                    </div>
+                                  ) : (
+                                    <div className="w-16 h-16 rounded-full bg-slate-100 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800 flex items-center justify-center text-slate-400 dark:text-slate-600 shadow-inner">
+                                      <Camera className="w-6 h-6 animate-pulse" />
+                                    </div>
+                                  )}
+                                  <div className="flex-1 space-y-1.5 text-center sm:text-left">
+                                    <input
+                                      type="file"
+                                      id="fast-student-avatar-upload"
+                                      accept="image/*"
+                                      onChange={(e) => {
+                                        const file = e.target.files?.[0];
+                                        if (!file) return;
+                                        const limit = 150 * 1024;
+                                        if (file.size > limit) {
+                                          setFastAvatarError("photo size more then 150kb please upload photo under 150kb");
+                                          setFastAvatarUrl('');
+                                          e.target.value = '';
+                                          return;
+                                        }
+                                        setFastAvatarError('');
+                                        const reader = new FileReader();
+                                        reader.onloadend = () => {
+                                          setFastAvatarUrl(reader.result as string);
+                                        };
+                                        reader.readAsDataURL(file);
+                                      }}
+                                      className="hidden"
+                                    />
+                                    <label
+                                      htmlFor="fast-student-avatar-upload"
+                                      className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-amber-500 text-amber-950 text-xs font-extrabold rounded-xl border border-amber-500/20 hover:bg-amber-600 transition shadow-sm cursor-pointer"
+                                    >
+                                      <Upload className="w-3.5 h-3.5" />
+                                      {fastAvatarUrl ? 'Change Avatar Asset' : 'Upload Student Photo'}
+                                    </label>
+                                    <p className="text-[9.5px] text-slate-450 dark:text-gray-500 leading-snug">
+                                      Supports JPEG, PNG, WebP format. Maximum file size budget: 150KB.
+                                    </p>
+                                    {fastAvatarError && (
+                                      <p className="text-[10.5px] text-rose-500 dark:text-rose-455 font-bold leading-tight mt-1">
+                                        {fastAvatarError}
+                                      </p>
+                                    )}
+                                  </div>
+                                </div>
+                              </div>
 
-                          {/* Dynamic option selection based on Category */}
-                          <AnimatePresence mode="wait">
-                            {lastQualificationCategory === 'school' && (
-                              <motion.div
-                                key="school-options"
-                                initial={{ opacity: 0, height: 0 }}
-                                animate={{ opacity: 1, height: 'auto' }}
-                                exit={{ opacity: 0, height: 0 }}
-                                transition={{ duration: 0.2 }}
-                                className="space-y-1 mt-1 overflow-hidden"
-                              >
-                                <label className="text-[9px] font-mono uppercase text-slate-400 dark:text-gray-500 block font-bold">What is the Class? *</label>
+                              {/* Student Legal Name */}
+                              <div className="space-y-1.5">
+                                <label className="text-[10px] font-mono uppercase text-slate-400 dark:text-gray-500 block font-bold tracking-wider">Full Legal Name *</label>
+                                <div className="relative">
+                                  <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
+                                    <User className="h-4 w-4 text-slate-400 dark:text-gray-500" />
+                                  </div>
+                                  <input
+                                    type="text"
+                                    required
+                                    placeholder="e.g. Samuel Wilson"
+                                    value={fastName}
+                                    onChange={e => {
+                                      setFastName(e.target.value);
+                                      if (e.target.value.trim()) setFastNameError('');
+                                    }}
+                                    className={`w-full pl-10 pr-3 py-3 text-xs bg-slate-50 dark:bg-[#070708] rounded-xl border ${fastNameError ? 'border-rose-500 ring-1 ring-rose-500' : 'border-slate-200 dark:border-white/5'} focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 text-slate-850 dark:text-gray-100 placeholder-slate-400 dark:placeholder-gray-600 transition-all font-sans`}
+                                  />
+                                </div>
+                                {fastNameError && (
+                                  <p className="text-[10px] text-rose-500 mt-1 font-semibold">{fastNameError}</p>
+                                )}
+                              </div>
+
+                              {/* Student Target Program Course Selection */}
+                              <div className="space-y-1.5">
+                                <label className="text-[10px] font-mono uppercase text-slate-400 dark:text-gray-500 block font-bold tracking-wider">Desired Professional Course *</label>
                                 <select
                                   required
-                                  value={schoolClassInput}
+                                  value={fastCourse}
                                   onChange={e => {
-                                    setSchoolClassInput(e.target.value);
-                                    setFastLastQualificationError('');
+                                    setFastCourse(e.target.value);
+                                    if (e.target.value) setFastCourseError('');
                                   }}
-                                  className="w-full px-3 py-2 text-xs bg-white dark:bg-[#121214] rounded-lg border border-slate-200 dark:border-white/5 focus:outline-none focus:ring-1 focus:ring-amber-500 text-slate-800 dark:text-gray-100 font-sans"
+                                  className={`w-full px-3 py-3 text-xs bg-slate-50 dark:bg-[#070708] rounded-xl border ${fastCourseError ? 'border-rose-500 ring-1 ring-rose-500' : 'border-slate-200 dark:border-white/5'} focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 text-slate-855 dark:text-gray-100 transition-all font-sans`}
                                 >
-                                  <option value="">-- Select Class --</option>
-                                  <option value="Class 10 (Secondary)">Class 10 (Secondary)</option>
-                                  <option value="Class 12 / Higher Secondary (10+2)">Class 12 / Higher Secondary (10+2)</option>
-                                  <option value="Class 11">Class 11</option>
-                                  <option value="Class 9">Class 9</option>
-                                  <option value="Class 8">Class 8</option>
-                                  <option value="Class 7">Class 7</option>
-                                  <option value="Class 6">Class 6</option>
-                                  <option value="Class 5">Class 5</option>
-                                  <option value="Other Schooling">Other Schooling</option>
+                                  <option value="">-- Select Course Program --</option>
+                                  {courses.map(c => (
+                                    <option key={c.id} value={c.name}>{c.name} ({c.code})</option>
+                                  ))}
                                 </select>
-                              </motion.div>
-                            )}
+                                {fastCourseError && (
+                                  <p className="text-[10px] text-rose-500 mt-1 font-semibold">{fastCourseError}</p>
+                                )}
+                              </div>
+                            </motion.div>
+                          )}
 
-                            {lastQualificationCategory === 'college' && (
-                              <motion.div
-                                key="college-options"
-                                initial={{ opacity: 0, height: 0 }}
-                                animate={{ opacity: 1, height: 'auto' }}
-                                exit={{ opacity: 0, height: 0 }}
-                                transition={{ duration: 0.2 }}
-                                className="space-y-1 mt-1 overflow-hidden"
+                          {/* STEP 2: Contact Specifications */}
+                          {currentRegStep === 2 && (
+                            <motion.div
+                              initial={{ opacity: 0, x: -10 }}
+                              animate={{ opacity: 1, x: 0 }}
+                              exit={{ opacity: 0, x: 10 }}
+                              className="space-y-4 animate-fadeIn"
+                            >
+                              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                {/* Email address */}
+                                <div className="space-y-1.5">
+                                  <label className="text-[10px] font-mono uppercase text-slate-400 dark:text-gray-500 block font-bold tracking-wider">Email Address *</label>
+                                  <div className="relative">
+                                    <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
+                                      <Mail className="h-4 w-4 text-slate-400 dark:text-gray-500" />
+                                    </div>
+                                    <input
+                                      type="email"
+                                      required
+                                      placeholder="sam@example.com"
+                                      value={fastEmail}
+                                      onChange={e => {
+                                        setFastEmail(e.target.value);
+                                        if (e.target.value.trim()) setFastEmailError('');
+                                      }}
+                                      className={`w-full pl-10 pr-3 py-3 text-xs bg-slate-50 dark:bg-[#070708] rounded-xl border ${fastEmailError ? 'border-rose-500 ring-1 ring-rose-500' : 'border-slate-200 dark:border-white/5'} focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 text-slate-855 dark:text-gray-100 placeholder-slate-400 dark:placeholder-gray-600 transition-all font-sans`}
+                                    />
+                                  </div>
+                                  {fastEmailError && (
+                                    <p className="text-[10px] text-rose-500 mt-1 font-semibold">{fastEmailError}</p>
+                                  )}
+                                </div>
+
+                                {/* Phone number */}
+                                <div className="space-y-1.5">
+                                  <label className="text-[10px] font-mono uppercase text-slate-400 dark:text-gray-500 block font-bold tracking-wider">Phone Number *</label>
+                                  <div className="flex gap-2">
+                                    <select
+                                      value={fastPhonePrefix}
+                                      onChange={e => {
+                                        setFastPhonePrefix(e.target.value);
+                                        setFastPhone('');
+                                        setFastPhoneError('');
+                                      }}
+                                      className="px-3 py-3 text-xs bg-slate-50 dark:bg-[#070708] rounded-xl border border-slate-200 dark:border-white/5 focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 text-slate-855 dark:text-gray-100 font-sans"
+                                    >
+                                      {COUNTRY_PHONE_CONFIGS.map(c => (
+                                        <option key={`${c.name}-${c.code}`} value={c.code}>{c.flag} {c.code}</option>
+                                      ))}
+                                    </select>
+                                    <div className="relative flex-1">
+                                      <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
+                                        <Smartphone className="h-4 w-4 text-slate-400 dark:text-gray-500" />
+                                      </div>
+                                      <input
+                                        type="text"
+                                        required
+                                        placeholder={COUNTRY_PHONE_CONFIGS.find(c => c.code === fastPhonePrefix)?.placeholder || '9876543210'}
+                                        value={fastPhone}
+                                        maxLength={COUNTRY_PHONE_CONFIGS.find(c => c.code === fastPhonePrefix)?.length || 10}
+                                        onChange={e => {
+                                          const raw = e.target.value.replace(/\D/g, '');
+                                          setFastPhone(raw);
+                                          const len = COUNTRY_PHONE_CONFIGS.find(c => c.code === fastPhonePrefix)?.length || 10;
+                                          if (!raw) {
+                                            setFastPhoneError('Phone number is required');
+                                          } else if (raw.length !== len) {
+                                            setFastPhoneError(`Must be exactly ${len} digits`);
+                                          } else {
+                                            setFastPhoneError('');
+                                          }
+                                        }}
+                                        className={`w-full pl-10 pr-3 py-3 text-xs bg-slate-50 dark:bg-[#070708] rounded-xl border ${fastPhoneError ? 'border-rose-500 ring-1 ring-rose-500' : 'border-slate-200 dark:border-white/5'} focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 text-slate-855 dark:text-gray-100 placeholder-slate-400 dark:placeholder-gray-600 transition-all font-mono`}
+                                      />
+                                    </div>
+                                  </div>
+                                  {fastPhoneError && (
+                                    <p className="text-[10px] text-rose-500 mt-1 font-semibold">{fastPhoneError}</p>
+                                  )}
+                                </div>
+                              </div>
+
+                              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                {/* Gender selection */}
+                                <div className="space-y-1.5">
+                                  <label className="text-[10px] font-mono uppercase text-slate-400 dark:text-gray-500 block font-bold tracking-wider">Gender *</label>
+                                  <select
+                                    required
+                                    value={fastGender}
+                                    onChange={e => {
+                                      setFastGender(e.target.value);
+                                      if (e.target.value) setFastGenderError('');
+                                    }}
+                                    className={`w-full px-3 py-3 text-xs bg-slate-50 dark:bg-[#070708] rounded-xl border ${fastGenderError ? 'border-rose-500 ring-1 ring-rose-500' : 'border-slate-200 dark:border-white/5'} focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 text-slate-855 dark:text-gray-100 transition-all font-sans`}
+                                  >
+                                    <option value="" disabled>Select Gender</option>
+                                    <option value="Male">Male</option>
+                                    <option value="Female">Female</option>
+                                    <option value="Non-Binary">Non-Binary</option>
+                                    <option value="Prefer not to say">Prefer not to say</option>
+                                  </select>
+                                  {fastGenderError && (
+                                    <p className="text-[10px] text-rose-500 mt-1 font-semibold">{fastGenderError}</p>
+                                  )}
+                                </div>
+
+                                {/* Date of Birth */}
+                                <div className="space-y-1.5">
+                                  <label className="text-[10px] font-mono uppercase text-slate-400 dark:text-gray-500 block font-bold tracking-wider">Date of Birth *</label>
+                                  <input
+                                    type="date"
+                                    required
+                                    value={fastDob}
+                                    onChange={e => {
+                                      setFastDob(e.target.value);
+                                      if (e.target.value) setFastDobError('');
+                                    }}
+                                    className={`w-full px-3 py-3 text-xs bg-slate-50 dark:bg-[#070708] rounded-xl border ${fastDobError ? 'border-rose-500 ring-1 ring-rose-500' : 'border-slate-200 dark:border-white/5'} focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 text-slate-855 dark:text-gray-100 transition-all font-sans select-none`}
+                                  />
+                                  {fastDobError && (
+                                    <p className="text-[10px] text-rose-500 mt-1 font-semibold">{fastDobError}</p>
+                                  )}
+                                </div>
+                              </div>
+                            </motion.div>
+                          )}
+
+                          {/* STEP 3: Educational Qualifications & Address details */}
+                          {currentRegStep === 3 && (
+                            <motion.div
+                              initial={{ opacity: 0, x: -10 }}
+                              animate={{ opacity: 1, x: 0 }}
+                              exit={{ opacity: 0, x: 10 }}
+                              className="space-y-4 animate-fadeIn"
+                            >
+                              {/* Father's name */}
+                              <div className="space-y-1.5">
+                                <label className="text-[10px] font-mono uppercase text-slate-400 dark:text-gray-500 block font-bold tracking-wider">Father's Full Name *</label>
+                                <div className="relative">
+                                  <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
+                                    <User className="h-4 w-4 text-slate-400 dark:text-gray-500" />
+                                  </div>
+                                  <input
+                                    type="text"
+                                    required
+                                    placeholder="e.g. Arthur Wilson"
+                                    value={fastFatherName}
+                                    onChange={e => {
+                                      setFastFatherName(e.target.value);
+                                      if (e.target.value.trim()) setFastFatherNameError('');
+                                    }}
+                                    className={`w-full pl-10 pr-3 py-3 text-xs bg-slate-50 dark:bg-[#070708] rounded-xl border ${fastFatherNameError ? 'border-rose-500 ring-1 ring-rose-500' : 'border-slate-200 dark:border-white/5'} focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 text-slate-855 dark:text-gray-100 placeholder-slate-400 dark:placeholder-gray-600 transition-all font-sans`}
+                                  />
+                                </div>
+                                {fastFatherNameError && (
+                                  <p className="text-[10px] text-rose-500 mt-1 font-semibold">{fastFatherNameError}</p>
+                                )}
+                              </div>
+
+                              {/* Prior Academic background status */}
+                              <div className="space-y-1.5">
+                                <label className="text-[10px] font-mono uppercase text-slate-400 dark:text-gray-500 block font-bold tracking-wider">Last Completed Qualification *</label>
+                                <div className="grid grid-cols-2 gap-2">
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      setLastQualificationCategory('school');
+                                      setFastLastQualificationError('');
+                                    }}
+                                    className={`py-2 px-3 text-xs rounded-xl font-bold border transition-all flex items-center justify-center gap-2 cursor-pointer ${
+                                      lastQualificationCategory === 'school'
+                                        ? 'bg-amber-500/10 border-amber-500/40 text-amber-500'
+                                        : 'bg-slate-50 dark:bg-[#070708] border-slate-200 dark:border-white/5 text-slate-600 dark:text-gray-400 hover:bg-slate-100/50 dark:hover:bg-white/5'
+                                    }`}
+                                  >
+                                    <GraduationCap className="h-4 w-4" />
+                                    Schooling
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      setLastQualificationCategory('college');
+                                      setFastLastQualificationError('');
+                                    }}
+                                    className={`py-2 px-3 text-xs rounded-xl font-bold border transition-all flex items-center justify-center gap-2 cursor-pointer ${
+                                      lastQualificationCategory === 'college'
+                                        ? 'bg-amber-500/10 border-amber-500/40 text-amber-500'
+                                        : 'bg-slate-50 dark:bg-[#070708] border-slate-200 dark:border-white/5 text-slate-600 dark:text-gray-400 hover:bg-slate-100/50 dark:hover:bg-white/5'
+                                    }`}
+                                  >
+                                    <GraduationCap className="h-4 w-4" />
+                                    College / University
+                                  </button>
+                                </div>
+
+                                <AnimatePresence mode="wait">
+                                  {lastQualificationCategory === 'school' && (
+                                    <motion.div
+                                      key="school-options"
+                                      initial={{ opacity: 0, height: 0 }}
+                                      animate={{ opacity: 1, height: 'auto' }}
+                                      exit={{ opacity: 0, height: 0 }}
+                                      transition={{ duration: 0.15 }}
+                                      className="space-y-1 mt-1.5 overflow-hidden"
+                                    >
+                                      <label className="text-[9px] font-mono uppercase text-slate-400 dark:text-gray-500 block font-bold">Standard Class Level *</label>
+                                      <select
+                                        required
+                                        value={schoolClassInput}
+                                        onChange={e => {
+                                          setSchoolClassInput(e.target.value);
+                                          setFastLastQualificationError('');
+                                        }}
+                                        className="w-full px-3 py-2.5 text-xs bg-white dark:bg-[#121214] rounded-lg border border-slate-200 dark:border-white/5 focus:outline-none focus:ring-1 focus:ring-amber-500 text-slate-800 dark:text-gray-100 font-sans"
+                                      >
+                                        <option value="">-- Select Class --</option>
+                                        <option value="Class 10 (Secondary)">Class 10 (Secondary)</option>
+                                        <option value="Class 12 / Higher Secondary (10+2)">Class 12 / Higher Secondary (10+2)</option>
+                                        <option value="Class 11">Class 11</option>
+                                        <option value="Class 9">Class 9</option>
+                                        <option value="Other Schooling">Other Schooling</option>
+                                      </select>
+                                    </motion.div>
+                                  )}
+
+                                  {lastQualificationCategory === 'college' && (
+                                    <motion.div
+                                      key="college-options"
+                                      initial={{ opacity: 0, height: 0 }}
+                                      animate={{ opacity: 1, height: 'auto' }}
+                                      exit={{ opacity: 0, height: 0 }}
+                                      transition={{ duration: 0.15 }}
+                                      className="space-y-1 mt-1.5 overflow-hidden"
+                                    >
+                                      <label className="text-[9px] font-mono uppercase text-slate-400 dark:text-gray-500 block font-bold">Degree / Specialization Name *</label>
+                                      <input
+                                        type="text"
+                                        required
+                                        placeholder="e.g. BCA, B.Sc, B.Tech, MCA, B.Com"
+                                        value={collegeDegreeInput}
+                                        onChange={e => {
+                                          setCollegeDegreeInput(e.target.value);
+                                          setFastLastQualificationError('');
+                                        }}
+                                        className="w-full px-3 py-2.5 text-xs bg-white dark:bg-[#121214] rounded-lg border border-slate-200 dark:border-white/5 focus:outline-none focus:ring-1 focus:ring-amber-500 text-slate-800 dark:text-gray-100 font-sans"
+                                      />
+                                    </motion.div>
+                                  )}
+                                </AnimatePresence>
+
+                                {fastLastQualificationError && (
+                                  <p className="text-[10px] text-rose-500 mt-1 font-semibold">{fastLastQualificationError}</p>
+                                )}
+                              </div>
+
+                              {/* Address */}
+                              <div className="space-y-1.5">
+                                <label className="text-[10px] font-mono uppercase text-slate-400 dark:text-gray-500 block font-bold tracking-wider">Full Residential Address *</label>
+                                <div className="relative">
+                                  <div className="absolute top-3 left-0 pl-3.5 flex items-start pointer-events-none">
+                                    <MapPin className="h-4 w-4 text-slate-400 dark:text-gray-500" />
+                                  </div>
+                                  <textarea
+                                    required
+                                    placeholder="Enter complete residential address details"
+                                    value={fastAddress}
+                                    onChange={e => {
+                                      setFastAddress(e.target.value);
+                                      if (e.target.value.trim()) setFastAddressError('');
+                                    }}
+                                    rows={3}
+                                    className={`w-full pl-10 pr-3 py-3 text-xs bg-slate-50 dark:bg-[#070708] rounded-xl border ${fastAddressError ? 'border-rose-500 ring-1 ring-rose-500' : 'border-slate-200 dark:border-white/5'} focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 text-slate-855 dark:text-gray-100 placeholder-slate-400 dark:placeholder-gray-600 transition-all font-sans resize-none`}
+                                  />
+                                </div>
+                                {fastAddressError && (
+                                  <p className="text-[10px] text-rose-500 mt-1 font-semibold">{fastAddressError}</p>
+                                )}
+                              </div>
+                            </motion.div>
+                          )}
+
+                          {/* Stepper Wizard Controls */}
+                          <div className="flex items-center justify-between gap-3 pt-4 border-t border-slate-100 dark:border-white/5 mt-6">
+                            {currentRegStep > 1 ? (
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setCurrentRegStep(currentRegStep - 1);
+                                }}
+                                className="px-4 py-2.5 bg-slate-100 hover:bg-slate-200 dark:bg-white/5 dark:hover:bg-white/10 text-slate-700 dark:text-gray-300 rounded-xl text-xs font-bold transition flex items-center gap-1.5 cursor-pointer"
                               >
-                                <label className="text-[9px] font-mono uppercase text-slate-400 dark:text-gray-500 block font-bold">Degree Name *</label>
-                                <input
-                                  type="text"
-                                  required
-                                  placeholder="e.g. BCA, B.Sc, B.Tech, MCA, B.Com"
-                                  value={collegeDegreeInput}
-                                  onChange={e => {
-                                    setCollegeDegreeInput(e.target.value);
-                                    setFastLastQualificationError('');
-                                  }}
-                                  className="w-full px-3 py-2 text-xs bg-white dark:bg-[#121214] rounded-lg border border-slate-200 dark:border-white/5 focus:outline-none focus:ring-1 focus:ring-amber-500 text-slate-800 dark:text-gray-100 font-sans"
-                                />
-                              </motion.div>
+                                <ChevronLeft className="w-4 h-4" />
+                                Previous
+                              </button>
+                            ) : (
+                              <div />
                             )}
-                          </AnimatePresence>
 
-                          {fastLastQualificationError && (
-                            <p className="text-[10px] text-rose-500 mt-1 font-semibold">{fastLastQualificationError}</p>
-                          )}
-                        </div>
-
-                        <div className="space-y-1.5">
-                          <label className="text-[10px] font-mono uppercase text-slate-400 dark:text-gray-500 block font-bold tracking-wider">Desired Professional Course *</label>
-                          <select
-                            required
-                            value={fastCourse}
-                            onChange={e => {
-                              setFastCourse(e.target.value);
-                              if (e.target.value) setFastCourseError('');
-                            }}
-                            className={`w-full px-3 py-2.5 text-xs bg-slate-50 dark:bg-[#070708] rounded-xl border ${fastCourseError ? 'border-rose-500' : 'border-slate-200 dark:border-white/5'} focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 text-slate-855 dark:text-gray-100 transition-all font-sans`}
-                          >
-                            <option value="">-- Select Course Program --</option>
-                            {courses.map(c => (
-                              <option key={c.id} value={c.name}>{c.name} ({c.code})</option>
-                            ))}
-                          </select>
-                          {fastCourseError && (
-                            <p className="text-[10px] text-rose-500 mt-1 font-semibold">{fastCourseError}</p>
-                          )}
-                        </div>
-
-                        <button
-                          type="submit"
-                          className="w-full py-3 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-amber-955 font-extrabold rounded-xl text-xs shadow-md shadow-amber-500/10 hover:shadow-lg hover:shadow-amber-500/15 transition-all active:scale-98 cursor-pointer mt-3 flex items-center justify-center gap-2"
-                        >
-                          <Sparkles className="w-3.5 h-3.5" />
-                          Submit Admission Application
-                        </button>
-                      </form>
+                            {currentRegStep < 3 ? (
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  if (validateStep(currentRegStep)) {
+                                    setCurrentRegStep(currentRegStep + 1);
+                                  }
+                                }}
+                                className="px-5 py-2.5 bg-amber-500 hover:bg-amber-600 text-amber-950 rounded-xl text-xs font-extrabold transition flex items-center gap-1.5 shadow-sm shadow-amber-500/10 cursor-pointer text-amber-950 font-sans ml-auto"
+                              >
+                                Next Step
+                                <ChevronRight className="w-4 h-4" />
+                              </button>
+                            ) : (
+                              <button
+                                type="submit"
+                                className="px-6 py-2.5 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-amber-950 rounded-xl text-xs font-extrabold transition-all duration-150 active:scale-95 shadow-md shadow-amber-500/10 cursor-pointer flex items-center gap-1.5 text-amber-955 font-sans ml-auto"
+                              >
+                                <Sparkles className="w-3.5 h-3.5" />
+                                Submit Admission Application
+                              </button>
+                            )}
+                          </div>
+                        </form>
+                      </div>
                     )}
+
+                    {/* Back link to login panel for student */}
+                    <div className="pt-5 border-t border-slate-150 dark:border-white/5 text-center mt-4">
+                      <button
+                        type="button"
+                        onClick={() => { setOnboardingTab('authLogin'); setLoginError(''); }}
+                        className="text-xs text-slate-500 hover:text-amber-500 transition-colors cursor-pointer font-medium"
+                      >
+                        Already applied? <span className="text-amber-500 hover:underline font-bold">Go to login portal instead &rarr;</span>
+                      </button>
+                    </div>
+
                   </div>
                 </div>
               )}
@@ -1882,6 +2114,18 @@ function AppContent() {
                         Sign In with Credentials &rarr;
                       </button>
                     </form>
+
+                    {/* Redirect log-in panel to core admissions form */}
+                    <div className="pt-5 border-t border-slate-150 dark:border-white/5 text-center mt-5">
+                      <button
+                        type="button"
+                        onClick={() => { setOnboardingTab('fastReg'); setLoginError(''); }}
+                        className="text-xs text-slate-500 hover:text-amber-500 transition-colors cursor-pointer font-medium"
+                      >
+                        Need admission? <span className="text-amber-500 hover:underline font-bold">Apply for Learnora admission &rarr;</span>
+                      </button>
+                    </div>
+
                   </div>
                 </div>
               )}
@@ -1898,7 +2142,7 @@ function AppContent() {
                       </div>
                       <h3 className="text-xl font-serif italic text-amber-500 font-bold tracking-tight">Admin Terminal Sign In</h3>
                       <p className="text-xs text-slate-500 dark:text-gray-400 mt-1 leading-relaxed">
-                        Access PrismCoaching's administrative panel, review student profiles, dispatch registration emails, and perform full ledger cleanups.
+                        Access Learnora's administrative panel, review student profiles, dispatch registration emails, and perform full ledger cleanups.
                       </p>
                     </div>
 
@@ -1977,6 +2221,18 @@ function AppContent() {
                         Acknowledge & Sign In to Console &rarr;
                       </button>
                     </form>
+
+                    {/* Redirect log-in admin panel to core admissions form */}
+                    <div className="pt-5 border-t border-slate-150 dark:border-white/5 text-center mt-5">
+                      <button
+                        type="button"
+                        onClick={() => { setOnboardingTab('fastReg'); setLoginError(''); }}
+                        className="text-xs text-slate-500 hover:text-amber-500 transition-colors cursor-pointer font-medium"
+                      >
+                        Register a new student? <span className="text-amber-500 hover:underline font-bold">Open Admissions form &rarr;</span>
+                      </button>
+                    </div>
+
                   </div>
                 </div>
               )}
@@ -1984,6 +2240,15 @@ function AppContent() {
 
           </div>
         </div>
+        ) : (
+          <HomePage
+            isDark={isDark}
+            onEnterPortal={(tab) => {
+              setShowPortal(true);
+              setOnboardingTab(tab);
+            }}
+          />
+        )
       ) : (
         /* Core UI Application Shell */
         <div className="min-h-screen flex flex-col md:flex-row bg-[#0A0A0B]">
@@ -2003,48 +2268,20 @@ function AppContent() {
           >
             <div className="space-y-6">
               {/* Header Branding */}
-              <div className="flex items-center justify-between select-none">
-                <div className="flex items-center gap-2">
-                  <span className="p-1.5 px-3 rounded-xl bg-amber-500 text-amber-950 text-sm font-black font-serif italic">P</span>
-                  {!isActuallyCollapsed && (
+              <div className={`flex items-center justify-center select-none`}>
+                <div className={`flex items-center gap-2`}>
+                  {!isActuallyCollapsed ? (
                     <div className="leading-none animate-fadeIn">
-                      <p className="font-serif italic text-amber-500 font-bold tracking-tight text-lg">PrismCoaching</p>
-                      <p className="text-[9px] text-gray-500 uppercase tracking-widest mt-0.5 font-sans">Active Scheduler</p>
+                      <div className="dark:invert origin-left scale-[0.65] -mb-1 relative -left-1">
+                        <Logo size="sm" withStrapline={false} />
+                      </div>
+                      <p className="text-[9px] text-gray-500 uppercase tracking-widest mt-0.5 font-sans ml-1 text-slate-400 dark:text-gray-500">Active Scheduler</p>
+                    </div>
+                  ) : (
+                    <div className="dark:invert scale-[0.45] origin-center -ml-3 -mb-1">
+                      <Logo size="sm" withStrapline={false} />
                     </div>
                   )}
-                </div>
-
-                <div className={`flex ${isActuallyCollapsed ? 'flex-col gap-2 mt-2 items-center' : 'items-center gap-1.5'}`}>
-                  <button
-                    type="button"
-                    onClick={toggleTheme}
-                    className="p-1 px-2 rounded-lg bg-slate-50 hover:bg-slate-100 dark:bg-[#161618] dark:hover:bg-white/5 transition text-slate-500 dark:text-gray-400 border border-transparent dark:border-white/5 cursor-pointer"
-                    title="Toggle Light/Dark Theme"
-                  >
-                    {isDark ? <Sun className="w-3.5 h-3.5 text-amber-500" /> : <Moon className="w-3.5 h-3.5" />}
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => {
-                      const nextCollapsed = !isSidebarCollapsed;
-                      setIsSidebarCollapsed(nextCollapsed);
-                      if (nextCollapsed) {
-                        setIsSidebarHovered(false);
-                        setIgnoreHover(true);
-                      } else {
-                        setIgnoreHover(false);
-                      }
-                    }}
-                    className="p-1 px-2 rounded-lg bg-slate-50 hover:bg-slate-100 dark:bg-[#161618] dark:hover:bg-white/5 transition text-slate-500 dark:text-gray-400 border border-transparent dark:border-white/5 cursor-pointer"
-                    title={isSidebarCollapsed ? "Expand Sidebar Menu" : "Collapse Sidebar Menu"}
-                  >
-                    {isSidebarCollapsed ? (
-                      <ChevronRight className="w-3.5 h-3.5 text-amber-500 animate-pulse" />
-                    ) : (
-                      <ChevronRight className="w-3.5 h-3.5 rotate-180 transition" />
-                    )}
-                  </button>
                 </div>
               </div>
 
@@ -2672,7 +2909,7 @@ function AppContent() {
                   
                   if (matchedUser) {
                     const subject = `[SECURITY DISPATCH] Recovered Platform Credentials`;
-                    const body = `Dear ${matchedUser.name || matchedUser.username},\n\nWe received a dynamic password lookup request for your platform account. Your security credentials are listed below:\n\n-----------------------------\nUSERNAME: ${matchedUser.username || 'n/a'}\nPASSWORD: ${matchedUser.password || 'n/a'}\n-----------------------------\n\nPlease make sure to memorize these credentials or change your password under Profile Settings once logged in.\n\nBest regards,\nPrismCoaching Sandbox Security Dispatch Team`;
+                    const body = `Dear ${matchedUser.name || matchedUser.username},\n\nWe received a dynamic password lookup request for your platform account. Your security credentials are listed below:\n\n-----------------------------\nUSERNAME: ${matchedUser.username || 'n/a'}\nPASSWORD: ${matchedUser.password || 'n/a'}\n-----------------------------\n\nPlease make sure to memorize these credentials or change your password under Profile Settings once logged in.\n\nBest regards,\nLearnora Sandbox Security Dispatch Team`;
                     
                     handleSendEmail(matchedUser.email, subject, body, 'anik.baidya@hotmail.com');
                     

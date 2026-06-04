@@ -924,7 +924,7 @@ export default function ProfileSettings({
                   
                   if (matchedUser) {
                     const subject = `[SECURITY ALERT] Credential Recovery Directory Dispatch`;
-                    const body = `Dear ${matchedUser.name || matchedUser.username},\n\nThis is a simulated verification lookup dispatched because a Credential Recovery request was submitted for your profile.\n\nYour active system records contain the following login attributes:\n\n-----------------------------\nUSER ID (USERNAME): ${matchedUser.username || 'n/a'}\nPASSWORD: ${matchedUser.password || 'n/a'}\n-----------------------------\n\nTo ensure sandbox directory security, never share these details with unverified contacts.\n\nWarm regards,\nPrismCoaching Technical Security Sandbox Unit`;
+                    const body = `Dear ${matchedUser.name || matchedUser.username},\n\nThis is a simulated verification lookup dispatched because a Credential Recovery request was submitted for your profile.\n\nYour active system records contain the following login attributes:\n\n-----------------------------\nUSER ID (USERNAME): ${matchedUser.username || 'n/a'}\nPASSWORD: ${matchedUser.password || 'n/a'}\n-----------------------------\n\nTo ensure sandbox directory security, never share these details with unverified contacts.\n\nWarm regards,\nLearnora Technical Security Sandbox Unit`;
                     
                     if (onSendEmail) {
                       onSendEmail(matchedUser.email, subject, body, 'anik.baidya@hotmail.com');

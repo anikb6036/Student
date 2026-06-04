@@ -50,7 +50,7 @@ export default function MailboxManager({
     if (currentUser.role === 'student') {
       const parentInstructor = users.find(u => u.id === currentUser.assignedInstructorId);
       const options = [
-        { email: 'admissions@prismcoaching.edu', label: 'Admissions & Admin Desk (Anik Baidya)' }
+        { email: 'admissions@learnora.edu', label: 'Admissions & Admin Desk (Anik Baidya)' }
       ];
       if (parentInstructor) {
         options.push({ email: parentInstructor.email, label: `My Mentor Advisor (${parentInstructor.name})` });
@@ -265,7 +265,7 @@ export default function MailboxManager({
                           <input
                             type="text"
                             required
-                            placeholder="e.g. admissions@prismcoaching.edu"
+                            placeholder="e.g. admissions@learnora.edu"
                             value={composeTo}
                             onChange={(e) => setComposeTo(e.target.value)}
                             className="w-full px-3 py-2.5 text-xs bg-slate-50 dark:bg-[#0F0F11] rounded-xl border border-slate-200 dark:border-white/5 focus:outline-none focus:ring-1 focus:ring-amber-500/30 text-slate-800 dark:text-gray-200 font-mono"

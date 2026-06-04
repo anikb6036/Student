@@ -5,6 +5,14 @@
   --font-sans: "Plus Jakarta Sans", "Inter", ui-sans-serif, system-ui, sans-serif;
   --font-serif: "Playfair Display", Georgia, serif;
   --font-mono: "JetBrains Mono", monospace;
+
+  /* Custom overrides to make all border-radii tighter globally */
+  --radius-sm: 2px;
+  --radius-md: 4px;
+  --radius-lg: 6.5px;
+  --radius-xl: 8.5px;
+  --radius-2xl: 10px;
+  --radius-3xl: 12px;
 }
 
 /* Custom scrollbars for a cleaner dark design */

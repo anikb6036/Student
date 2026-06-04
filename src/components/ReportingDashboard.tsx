@@ -368,7 +368,7 @@ export default function ReportingDashboard({
                         <XAxis dataKey="subject" fontSize={10} stroke="#94a3b8" />
                         <YAxis domain={[0, 100]} fontSize={10} stroke="#94a3b8" />
                         <Tooltip
-                          contentStyle={{ background: '#0F0F11', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '12px', color: '#f8fafc', fontSize: '11px' }}
+                          contentStyle={{ background: '#0F0F11', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '8px', color: '#f8fafc', fontSize: '11px' }}
                           cursor={{ fill: 'rgba(255, 255, 255, 0.03)' }}
                         />
                         <Legend wrapperStyle={{ fontSize: '10px', paddingTop: '10px' }} />
@@ -400,7 +400,7 @@ export default function ReportingDashboard({
                         <XAxis dataKey="date" fontSize={10} stroke="#94a3b8" />
                         <YAxis domain={[0, 100]} fontSize={10} stroke="#94a3b8" />
                         <Tooltip
-                          contentStyle={{ background: '#0F0F11', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '12px', color: '#f8fafc', fontSize: '11px' }}
+                          contentStyle={{ background: '#0F0F11', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '8px', color: '#f8fafc', fontSize: '11px' }}
                         />
                         <Legend wrapperStyle={{ fontSize: '10px', paddingTop: '10px' }} />
                         <Line type="monotone" dataKey={studentNameA} stroke="#f59e0b" strokeWidth={2.5} activeDot={{ r: 6 }} connectNulls />
@@ -437,7 +437,7 @@ export default function ReportingDashboard({
                 <XAxis dataKey="name" fontSize={11} stroke="#94a3b8" />
                 <YAxis domain={[0, 100]} fontSize={11} stroke="#94a3b8" />
                 <Tooltip
-                  contentStyle={{ background: '#0F0F11', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '12px', color: '#f8fafc', fontSize: '11px' }}
+                  contentStyle={{ background: '#0F0F11', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '8px', color: '#f8fafc', fontSize: '11px' }}
                   cursor={{ fill: 'rgba(255, 255, 255, 0.03)' }}
                 />
                 <Bar dataKey="Average Score" fill="#f59e0b" radius={[8, 8, 0, 0]} barSize={40} />
@@ -465,7 +465,7 @@ export default function ReportingDashboard({
                 <XAxis dataKey="name" fontSize={11} stroke="#94a3b8" />
                 <YAxis fontSize={11} stroke="#94a3b8" allowDecimals={false} />
                 <Tooltip
-                  contentStyle={{ background: '#0F0F11', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '12px', color: '#f8fafc', fontSize: '11px' }}
+                  contentStyle={{ background: '#0F0F11', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '8px', color: '#f8fafc', fontSize: '11px' }}
                   cursor={{ fill: 'rgba(255, 255, 255, 0.03)' }}
                 />
                 <Bar dataKey="Enrolled Count" fill="#9ca3af" radius={[8, 8, 0, 0]} barSize={40} />
@@ -495,7 +495,7 @@ export default function ReportingDashboard({
                 <XAxis dataKey="range" fontSize={11} stroke="#94a3b8" />
                 <YAxis fontSize={11} stroke="#94a3b8" allowDecimals={false} />
                 <Tooltip
-                  contentStyle={{ background: '#0F0F11', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '12px', color: '#f8fafc', fontSize: '11px' }}
+                  contentStyle={{ background: '#0F0F11', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '8px', color: '#f8fafc', fontSize: '11px' }}
                   cursor={{ fill: 'rgba(255, 255, 255, 0.03)' }}
                 />
                 <Bar dataKey="Record Count" fill="#f59e0b" radius={[8, 8, 0, 0]} barSize={50} />
@@ -529,7 +529,7 @@ export default function ReportingDashboard({
                 <XAxis dataKey="date" fontSize={11} stroke="#94a3b8" />
                 <YAxis domain={[0, 100]} fontSize={11} stroke="#94a3b8" />
                 <Tooltip
-                  contentStyle={{ background: '#0F0F11', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '12px', color: '#f8fafc', fontSize: '11px' }}
+                  contentStyle={{ background: '#0F0F11', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '8px', color: '#f8fafc', fontSize: '11px' }}
                 />
                 <Area type="monotone" dataKey="score" stroke="#f59e0b" strokeWidth={2} fillOpacity={1} fill="url(#scoreGrad)" />
               </AreaChart>

@@ -15,14 +15,13 @@ const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const [isDark, setIsDark] = useState<boolean>(() => {
-    // Default to true for the Sophisticated Dark theme experience
-    const saved = getSavedState<boolean | null>('theme-dark', null);
-    if (saved !== null) return saved;
+    if (typeof window !== 'undefined' && window.matchMedia) {
+      return window.matchMedia('(prefers-color-scheme: dark)').matches;
+    }
     return true;
   });
 
   useEffect(() => {
-    saveState('theme-dark', isDark);
     const root = window.document.documentElement;
     if (isDark) {
       root.classList.add('dark');
@@ -30,6 +29,16 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
       root.classList.remove('dark');
     }
   }, [isDark]);
+
+  useEffect(() => {
+    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+    const handleChange = (e: MediaQueryListEvent) => {
+      setIsDark(e.matches);
+    };
+    
+    mediaQuery.addEventListener('change', handleChange);
+    return () => mediaQuery.removeEventListener('change', handleChange);
+  }, []);
 
   const toggleTheme = () => setIsDark(prev => !prev);
 

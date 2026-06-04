@@ -286,7 +286,7 @@ export default function EnrollmentManager({
           <div className="bg-white dark:bg-[#161618] rounded-2xl border border-slate-150/80 dark:border-white/5 p-5 shadow-sm">
             <p className="text-xs font-mono uppercase tracking-widest text-slate-500 dark:text-gray-400">No Primary Mentor Assigned</p>
             <p className="text-3xl font-serif text-slate-800 dark:text-white mt-1.5">
-              {students.filter(s => !s.assignedInstructorId).length}
+              {students.filter(s => !s.assignedInstructorId || !instructors.some(i => i.id === s.assignedInstructorId)).length}
             </p>
             <p className="mt-2 text-xs text-slate-400 dark:text-gray-500">Requires review by administrator</p>
           </div>
@@ -611,7 +611,7 @@ export default function EnrollmentManager({
                       <input
                         type="email"
                         required
-                        placeholder="sarah@prismcoaching.com"
+                        placeholder="sarah@learnora.com"
                         value={newEmail}
                         onChange={e => setNewEmail(e.target.value)}
                         className="w-full px-3 py-2 text-xs border border-slate-200 dark:border-slate-800 rounded-xl bg-white dark:bg-slate-900 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500/30"
@@ -715,7 +715,7 @@ export default function EnrollmentManager({
                       <input
                         type="email"
                         required
-                        placeholder="john@prismcoaching.com"
+                        placeholder="john@learnora.com"
                         value={newEmail}
                         onChange={e => setNewEmail(e.target.value)}
                         className="w-full px-3 py-2 text-xs border border-slate-200 dark:border-slate-800 rounded-xl bg-white dark:bg-slate-900 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500/30"

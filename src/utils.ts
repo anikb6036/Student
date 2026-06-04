@@ -21,7 +21,7 @@ export const INITIAL_USERS: UserAccount[] = [
   {
     id: 'instructor-1',
     name: 'Prof. Sarah Connor',
-    email: 'sarah@prismcoaching.com',
+    email: 'sarah@learnora.com',
     role: 'instructor',
     avatarUrl: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=150',
     phone: '+1 (555) 0121',
@@ -33,7 +33,7 @@ export const INITIAL_USERS: UserAccount[] = [
   {
     id: 'subadmin-1',
     name: 'Marcus Wright',
-    email: 'marcus@prismcoaching.com',
+    email: 'marcus@learnora.com',
     role: 'sub-admin',
     avatarUrl: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150',
     phone: '+1 (555) 0122',
@@ -44,7 +44,7 @@ export const INITIAL_USERS: UserAccount[] = [
   {
     id: 'student-1',
     name: 'John Connor',
-    email: 'john@prismcoaching.com',
+    email: 'john@learnora.com',
     role: 'student',
     avatarUrl: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150',
     phone: '+1 (555) 0123',
@@ -58,7 +58,7 @@ export const INITIAL_USERS: UserAccount[] = [
   {
     id: 'student-2',
     name: 'Alex Mercer',
-    email: 'alex@prismcoaching.com',
+    email: 'alex@learnora.com',
     role: 'student',
     avatarUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150',
     phone: '+1 (555) 0124',
