@@ -9,29 +9,32 @@ interface HomePageProps {
 
 export default function HomePage({ isDark, onEnterPortal }: HomePageProps) {
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-[#0A0A0B] text-slate-800 dark:text-gray-200 transition-colors duration-300 flex flex-col justify-between relative overflow-hidden font-sans">
+    <div className="min-h-screen bg-gradient-to-tr from-[#FFF3F5] via-[#FFF8F9] to-[#FFFBFB] dark:from-[#110D12] dark:via-[#160E14] dark:to-[#0A0A0B] text-slate-800 dark:text-gray-200 transition-colors duration-300 flex flex-col justify-between relative overflow-hidden font-sans">
       
       {/* Subtle background glows */}
       <div className="absolute top-[-10%] left-[-10%] h-[500px] w-[500px] bg-amber-500/5 blur-[120px] rounded-full pointer-events-none" />
       <div className="absolute bottom-[-10%] right-[-10%] h-[500px] w-[500px] bg-amber-500/5 blur-[120px] rounded-full pointer-events-none" />
 
       {/* Nav Header */}
-      <header className="w-full border-b border-slate-200/50 dark:border-white/5 bg-white/70 dark:bg-[#0A0A0B]/70 backdrop-blur-md sticky top-0 z-50 transition-colors">
+      <header className="w-full border-b border-slate-200/20 bg-black sticky top-0 z-50 transition-colors shadow-md text-white">
         <div className="w-full max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
           
           {/* Logo / Brand */}
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-3">
+            <div className="bg-white px-3.5 py-1.5 rounded-xl shadow-sm flex items-center justify-center scale-90 sm:scale-100 origin-left">
+              <Logo size="sm" withStrapline={false} />
+            </div>
             <div>
-              <Logo size="sm" withStrapline={false} className="scale-90 origin-left dark:invert" />
-              <p className="text-[9px] text-gray-500 uppercase tracking-widest mt-0.5 font-sans">Coaching Center Console</p>
+              <p className="text-[10px] text-white uppercase tracking-widest font-mono font-bold leading-none">Learnora Portal</p>
+              <p className="text-[9px] text-slate-200 uppercase tracking-widest mt-1 font-sans">Coaching Center Console</p>
             </div>
           </div>
 
           {/* Center static items for look & feel */}
-          <nav className="hidden md:flex items-center gap-8 text-xs font-mono font-bold uppercase tracking-wider text-slate-500 dark:text-gray-400">
-            <a href="#features" className="hover:text-amber-500 transition-colors">Features</a>
-            <a href="#workflow" className="hover:text-amber-500 transition-colors">Interactive Loop</a>
-            <a href="#sandbox" className="hover:text-amber-500 transition-colors">Sandbox Spec</a>
+          <nav className="hidden md:flex items-center gap-8 text-xs font-mono font-bold uppercase tracking-wider text-slate-200">
+            <a href="#features" className="hover:text-[#FF3B5C] transition-colors">Features</a>
+            <a href="#workflow" className="hover:text-[#FF3B5C] transition-colors">Interactive Loop</a>
+            <a href="#sandbox" className="hover:text-[#FF3B5C] transition-colors">Sandbox Spec</a>
           </nav>
 
           {/* Action area */}
@@ -39,7 +42,7 @@ export default function HomePage({ isDark, onEnterPortal }: HomePageProps) {
             <button
               type="button"
               onClick={() => onEnterPortal('authLogin')}
-              className="px-4 py-2.5 text-xs font-bold uppercase tracking-wider bg-amber-500 hover:bg-amber-600 text-amber-95 transition-all rounded-xl shadow-md shadow-amber-500/10 cursor-pointer active:scale-95 text-amber-950 font-extrabold"
+              className="px-4 py-2.5 text-xs font-bold uppercase tracking-wider bg-black hover:bg-neutral-900 text-[#FF2C2C] hover:text-emerald-400 transition-all rounded-xl shadow-md cursor-pointer active:scale-95 font-extrabold"
             >
               Login
             </button>
@@ -52,12 +55,12 @@ export default function HomePage({ isDark, onEnterPortal }: HomePageProps) {
       <main className="flex-1 w-full max-w-7xl mx-auto px-6 py-12 md:py-24 grid grid-cols-1 lg:grid-cols-12 gap-12 items-center relative z-10">
         <div className="lg:col-span-7 space-y-6 text-left">
           
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/20 text-[10px] font-mono font-bold tracking-widest text-amber-500 uppercase">
-            <Sparkles className="w-3 h-3 text-amber-500 animate-pulse" />
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#F0ECE1] border border-slate-200/40 text-[10px] font-mono font-bold tracking-widest text-black uppercase">
+            <Sparkles className="w-3 h-3 text-black animate-pulse" />
             <span>Sandbox Core Ready</span>
           </div>
 
-          <h2 className="text-4xl md:text-6xl font-serif italic text-slate-900 dark:text-white leading-tight font-extrabold tracking-tight">
+          <h2 className="text-4xl md:text-6xl font-serif italic text-black dark:text-black leading-tight font-extrabold tracking-tight">
             Learn with Rigor,<br />
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-500 to-amber-600">Coordinate with Grace.</span>
           </h2>
@@ -82,7 +85,7 @@ export default function HomePage({ isDark, onEnterPortal }: HomePageProps) {
               onClick={() => onEnterPortal('authLogin')}
               className="px-6 py-3.5 bg-white hover:bg-slate-50 dark:bg-[#161618] dark:hover:bg-white/10 text-slate-800 dark:text-gray-200 rounded-xl text-xs font-bold uppercase tracking-wider border border-slate-200 dark:border-white/5 active:scale-98 transition-all flex items-center justify-center gap-2 cursor-pointer shadow-sm"
             >
-              <Lock className="w-4 h-4 text-amber-500" />
+              <Lock className="w-4 h-4 text-red-500" />
               Sign In to Portal
             </button>
 
@@ -91,7 +94,7 @@ export default function HomePage({ isDark, onEnterPortal }: HomePageProps) {
               onClick={() => onEnterPortal('adminLogin')}
               className="px-6 py-3.5 bg-transparent hover:bg-slate-100 dark:hover:bg-white/5 text-slate-500 dark:text-gray-400 rounded-xl text-xs font-bold uppercase tracking-wider active:scale-98 transition-all flex items-center justify-center gap-2 cursor-pointer"
             >
-              <Shield className="w-4 h-4 text-amber-500" />
+              <Shield className="w-4 h-4 text-emerald-500" />
               Admin Entry
             </button>
           </div>
@@ -99,7 +102,7 @@ export default function HomePage({ isDark, onEnterPortal }: HomePageProps) {
           {/* Dynamic stats bar */}
           <div className="pt-8 grid grid-cols-3 gap-6 border-t border-slate-200 dark:border-white/5 max-w-xl font-mono text-[11px]">
             <div>
-              <p className="text-lg font-bold text-slate-900 dark:text-white font-serif">3 + Roles</p>
+              <p className="text-lg font-bold text-slate-900 dark:text-white font-serif">3 <span className="text-red-500 font-sans">+</span> Roles</p>
               <p className="text-slate-450 dark:text-gray-500 mt-1">Student, Advisor, Admin</p>
             </div>
             <div>
@@ -118,40 +121,40 @@ export default function HomePage({ isDark, onEnterPortal }: HomePageProps) {
         <div id="workflow" className="lg:col-span-5 space-y-4">
           <div className="p-6 md:p-8 rounded-3xl bg-white dark:bg-[#0F0F11] border border-slate-150/80 dark:border-white/5 shadow-2xl relative">
             
-            <p className="text-[10px] font-mono uppercase text-amber-500 font-bold tracking-widest mb-4">
-              🔄 Sandbox Simulation Lifecycle Loop
+            <p className="text-[10px] font-mono uppercase text-red-500 font-bold tracking-widest mb-4">
+              Sandbox Simulation Lifecycle Loop
             </p>
 
             <div className="space-y-4">
               <div className="flex gap-4 items-start p-3 hover:bg-slate-50 dark:hover:bg-white/5 rounded-2xl transition">
-                <div className="p-2 bg-amber-500/10 text-amber-500 rounded-xl border border-amber-500/20 font-mono text-xs font-bold leading-none w-7 h-7 flex items-center justify-center shrink-0">1</div>
+                <div className="text-lg text-blue-900 dark:text-blue-400 w-7 h-7 flex items-center justify-center shrink-0 font-bold select-none">•</div>
                 <div>
-                  <h4 className="text-xs font-bold text-slate-900 dark:text-gray-200">Submit Application Form</h4>
-                  <p className="text-[11px] text-slate-500 dark:text-gray-400 mt-0.5 leading-relaxed">Submit registration with smart country dropdowns and file verification bounds.</p>
+                   <h4 className="text-xs font-bold text-slate-900 dark:text-gray-200">Submit Application Form</h4>
+                   <p className="text-[11px] text-slate-500 dark:text-gray-400 mt-0.5 leading-relaxed">Submit registration with smart country dropdowns and file verification bounds.</p>
                 </div>
               </div>
 
               <div className="flex gap-4 items-start p-3 hover:bg-slate-50 dark:hover:bg-white/5 rounded-2xl transition">
-                <div className="p-2 bg-amber-500/10 text-amber-500 rounded-xl border border-amber-500/20 font-mono text-xs font-bold leading-none w-7 h-7 flex items-center justify-center shrink-0">2</div>
+                <div className="text-lg text-blue-900 dark:text-blue-400 w-7 h-7 flex items-center justify-center shrink-0 font-bold select-none">•</div>
                 <div>
-                  <h4 className="text-xs font-bold text-slate-900 dark:text-gray-200">Dynamic Admin Review</h4>
-                  <p className="text-[11px] text-slate-500 dark:text-gray-400 mt-0.5 leading-relaxed">Admin logs the request, checks information validity, and clicks Approve to enroll.</p>
+                   <h4 className="text-xs font-bold text-slate-900 dark:text-gray-200">Dynamic Admin Review</h4>
+                   <p className="text-[11px] text-slate-500 dark:text-gray-400 mt-0.5 leading-relaxed">Admin logs the request, checks information validity, and clicks Approve to enroll.</p>
+                </div>
+              </div>
+
+              <div className="flex gap-4 items-start p-3 hover:bg-slate-55/60 dark:hover:bg-white/5 rounded-2xl transition">
+                <div className="text-lg text-blue-900 dark:text-blue-400 w-7 h-7 flex items-center justify-center shrink-0 font-bold select-none">•</div>
+                <div>
+                   <h4 className="text-xs font-bold text-slate-900 dark:text-gray-200">Credential Simulation Dispatch</h4>
+                   <p className="text-[11px] text-slate-500 dark:text-gray-400 mt-0.5 leading-relaxed">The platform auto-dispatches generated setup keys on the built-in Sandbox Student Inbox.</p>
                 </div>
               </div>
 
               <div className="flex gap-4 items-start p-3 hover:bg-slate-50 dark:hover:bg-white/5 rounded-2xl transition">
-                <div className="p-2 bg-amber-500/10 text-amber-500 rounded-xl border border-amber-500/20 font-mono text-xs font-bold leading-none w-7 h-7 flex items-center justify-center shrink-0">3</div>
+                <div className="text-lg text-blue-900 dark:text-blue-400 w-7 h-7 flex items-center justify-center shrink-0 font-bold select-none">•</div>
                 <div>
-                  <h4 className="text-xs font-bold text-slate-900 dark:text-gray-200">Credential Simulation Dispatch</h4>
-                  <p className="text-[11px] text-slate-500 dark:text-gray-400 mt-0.5 leading-relaxed">The platform auto-dispatches generated setup keys on the built-in Sandbox Student Inbox.</p>
-                </div>
-              </div>
-
-              <div className="flex gap-4 items-start p-3 hover:bg-slate-50 dark:hover:bg-white/5 rounded-2xl transition">
-                <div className="p-2 bg-amber-500/10 text-amber-500 rounded-xl border border-amber-500/20 font-mono text-xs font-bold leading-none w-7 h-7 flex items-center justify-center shrink-0">4</div>
-                <div>
-                  <h4 className="text-xs font-bold text-slate-900 dark:text-gray-200">Academic Evaluations</h4>
-                  <p className="text-[11px] text-slate-500 dark:text-gray-400 mt-0.5 leading-relaxed">Instructors schedule class logs and evaluate grades, displaying performance curves instantly.</p>
+                   <h4 className="text-xs font-bold text-slate-900 dark:text-gray-200">Academic Evaluations</h4>
+                   <p className="text-[11px] text-slate-500 dark:text-gray-400 mt-0.5 leading-relaxed">Instructors schedule class logs and evaluate grades, displaying performance curves instantly.</p>
                 </div>
               </div>
             </div>

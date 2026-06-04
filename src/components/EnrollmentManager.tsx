@@ -594,7 +594,7 @@ export default function EnrollmentManager({
 
                 {addFormType === 'instructor' ? (
                   <>
-                    <div className="space-y-1.5">
+                    <div className="space-y-1.5 md:col-span-1 lg:col-span-2">
                       <label className="text-[11px] font-mono uppercase text-slate-500 dark:text-slate-400 block font-bold">Instructor Full Name</label>
                       <input
                         type="text"
@@ -606,7 +606,7 @@ export default function EnrollmentManager({
                       />
                     </div>
 
-                    <div className="space-y-1.5">
+                    <div className="space-y-1.5 md:col-span-1 lg:col-span-2">
                       <label className="text-[11px] font-mono uppercase text-slate-500 dark:text-slate-400 block font-bold">Work Email Address</label>
                       <input
                         type="email"
@@ -618,7 +618,7 @@ export default function EnrollmentManager({
                       />
                     </div>
 
-                    <div className="space-y-1.5">
+                    <div className="space-y-1.5 md:col-span-1 lg:col-span-2">
                       <label className="text-[11px] font-mono uppercase text-slate-500 dark:text-slate-400 block font-bold">Phone (Optional)</label>
                       <div className="flex gap-1.5">
                         <select
@@ -628,7 +628,7 @@ export default function EnrollmentManager({
                             setNewPhone('');
                             setNewPhoneError('');
                           }}
-                          className="px-2 py-2 text-xs border border-slate-200 dark:border-slate-800 rounded-xl bg-white dark:bg-slate-900 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500/30 font-sans"
+                          className="px-2 py-2 text-xs border border-slate-200 dark:border-slate-800 rounded-xl bg-white dark:bg-slate-900 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500/30 font-sans animate-fade-in"
                         >
                           {COUNTRY_PHONE_CONFIGS.map(c => (
                             <option key={`${c.name}-${c.code}`} value={c.code}>{c.flag} {c.code}</option>
@@ -657,7 +657,7 @@ export default function EnrollmentManager({
                       )}
                     </div>
 
-                    <div className="space-y-1.5">
+                    <div className="space-y-1.5 md:col-span-1 lg:col-span-2">
                       <label className="text-[11px] font-mono uppercase text-slate-500 dark:text-slate-400 block font-bold">Specialization Topic</label>
                       <input
                         type="text"
@@ -668,7 +668,7 @@ export default function EnrollmentManager({
                       />
                     </div>
 
-                    <div className="space-y-1.5">
+                    <div className="space-y-1.5 md:col-span-1 lg:col-span-2">
                       <label className="text-[11px] font-mono uppercase text-amber-500 dark:text-amber-500 block font-bold">
                         Instructor Username
                       </label>
@@ -682,7 +682,7 @@ export default function EnrollmentManager({
                       />
                     </div>
 
-                    <div className="space-y-1.5">
+                    <div className="space-y-1.5 md:col-span-1 lg:col-span-2">
                       <label className="text-[11px] font-mono uppercase text-amber-500 dark:text-amber-500 block font-bold">
                         Instructor Password
                       </label>
@@ -698,7 +698,7 @@ export default function EnrollmentManager({
                   </>
                 ) : addFormType === 'sub-admin' ? (
                   <>
-                    <div className="space-y-1.5">
+                    <div className="space-y-1.5 md:col-span-1 lg:col-span-2">
                       <label className="text-[11px] font-mono uppercase text-slate-500 dark:text-slate-400 block font-bold">Sub-Admin Full Name</label>
                       <input
                         type="text"
@@ -710,7 +710,7 @@ export default function EnrollmentManager({
                       />
                     </div>
 
-                    <div className="space-y-1.5">
+                    <div className="space-y-1.5 md:col-span-1 lg:col-span-2">
                       <label className="text-[11px] font-mono uppercase text-slate-500 dark:text-slate-400 block font-bold">Work Email Address</label>
                       <input
                         type="email"
@@ -722,7 +722,7 @@ export default function EnrollmentManager({
                       />
                     </div>
 
-                    <div className="space-y-1.5">
+                    <div className="space-y-1.5 md:col-span-1 lg:col-span-2">
                       <label className="text-[11px] font-mono uppercase text-slate-500 dark:text-slate-400 block font-bold">Phone (Optional)</label>
                       <div className="flex gap-1.5">
                         <select
@@ -761,14 +761,14 @@ export default function EnrollmentManager({
                       )}
                     </div>
 
-                    <div className="space-y-1.5">
+                    <div className="space-y-1.5 md:col-span-1 lg:col-span-2 col-span-1">
                       <span className="text-[10px] font-mono text-slate-400 uppercase tracking-widest block font-bold">Operational Scope</span>
                       <div className="text-[10.5px] p-2 bg-amber-500/5 border border-amber-500/10 text-amber-600 dark:text-amber-500 rounded-xl font-medium leading-relaxed">
                         Authorized to manage class schedules and evaluate student progress folders. Cannot build other sub-admin or faculty credentials.
                       </div>
                     </div>
 
-                    <div className="space-y-1.5">
+                    <div className="space-y-1.5 md:col-span-1 lg:col-span-2">
                       <label className="text-[11px] font-mono uppercase text-amber-500 dark:text-amber-500 block font-bold">
                         Sub-Admin Username
                       </label>
@@ -782,7 +782,7 @@ export default function EnrollmentManager({
                       />
                     </div>
 
-                    <div className="space-y-1.5">
+                    <div className="space-y-1.5 md:col-span-1 lg:col-span-2">
                       <label className="text-[11px] font-mono uppercase text-amber-500 dark:text-amber-500 block font-bold">
                         Sub-Admin Password
                       </label>
@@ -798,7 +798,7 @@ export default function EnrollmentManager({
                   </>
                 ) : (
                   <>
-                    <div className="space-y-1.5">
+                    <div className="space-y-1.5 md:col-span-1 lg:col-span-2">
                       <label className="text-[11px] font-mono uppercase text-slate-500 dark:text-slate-400 block">Full Name</label>
                       <input
                         type="text"
@@ -810,7 +810,7 @@ export default function EnrollmentManager({
                       />
                     </div>
 
-                    <div className="space-y-1.5">
+                    <div className="space-y-1.5 md:col-span-1 lg:col-span-2">
                       <label className="text-[11px] font-mono uppercase text-slate-500 dark:text-slate-400 block">Email Address</label>
                       <input
                         type="email"
@@ -822,7 +822,7 @@ export default function EnrollmentManager({
                       />
                     </div>
 
-                    <div className="space-y-1.5">
+                    <div className="space-y-1.5 md:col-span-1 lg:col-span-2">
                       <label className="text-[11px] font-mono uppercase text-slate-500 dark:text-slate-400 block">Phone Number (Optional)</label>
                       <div className="flex gap-1.5">
                         <select
@@ -861,7 +861,7 @@ export default function EnrollmentManager({
                       )}
                     </div>
 
-                    <div className="space-y-1.5">
+                    <div className="space-y-1.5 md:col-span-1 lg:col-span-2">
                       <label className="text-[11px] font-mono uppercase text-slate-500 dark:text-slate-400 block">Assign Advisor Mentor</label>
                       <select
                         value={newInstructorId}
@@ -1346,7 +1346,7 @@ export default function EnrollmentManager({
                 <tr className="bg-slate-50/50 dark:bg-slate-950/20 border-b border-slate-100 dark:border-slate-800">
                   <th className="p-4 text-xs font-bold text-slate-500 dark:text-slate-400 tracking-wider">Instructor Profile</th>
                   <th className="p-4 text-xs font-bold text-slate-500 dark:text-slate-400 tracking-wider">Contact Info</th>
-                  <th className="p-4 text-xs font-bold text-slate-500 dark:text-slate-400 tracking-wider font-sans">Specialization</th>
+                  <th className="p-4 text-xs font-bold text-slate-500 dark:text-slate-400 tracking-wider font-sans min-w-[140px] max-w-[200px]">Specialization</th>
                   <th className="p-4 text-xs font-bold text-slate-500 dark:text-slate-400 tracking-wider font-mono">Credentials Info</th>
                   {['admin', 'sub-admin'].includes(currentUser.role) && (
                     <th className="p-4 text-xs font-bold text-slate-550 dark:text-slate-400 text-right">Actions</th>
@@ -1380,8 +1380,8 @@ export default function EnrollmentManager({
                         {ins.phone && <p className="text-slate-400 dark:text-gray-500 text-[10.5px] mt-0.5">{ins.phone}</p>}
                         <p className="text-[10px] text-slate-400 font-mono mt-1">Joined: {ins.joinedDate}</p>
                       </td>
-                      <td className="p-4">
-                        <span className="p-1.5 px-2.5 bg-amber-500/10 border border-amber-500/20 text-amber-500 rounded-full text-[10px] font-bold">
+                      <td className="p-4 min-w-[140px] max-w-[200px] break-words">
+                        <span className="inline-block px-2.5 py-1.5 bg-amber-500/10 border border-amber-500/20 text-amber-500 rounded-xl text-[10px] font-bold leading-normal text-left whitespace-normal break-words">
                           {ins.specialization || 'General Mentor / Coach'}
                         </span>
                       </td>

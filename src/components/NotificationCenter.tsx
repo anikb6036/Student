@@ -187,7 +187,7 @@ export default function NotificationCenter({
                       {!item.read && (
                         <button
                           onClick={() => onMarkAsRead(item.id)}
-                          className="text-[10px] text-amber-500 font-semibold hover:underline flex items-center gap-0.5"
+                          className="text-[10px] text-[#FF3B5C] hover:text-[#E11D48] font-semibold hover:underline flex items-center gap-0.5"
                         >
                           <Check className="w-3 h-3" /> Mark read
                         </button>

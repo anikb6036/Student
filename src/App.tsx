@@ -1202,7 +1202,7 @@ function AppContent() {
   const isActuallyCollapsed = isSidebarCollapsed && !(isSidebarHovered && !ignoreHover);
 
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-800 dark:bg-[#0A0A0B] dark:text-gray-200 transition-colors duration-300 font-sans">
+    <div className="min-h-screen bg-gradient-to-tr from-[#FFF3F5] via-[#FFF8F9] to-[#FFFBFB] text-slate-800 dark:from-[#110D12] dark:via-[#160E14] dark:to-[#0A0A0B] dark:text-gray-200 transition-colors duration-300 font-sans">
       
       {/* Real-time Toast Popups */}
       <AnimatePresence>
@@ -1342,7 +1342,7 @@ function AppContent() {
                     <div className="hidden sm:block scale-90 origin-left text-slate-800 dark:invert">
                        <Logo size="sm" withStrapline={false} />
                     </div>
-                    <span className="sm:hidden font-mono uppercase tracking-widest text-[#102b5c] dark:text-gray-300 font-bold text-xs mt-1">Learnora</span>
+                    <span className="sm:hidden font-mono uppercase tracking-widest text-black dark:text-gray-300 font-bold text-xs mt-1">Learnora</span>
                     <h1 className="text-lg font-serif italic text-slate-600 dark:text-gray-400 font-semibold tracking-tight ml-2 border-l border-amber-500/20 pl-3">Admissions</h1>
                   </div>
                   <button
@@ -2202,16 +2202,7 @@ function AppContent() {
                         </div>
                       </div>
 
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setLoginUsername('anik');
-                          setLoginPassword('anik');
-                        }}
-                        className="text-[11px] text-amber-500 hover:text-amber-600 font-bold block transition cursor-pointer hover:underline"
-                      >
-                        ⚡ Autofill Demo Admin Credentials
-                      </button>
+
 
                       <button
                         type="submit"
@@ -2251,7 +2242,7 @@ function AppContent() {
         )
       ) : (
         /* Core UI Application Shell */
-        <div className="min-h-screen flex flex-col md:flex-row bg-[#0A0A0B]">
+        <div className="min-h-screen flex flex-col md:flex-row bg-gradient-to-tr from-[#FFF3F5] via-[#FFF8F9] to-[#FFFBFB] dark:from-[#110D12] dark:via-[#160E14] dark:to-[#0A0A0B]">
           
           {/* Responsive Navigation Rail */}
           <aside 
@@ -2526,26 +2517,28 @@ function AppContent() {
               <div className="space-y-6">
                 
                 {/* Welcomes banner custom header */}
-                <div className="p-6 md:p-8 rounded-3xl bg-white dark:bg-[#161618] border border-slate-150/80 dark:border-white/5 text-slate-900 dark:text-gray-200 flex flex-col md:flex-row items-start md:items-center justify-between gap-4 shadow-md relative overflow-hidden select-none">
+                <div className="p-6 md:p-8 rounded-3xl bg-black border border-white/10 text-white flex flex-col md:flex-row items-start md:items-center justify-between gap-4 shadow-md relative overflow-hidden select-none">
                   {/* Branding background shape ornament */}
-                  <div className="absolute right-0 bottom-0 h-32 w-32 bg-amber-500/10 rounded-full blur-2xl pointer-events-none" />
+                  <div className="absolute right-0 bottom-0 h-32 w-32 bg-white/10 rounded-full blur-2xl pointer-events-none" />
                   
                   <div className="space-y-1">
-                    <p className="text-[10px] font-bold text-amber-500 uppercase tracking-widest font-mono flex items-center gap-1.5">
-                      <span className="inline-block h-2 w-2 rounded-full bg-red-500 animate-pulse"></span>
+                    <p className="text-[10px] font-bold text-slate-200 uppercase tracking-widest font-mono flex items-center gap-1.5">
+                      <span className="inline-block h-2 w-2 rounded-full bg-emerald-500 animate-pulse"></span>
                       COACHING OFFICE SERVER CONNECTED
                     </p>
-                    <h1 className="text-2xl md:text-3xl font-serif italic text-amber-500 font-bold tracking-tight mt-1">
+                    <h1 className="text-2xl md:text-3xl font-serif italic text-white font-bold tracking-tight mt-1">
                       Welcome Back, {currentUser.name}!
                     </h1>
-                    <p className="text-xs text-slate-500 dark:text-gray-400 pr-4 mt-0.5 leading-relaxed">
+                    <p className="text-xs text-slate-200 pr-4 mt-0.5 leading-relaxed">
                       Auditing center coordinates. Time check: {new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' })}. All automated reminders ready in queue.
                     </p>
                   </div>
 
-                  <div className="bg-slate-50 dark:bg-[#0A0A0B] border border-slate-150/80 dark:border-white/5 p-3.5 rounded-2xl text-xs space-y-1 font-mono">
-                    <p className="text-amber-500 font-bold">STATUS Dashboard Live</p>
-                    <p className="text-slate-500 dark:text-gray-500 text-[10px]">RECORDS: {users.length} registered</p>
+                  <div className="bg-white/15 border border-white/10 p-3.5 rounded-2xl text-xs space-y-1 font-mono text-white">
+                    <p className="text-[#FF3B5C] font-bold">
+                      STATUS Dashboard <span className="text-emerald-400 animate-pulse inline-block">Live</span>
+                    </p>
+                    <p className="text-slate-300 text-[10px]">RECORDS: {users.length} registered</p>
                   </div>
                 </div>
 
@@ -2557,7 +2550,7 @@ function AppContent() {
                         <p className="text-xs text-slate-401 dark:text-gray-500 font-mono uppercase tracking-widest font-semibold">Total Students</p>
                         <p className="text-3xl font-serif text-slate-900 dark:text-white mt-1.5">{users.filter(u => u.role === 'student').length}</p>
                       </div>
-                      <span className="text-[10.5px] font-semibold text-amber-500 hover:underline cursor-pointer flex items-center gap-0.5 mt-4" onClick={() => setActiveTab('enrollments')}>
+                      <span className="text-[10.5px] font-semibold text-[#FF3B5C] hover:text-[#E11D48] hover:underline cursor-pointer flex items-center gap-0.5 mt-4" onClick={() => setActiveTab('enrollments')}>
                         View folder registry &rarr;
                       </span>
                     </div>
@@ -2575,7 +2568,7 @@ function AppContent() {
                         <p className="text-xs text-slate-401 dark:text-gray-500 font-mono uppercase tracking-widest font-semibold">Scheduled Classes</p>
                         <p className="text-3xl font-serif text-slate-900 dark:text-white mt-1.5">{schedules.filter(s => s.status === 'scheduled').length}</p>
                       </div>
-                      <span className="text-[10.5px] font-semibold text-amber-500 hover:underline cursor-pointer flex items-center gap-0.5 mt-4" onClick={() => setActiveTab('schedule')}>
+                      <span className="text-[10.5px] font-semibold text-[#FF3B5C] hover:text-[#E11D48] hover:underline cursor-pointer flex items-center gap-0.5 mt-4" onClick={() => setActiveTab('schedule')}>
                         Organize calendar &rarr;
                       </span>
                     </div>
@@ -2587,7 +2580,7 @@ function AppContent() {
                           {(progressRecords.reduce((acc, r) => acc + r.score, 0) / progressRecords.length).toFixed(0)}%
                         </p>
                       </div>
-                      <span className="text-[10.5px] font-semibold text-amber-500 hover:underline cursor-pointer flex items-center gap-0.5 mt-4" onClick={() => setActiveTab('reports')}>
+                      <span className="text-[10.5px] font-semibold text-[#FF3B5C] hover:text-[#E11D48] hover:underline cursor-pointer flex items-center gap-0.5 mt-4" onClick={() => setActiveTab('reports')}>
                         Explore insights &rarr;
                       </span>
                     </div>
@@ -2604,7 +2597,7 @@ function AppContent() {
                             {schedules.filter(s => s.enrolledStudentIds.includes(currentUser.id)).length}
                           </p>
                         </div>
-                        <span className="text-[10.5px] font-semibold text-amber-500 hover:underline cursor-pointer flex items-center gap-0.5 mt-4" onClick={() => setActiveTab('schedule')}>
+                        <span className="text-[10.5px] font-semibold text-[#FF3B5C] hover:text-[#E11D48] hover:underline cursor-pointer flex items-center gap-0.5 mt-4" onClick={() => setActiveTab('schedule')}>
                           Check Timetables &rarr;
                         </span>
                       </div>
@@ -2618,7 +2611,7 @@ function AppContent() {
                               : '0'}%
                           </p>
                         </div>
-                        <span className="text-[10.5px] font-semibold text-amber-500 hover:underline cursor-pointer flex items-center gap-0.5 mt-4" onClick={() => setActiveTab('progress')}>
+                        <span className="text-[10.5px] font-semibold text-[#FF3B5C] hover:text-[#E11D48] hover:underline cursor-pointer flex items-center gap-0.5 mt-4" onClick={() => setActiveTab('progress')}>
                           View My Feedbacks &rarr;
                         </span>
                       </div>
@@ -2704,7 +2697,7 @@ function AppContent() {
                           {schedules.filter(s => s.instructorId === currentUser.id && s.status === 'scheduled').length}
                         </p>
                       </div>
-                      <span className="text-[10.5px] font-semibold text-amber-500 hover:underline cursor-pointer flex items-center gap-0.5 mt-4" onClick={() => setActiveTab('schedule')}>
+                      <span className="text-[10.5px] font-semibold text-[#FF3B5C] hover:text-[#E11D48] hover:underline cursor-pointer flex items-center gap-0.5 mt-4" onClick={() => setActiveTab('schedule')}>
                         Mark Timetable completion &rarr;
                       </span>
                     </div>
@@ -2716,7 +2709,7 @@ function AppContent() {
                           {progressRecords.filter(r => r.instructorId === currentUser.id).length}
                         </p>
                       </div>
-                      <span className="text-[10.5px] font-semibold text-amber-500 hover:underline cursor-pointer flex items-center gap-0.5 mt-4" onClick={() => setActiveTab('progress')}>
+                      <span className="text-[10.5px] font-semibold text-[#FF3B5C] hover:text-[#E11D48] hover:underline cursor-pointer flex items-center gap-0.5 mt-4" onClick={() => setActiveTab('progress')}>
                         Grade more schedules progress &rarr;
                       </span>
                     </div>
@@ -2739,7 +2732,7 @@ function AppContent() {
                       <h3 className="text-lg font-serif italic text-slate-900 dark:text-white">Active Classroom Sessions Timetable</h3>
                       <p className="text-xs text-slate-500 dark:text-gray-400 mt-0.5 font-sans">Quick lookup of classes registered currently</p>
                     </div>
-                    <button onClick={() => setActiveTab('schedule')} className="text-xs font-bold text-amber-500 hover:underline">
+                    <button onClick={() => setActiveTab('schedule')} className="text-xs font-bold text-[#FF3B5C] hover:text-[#E11D48] hover:underline">
                       See full list &rarr;
                     </button>
                   </div>
@@ -2863,7 +2856,7 @@ function AppContent() {
           <div className="w-full max-w-md bg-white dark:bg-[#161618] border border-slate-150/80 dark:border-white/5 rounded-3xl p-6 shadow-2xl space-y-4">
             <div className="flex items-center justify-between border-b border-slate-100 dark:border-white/5 pb-3">
               <h3 className="text-base font-serif italic font-bold text-slate-900 dark:text-white flex items-center gap-2">
-                <Lock className="w-4 h-4 text-amber-500" /> Recover Account Credentials
+                <Lock className="w-4 h-4 text-red-500" /> Recover Account Credentials
               </h3>
               <button 
                 onClick={() => {
