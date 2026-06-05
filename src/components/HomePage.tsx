@@ -20,15 +20,7 @@ export default function HomePage({ isDark, onEnterPortal }: HomePageProps) {
         <div className="w-full max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
           
           {/* Logo / Brand */}
-          <div className="flex items-center gap-3">
-            <div className="bg-white px-3.5 py-1.5 rounded-xl shadow-sm flex items-center justify-center scale-90 sm:scale-100 origin-left">
-              <Logo size="sm" withStrapline={false} />
-            </div>
-            <div>
-              <p className="text-[10px] text-white uppercase tracking-widest font-mono font-bold leading-none">Learnora Portal</p>
-              <p className="text-[9px] text-slate-200 uppercase tracking-widest mt-1 font-sans">Coaching Center Console</p>
-            </div>
-          </div>
+          <Logo size="sm" withStrapline={true} inverse={true} />
 
           {/* Center static items for look & feel */}
           <nav className="hidden md:flex items-center gap-8 text-xs font-mono font-bold uppercase tracking-wider text-slate-200">
@@ -230,7 +222,7 @@ export default function HomePage({ isDark, onEnterPortal }: HomePageProps) {
           {/* Column 1: Brand Info */}
           <div className="md:col-span-4 space-y-4">
             <div className="flex items-center gap-2">
-              <Logo size="sm" withStrapline={false} className="dark:invert origin-left scale-75" />
+              <Logo size="sm" withStrapline={false} />
             </div>
             <p className="text-xs text-slate-500 dark:text-gray-400 leading-relaxed max-w-sm">
               An advanced, simulated academic and administrative scheduling platform. Manage multi-role authorization states, advisor assignments, and live score trend reports with secure client-side storage.

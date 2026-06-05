@@ -1339,7 +1339,7 @@ function AppContent() {
               {onboardingTab === 'fastReg' && (
                 <div className="flex items-center justify-between gap-4 border-b border-slate-100 dark:border-white/5 pb-4 mb-6">
                   <div className="flex items-center gap-2">
-                    <div className="hidden sm:block scale-90 origin-left text-slate-800 dark:invert">
+                    <div className="hidden sm:block scale-90 origin-left text-slate-800">
                        <Logo size="sm" withStrapline={false} />
                     </div>
                     <span className="sm:hidden font-mono uppercase tracking-widest text-black dark:text-gray-300 font-bold text-xs mt-1">Learnora</span>
@@ -1360,7 +1360,7 @@ function AppContent() {
                 <div className="md:col-span-12 lg:col-span-5 space-y-6 flex flex-col justify-between">
                   <div className="space-y-6">
                     <div className="flex items-center justify-between gap-4">
-                      <div className="text-slate-800 dark:invert mb-2 origin-left scale-90 sm:scale-100">
+                      <div className="text-slate-800 mb-2 origin-left scale-90 sm:scale-100">
                         <Logo size="md" />
                       </div>
                       <button
@@ -2263,13 +2263,13 @@ function AppContent() {
                 <div className={`flex items-center gap-2`}>
                   {!isActuallyCollapsed ? (
                     <div className="leading-none animate-fadeIn">
-                      <div className="dark:invert origin-left scale-[0.65] -mb-1 relative -left-1">
+                      <div className="origin-left scale-[0.65] -mb-1 relative -left-1">
                         <Logo size="sm" withStrapline={false} />
                       </div>
                       <p className="text-[9px] text-gray-500 uppercase tracking-widest mt-0.5 font-sans ml-1 text-slate-400 dark:text-gray-500">Active Scheduler</p>
                     </div>
                   ) : (
-                    <div className="dark:invert scale-[0.45] origin-center -ml-3 -mb-1">
+                    <div className="scale-[0.45] origin-center -ml-3 -mb-1">
                       <Logo size="sm" withStrapline={false} />
                     </div>
                   )}

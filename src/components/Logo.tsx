@@ -4,73 +4,98 @@ interface LogoProps {
   className?: string;
   size?: 'sm' | 'md' | 'lg' | 'xl';
   withStrapline?: boolean;
+  onlyIcon?: boolean;
+  inverse?: boolean;
 }
 
-export default function Logo({ className = '', size = 'md', withStrapline = true }: LogoProps) {
-  const sizeClasses = {
-    sm: 'text-[22px]',
-    md: 'text-[36px]',
-    lg: 'text-[54px]',
-    xl: 'text-[82px]',
+export default function Logo({ 
+  className = '', 
+  size = 'md', 
+  withStrapline = true,
+  onlyIcon = false,
+  inverse = false
+}: LogoProps) {
+  
+  // Icon dimensions
+  const iconSizes = {
+    sm: 'w-8 h-8',
+    md: 'w-12 h-12',
+    lg: 'w-16 h-16',
+    xl: 'w-24 h-24',
   };
 
-  // Exact relative positions for the graduation cap to sit beautifully over 'ora'
-  const capStyles = {
-    sm: {
-      container: 'w-[30px] h-[20px] -top-[13px] right-[-2px]',
-    },
-    md: {
-      container: 'w-[50px] h-[34px] -top-[21px] right-[-3px]',
-    },
-    lg: {
-      container: 'w-[75px] h-[50px] -top-[32px] right-[-5px]',
-    },
-    xl: {
-      container: 'w-[115px] h-[78px] -top-[49px] right-[-7px]',
-    },
+  // Text font-size mappings
+  const textSizes = {
+    sm: 'text-lg',
+    md: 'text-2xl',
+    lg: 'text-4xl',
+    xl: 'text-6xl',
   };
+
+  const renderIcon = () => (
+    <div className={`${iconSizes[size]} shrink-0 shadow-sm rounded-xl overflow-hidden transition-transform duration-300 hover:scale-105`}>
+      <svg viewBox="0 0 100 100" className="w-full h-full select-none" fill="none" xmlns="http://www.w3.org/2000/svg">
+        {/* Deep branding Navy Blue Background Card (Squircle) */}
+        <rect width="100" height="100" rx="22" fill="#0A2A66" />
+        
+        {/* Bold White Sans-Serif Capital "L" with precise geometry */}
+        <path d="M 24 24 L 36 24 L 36 70 L 54 70 L 54 80 L 24 80 Z" fill="#FFFFFF" />
+        
+        {/* Lowercase connected "oa" in vibrant brand coral red */}
+        <text 
+          x="46" 
+          y="78" 
+          fill="#FF3B5C" 
+          fontFamily="system-ui, -apple-system, sans-serif" 
+          fontWeight="900" 
+          fontSize="33px" 
+          letterSpacing="-1.5px"
+        >
+          oa
+        </text>
+        
+        {/* High-Fidelity White Graduation Cap hovering above "oa" */}
+        <path d="M 68 15 L 94 25 L 68 35 L 42 25 Z" fill="#FFFFFF" />
+        <path d="M 52 28 Q 68 32 84 28 L 84 34 Q 68 40 52 34 Z" fill="#FFFFFF" />
+        
+        {/* Hanging Tassel in branding Coral Red matching "oa" */}
+        <path d="M 90 23 L 90 35" stroke="#FF3B5C" strokeWidth="2.2" strokeLinecap="round" />
+        <circle cx="90" cy="39" r="3.5" fill="#FF3B5C" />
+      </svg>
+    </div>
+  );
+
+  if (onlyIcon) {
+    return <div className={`inline-flex ${className}`}>{renderIcon()}</div>;
+  }
+
+  // Choose colors based on the inverse prop (forced dark container)
+  const prefixColorClass = inverse 
+    ? 'text-white' 
+    : 'text-[#0A2A66] dark:text-white';
+    
+  const straplineColorClass = inverse
+    ? 'text-slate-300'
+    : 'text-slate-500 dark:text-slate-400';
 
   return (
-    <div className={`flex flex-col items-center justify-center font-sans select-none ${className}`}>
-      {/* Container for the logo text with baseline alignment to match professional typographers */}
-      <div className={`relative flex items-baseline leading-none font-extrabold tracking-tight ${sizeClasses[size]}`}>
-        {/* "Learn" segment in deep solid Navy Blue */}
-        <span className="text-[#0A2A66] dark:text-[#0A2A66]">Learn</span>
-        
-        {/* "ora" segment in vibrant branding coral red, wrapped relative to anchor the cap */}
-        <span className="relative text-[#FF3B5C] dark:text-[#FF3B5C]">
-          ora
-          
-          {/* Graduation Cap container sitting perfectly on top of 'ora' */}
-          <div className={`absolute ${capStyles[size].container} pointer-events-none select-none`}>
-            <svg viewBox="0 0 120 80" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full h-full drop-shadow-[0_1px_2px_rgba(0,0,0,0.15)]">
-              {/* Mortarboard / Hat Diamond in Deep Navy Blue */}
-              <path d="M60 4 L115 28 L60 52 L5 28 Z" fill="#0A2A66" />
-              
-              {/* Under-ring Skullcap in Deep Navy Blue */}
-              <path d="M28 35 C28 35 28 47 60 47 C92 47 92 35 92 35 C92 35 88 56 60 56 C32 56 28 35 28 35 Z" fill="#0A2A66" />
-              
-              {/* Separator curve highlight in white */}
-              <path d="M28 35 C44 42 76 42 92 35" stroke="#FFFFFF" strokeWidth="2.5" strokeLinecap="round" />
-              
-              {/* Hanging Tassel - Coral Red to match the "ora" text */}
-              <path d="M107 26 L107 43" stroke="#FF3B5C" strokeWidth="2.5" strokeLinecap="round" />
-              <circle cx="107" cy="47" r="4.5" fill="#FF3B5C" />
-            </svg>
-          </div>
-        </span>
-      </div>
-      
-      {withStrapline && (
-        <div className="flex items-center w-full justify-center mt-[0.3em]">
-          <div className="flex-1 h-[1.2px] bg-[#0A2A66] mr-2 opacity-80"></div>
-          <p className="text-[0.24em] tracking-[0.24em] uppercase text-[#0A2A66] font-extrabold flex items-center gap-[0.2em] whitespace-nowrap">
-            LEARN<span className="text-[#FF3B5C] font-black scale-110">.</span> GROW<span className="text-[#FF3B5C] font-black scale-110">.</span> SUCCEED<span className="text-[#FF3B5C] font-black scale-110">.</span>
-          </p>
-          <div className="flex-1 h-[1.2px] bg-[#0A2A66] ml-2 opacity-80"></div>
+    <div className={`flex items-center gap-3 font-sans select-none ${className}`}>
+      {/* Sleek brand emblem */}
+      {renderIcon()}
+
+      {/* Structured Wordmark branding */}
+      <div className="flex flex-col justify-center text-left">
+        <div className={`flex items-baseline font-black tracking-tight leading-none ${textSizes[size]}`}>
+          <span className={`${prefixColorClass} transition-colors`}>Learn</span>
+          <span className="text-[#FF3B5C]">ora</span>
         </div>
-      )}
+        
+        {withStrapline && (
+          <p className={`text-[9px] md:text-[10.5px] tracking-[0.18em] uppercase ${straplineColorClass} font-extrabold mt-1 leading-none`}>
+            Coaching Center
+          </p>
+        )}
+      </div>
     </div>
   );
 }
-
