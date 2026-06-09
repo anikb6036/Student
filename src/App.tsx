@@ -123,6 +123,53 @@ function AppContent() {
   // Navigation tab state
   const [activeTab, setActiveTab] = useState<'dashboard' | 'enrollments' | 'schedule' | 'progress' | 'reports' | 'backup' | 'inbox' | 'profile'>('dashboard');
 
+  // Security Session Activity Auto-Logout
+  const AUTO_LOGOUT_TIME_MS = 15 * 60 * 1000; // 15 mins of inactivity
+  const [lastActivity, setLastActivity] = useState<number>(Date.now());
+
+  useEffect(() => {
+    if (!currentUser) return;
+    
+    // Auto logout timer check
+    const interval = setInterval(() => {
+      const now = Date.now();
+      if (now - lastActivity > AUTO_LOGOUT_TIME_MS) {
+        handleLogout('Your session expired due to inactivity. For your security, you have been logged out.');
+      }
+    }, 30000); // Check every 30 seconds
+
+    return () => clearInterval(interval);
+  }, [currentUser, lastActivity]);
+
+  useEffect(() => {
+    if (!currentUser) return;
+
+    // Throttle the state update to avoid overwhelming renders
+    let throttleTimeout: NodeJS.Timeout | null = null;
+    const updateActivity = () => {
+      if (!throttleTimeout) {
+        throttleTimeout = setTimeout(() => {
+          setLastActivity(Date.now());
+          throttleTimeout = null;
+        }, 5000); // only update at most once every 5 seconds
+      }
+    };
+    
+    // Listen to standard interaction events
+    const events = ['mousemove', 'keydown', 'mousedown', 'touchstart', 'scroll'];
+
+    events.forEach(event => {
+      window.addEventListener(event, updateActivity, { passive: true });
+    });
+
+    return () => {
+      if (throttleTimeout) clearTimeout(throttleTimeout);
+      events.forEach(event => {
+        window.removeEventListener(event, updateActivity);
+      });
+    };
+  }, [currentUser]);
+
   // Sidebar expand/collapse and hover active state checks
   const [isSidebarCollapsed] = useState<boolean>(true);
   const [isSidebarHovered, setIsSidebarHovered] = useState<boolean>(false);
@@ -190,6 +237,10 @@ function AppContent() {
   const [loginUsername, setLoginUsername] = useState('');
   const [loginPassword, setLoginPassword] = useState('');
   const [loginError, setLoginError] = useState('');
+
+  // Login Security / Rate Limiting
+  const [loginAttempts, setLoginAttempts] = useState(0);
+  const [lockoutUntil, setLockoutUntil] = useState<number | null>(null);
 
   // Forgot Password modal level states
   const [forgotEmailModalOpen, setForgotEmailModalOpen] = useState(false);
@@ -1116,6 +1167,11 @@ function AppContent() {
 
   const handleCredentialsLogin = (e: React.FormEvent) => {
     e.preventDefault();
+    if (lockoutUntil && Date.now() < lockoutUntil) {
+      setLoginError(`Terminal locked due to too many failed attempts. Please try again in ${Math.ceil((lockoutUntil - Date.now()) / 1000)} seconds.`);
+      return;
+    }
+    
     setLoginError('');
     const matched = users.find(u => 
       u.username && u.username.toLowerCase() === loginUsername.trim().toLowerCase() && 
@@ -1125,13 +1181,27 @@ function AppContent() {
       setCurrentUser(matched);
       setLoginUsername('');
       setLoginPassword('');
+      setLoginAttempts(0); // reset on success
     } else {
-      setLoginError('Invalid Username/Password. Under the simulation flow, make sure the Administrator has already Accepted your application, then fetch credentials from the Simulated Student Mail Inbox.');
+      const remainingAttempts = 4 - loginAttempts;
+      if (remainingAttempts <= 0) {
+        setLockoutUntil(Date.now() + 60000); // 1 minute lockout
+        setLoginError('Too many failed attempts. Terminal locked for 60 seconds.');
+        setLoginAttempts(0);
+      } else {
+        setLoginAttempts(prev => prev + 1);
+        setLoginError(`Invalid Username/Password. (${remainingAttempts} attempts remaining)`);
+      }
     }
   };
 
   const handleAdminLogin = (e: React.FormEvent) => {
     e.preventDefault();
+    if (lockoutUntil && Date.now() < lockoutUntil) {
+      setLoginError(`Terminal locked due to too many failed attempts. Please try again in ${Math.ceil((lockoutUntil - Date.now()) / 1000)} seconds.`);
+      return;
+    }
+
     setLoginError('');
     const matched = users.find(u => 
       u.username && u.username.toLowerCase() === loginUsername.trim().toLowerCase() && 
@@ -1142,16 +1212,36 @@ function AppContent() {
         setCurrentUser(matched);
         setLoginUsername('');
         setLoginPassword('');
+        setLoginAttempts(0);
       } else {
         setLoginError('Access Denied. This terminal is restricted to Administrator and Sub-Admin roles only.');
       }
     } else {
-      setLoginError('Invalid Administrator or Sub-Admin credentials. Ensure the account has been registered by a Head Administrator.');
+      const remainingAttempts = 4 - loginAttempts;
+      if (remainingAttempts <= 0) {
+        setLockoutUntil(Date.now() + 60000); // 1 minute lockout
+        setLoginError('Too many failed attempts. Admin terminal locked for 60 seconds.');
+        setLoginAttempts(0);
+      } else {
+        setLoginAttempts(prev => prev + 1);
+        setLoginError(`Invalid Administrator or Sub-Admin credentials. (${remainingAttempts} attempts remaining)`);
+      }
     }
   };
 
-  const handleLogout = () => {
+  const handleLogout = (message?: string) => {
     setCurrentUser(null);
+    if (message) {
+      triggerToast({
+        id: `notif-logout-${Date.now()}`,
+        title: 'Session Ended',
+        message: message,
+        timestamp: new Date().toISOString(),
+        read: false,
+        type: 'general',
+        channel: 'push'
+      });
+    }
   };
 
   const isActuallyCollapsed = isSidebarCollapsed && !(isSidebarHovered && !ignoreHover);
@@ -2489,7 +2579,7 @@ function AppContent() {
                 <div className="pt-2 border-t border-slate-100 dark:border-white/5">
                   <button
                     type="button"
-                    onClick={handleLogout}
+                    onClick={() => handleLogout()}
                     className={`w-full flex items-center ${isActuallyCollapsed ? 'justify-center p-3' : 'gap-3.5 px-3.5 py-3'} rounded-xl border border-slate-100 dark:border-white/5 hover:bg-amber-500/10 dark:hover:bg-amber-500/10 hover:text-amber-500 dark:hover:text-amber-500 font-bold text-xs text-slate-550 dark:text-gray-400 transition cursor-pointer`}
                     title={isActuallyCollapsed ? "Change Simulator Role" : undefined}
                   >

@@ -24,7 +24,7 @@ import {
   Pencil,
   X
 } from 'lucide-react';
-import { motion } from 'motion/react';
+import { motion, AnimatePresence } from 'motion/react';
 
 interface ProfileSettingsProps {
   currentUser: UserAccount;
@@ -46,6 +46,10 @@ export default function ProfileSettings({
   // Read-only toggle state
   const [isEditing, setIsEditing] = useState(false);
   const [isEditingPassword, setIsEditingPassword] = useState(false);
+  
+  // Confirmation states
+  const [pendingProfileUpdate, setPendingProfileUpdate] = useState<UserAccount | null>(null);
+  const [pendingPasswordUpdate, setPendingPasswordUpdate] = useState<UserAccount | null>(null);
 
   // Forgot Password modal level states
   const [showForgotModal, setShowForgotModal] = useState(false);
@@ -174,20 +178,7 @@ export default function ProfileSettings({
       fatherPhone: currentUser.role === 'student' ? finalFatherPhone : currentUser.fatherPhone,
     };
 
-    onUpdateProfile(updatedUser);
-    setProfileSuccess('Profile updated successfully across active directories.');
-    setIsEditing(false);
-
-    const notif: AppNotification = {
-      id: `notif-prof-${Date.now()}`,
-      title: 'Profile Directory Updated',
-      message: 'Your personal coaching directory properties have been saved successfully.',
-      timestamp: new Date().toISOString(),
-      read: false,
-      type: 'general',
-      channel: 'push'
-    };
-    onTriggerToast(notif);
+    setPendingProfileUpdate(updatedUser);
   };
 
   const handleChangePassword = (e: React.FormEvent) => {
@@ -222,25 +213,7 @@ export default function ProfileSettings({
       password: newPassword
     };
 
-    onUpdateProfile(updatedUser);
-    setPasswordSuccess('Success! Password updated safely in credential registers.');
-    setIsEditingPassword(false);
-    
-    // Clear fields
-    setOldPassword('');
-    setNewPassword('');
-    setConfirmPassword('');
-
-    const notif: AppNotification = {
-      id: `notif-pass-${Date.now()}`,
-      title: 'Security Credentials Configured',
-      message: 'Your account login authentication password has been updated successfully.',
-      timestamp: new Date().toISOString(),
-      read: false,
-      type: 'general',
-      channel: 'push'
-    };
-    onTriggerToast(notif);
+    setPendingPasswordUpdate(updatedUser);
   };
 
   const handleAvatarFile = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -981,6 +954,145 @@ export default function ProfileSettings({
           </motion.div>
         </div>
       )}
+
+      {/* Profile Edit Confirmation Dialog */}
+      <AnimatePresence>
+        {pendingProfileUpdate && (
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-sm">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className="w-full max-w-md bg-white dark:bg-[#161618] rounded-2xl border border-slate-100 dark:border-white/5 p-6 shadow-2xl relative"
+            >
+              <div className="flex items-center gap-3 text-amber-500 mb-4">
+                <div className="p-2.5 bg-amber-500/10 rounded-xl">
+                  <Sparkles className="w-6 h-6" />
+                </div>
+                <div>
+                  <h3 className="text-base font-serif font-bold text-slate-900 dark:text-white">
+                    Confirm Personal Directory Updates
+                  </h3>
+                  <p className="text-[10px] font-mono uppercase tracking-widest text-slate-400">
+                    Sync Verification
+                  </p>
+                </div>
+              </div>
+
+              <p className="text-xs text-slate-600 dark:text-gray-300 leading-relaxed mb-6 font-sans">
+                Are you ready to commit your updated directory settings? This will immediately synchronize your name, phone, gender, residency address, and contact preferences across all Learnora platforms.
+              </p>
+
+              <div className="flex justify-end gap-3">
+                <button
+                  type="button"
+                  onClick={() => setPendingProfileUpdate(null)}
+                  className="px-4 py-2.5 text-xs bg-slate-100 dark:bg-white/5 text-slate-705 dark:text-gray-300 font-bold hover:bg-slate-200 dark:hover:bg-white/10 rounded-xl cursor-pointer transition active:scale-[0.98]"
+                >
+                  No, Go Back
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (onUpdateProfile) {
+                      onUpdateProfile(pendingProfileUpdate);
+                      setProfileSuccess('Profile updated successfully across active directories.');
+                      setIsEditing(false);
+
+                      const notif: AppNotification = {
+                        id: `notif-prof-${Date.now()}`,
+                        title: 'Profile Directory Updated',
+                        message: 'Your personal coaching directory properties have been saved successfully.',
+                        timestamp: new Date().toISOString(),
+                        read: false,
+                        type: 'general',
+                        channel: 'push'
+                      };
+                      onTriggerToast(notif);
+                    }
+                    setPendingProfileUpdate(null);
+                  }}
+                  className="px-5 py-2.5 text-xs bg-amber-500 hover:bg-amber-600 text-amber-950 font-bold rounded-xl cursor-pointer transition shadow-md active:scale-[0.98]"
+                >
+                  Yes, Save Profile
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* Password Edit Confirmation Dialog */}
+      <AnimatePresence>
+        {pendingPasswordUpdate && (
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-sm">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className="w-full max-w-md bg-white dark:bg-[#161618] rounded-2xl border border-slate-100 dark:border-white/5 p-6 shadow-2xl relative"
+            >
+              <div className="flex items-center gap-3 text-amber-500 mb-4">
+                <div className="p-2.5 bg-amber-500/10 rounded-xl">
+                  <Lock className="w-6 h-6" />
+                </div>
+                <div>
+                  <h3 className="text-base font-serif font-bold text-slate-900 dark:text-white">
+                    Confirm Password Changes
+                  </h3>
+                  <p className="text-[10px] font-mono uppercase tracking-widest text-slate-400">
+                    Security Re-alignment
+                  </p>
+                </div>
+              </div>
+
+              <p className="text-xs text-slate-600 dark:text-gray-350 leading-relaxed mb-6 font-sans">
+                Are you sure you want to configure new access keys? You will need to use your new password next time you authenticate yourself in Learnora.
+              </p>
+
+              <div className="flex justify-end gap-3">
+                <button
+                  type="button"
+                  onClick={() => setPendingPasswordUpdate(null)}
+                  className="px-4 py-2.5 text-xs bg-slate-100 dark:bg-white/5 text-slate-705 dark:text-gray-300 font-bold hover:bg-slate-200 dark:hover:bg-white/10 rounded-xl cursor-pointer transition active:scale-[0.98]"
+                >
+                  Keep Old Keys
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (onUpdateProfile) {
+                      onUpdateProfile(pendingPasswordUpdate);
+                      setPasswordSuccess('Success! Password updated safely in credential registers.');
+                      setIsEditingPassword(false);
+                      
+                      // Clear fields
+                      setOldPassword('');
+                      setNewPassword('');
+                      setConfirmPassword('');
+
+                      const notif: AppNotification = {
+                        id: `notif-pass-${Date.now()}`,
+                        title: 'Security Credentials Configured',
+                        message: 'Your account login authentication password has been updated successfully.',
+                        timestamp: new Date().toISOString(),
+                        read: false,
+                        type: 'general',
+                        channel: 'push'
+                      };
+                      onTriggerToast(notif);
+                    }
+                    setPendingPasswordUpdate(null);
+                  }}
+                  className="px-5 py-2.5 text-xs bg-amber-500 hover:bg-amber-600 text-amber-950 font-bold rounded-xl cursor-pointer transition shadow-md active:scale-[0.98]"
+                >
+                  Confirm & Update Password
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
 
     </div>
   );

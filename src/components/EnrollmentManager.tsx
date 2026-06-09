@@ -58,6 +58,8 @@ export default function EnrollmentManager({
 
   // Edit Student level states
   const [editingStudent, setEditingStudent] = useState<UserAccount | null>(null);
+  const [userToDelete, setUserToDelete] = useState<{ id: string; name: string; role: 'student' | 'instructor' | 'sub-admin' } | null>(null);
+  const [pendingStudentUpdate, setPendingStudentUpdate] = useState<UserAccount | null>(null);
   const [editName, setEditName] = useState('');
   const [editEmail, setEditEmail] = useState('');
   const [editPhoneRaw, setEditPhoneRaw] = useState('');
@@ -1323,8 +1325,8 @@ export default function EnrollmentManager({
                                 </button>
                               )}
                               <button
-                                onClick={() => onRemoveStudent(student.id)}
-                                className="p-1.5 hover:bg-rose-50/10 dark:hover:bg-rose-950/20 text-slate-444 hover:text-rose-500 rounded-lg transition"
+                                onClick={() => setUserToDelete({ id: student.id, name: student.name, role: 'student' })}
+                                className="p-1.5 hover:bg-rose-50/10 dark:hover:bg-rose-950/20 text-slate-444 hover:text-rose-500 rounded-lg transition cursor-pointer"
                                 title="Remove Student Record"
                               >
                                 <Trash2 className="w-4 h-4" />
@@ -1394,7 +1396,7 @@ export default function EnrollmentManager({
                       {['admin', 'sub-admin'].includes(currentUser.role) && (
                         <td className="p-4 text-right">
                           <button
-                            onClick={() => onRemoveInstructor && onRemoveInstructor(ins.id)}
+                            onClick={() => setUserToDelete({ id: ins.id, name: ins.name, role: 'instructor' })}
                             className="p-1.5 hover:bg-rose-50/10 dark:hover:bg-rose-950/20 text-slate-444 hover:text-rose-500 rounded-lg transition cursor-pointer"
                             title="Remove Faculty Record"
                           >
@@ -1464,7 +1466,7 @@ export default function EnrollmentManager({
                       {currentUser.role === 'admin' && (
                         <td className="p-4 text-right">
                           <button
-                            onClick={() => onRemoveSubAdmin && onRemoveSubAdmin(sa.id)}
+                            onClick={() => setUserToDelete({ id: sa.id, name: sa.name, role: 'sub-admin' })}
                             className="p-1.5 hover:bg-rose-50/10 dark:hover:bg-rose-950/20 text-slate-444 hover:text-rose-500 rounded-lg transition cursor-pointer"
                             title="Remove Sub-Admin"
                           >
@@ -1548,10 +1550,7 @@ export default function EnrollmentManager({
                     course: editCourse || undefined,
                   };
 
-                  if (onUpdateStudent) {
-                    onUpdateStudent(updatedStudent);
-                  }
-                  setEditingStudent(null);
+                  setPendingStudentUpdate(updatedStudent);
                 }}
                 className="space-y-4 text-xs"
               >
@@ -1797,6 +1796,119 @@ export default function EnrollmentManager({
             </motion.div>
           </div>
         )}
+
+        {/* Delete User Confirmation Modal */}
+        <AnimatePresence>
+          {userToDelete && (
+            <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-sm">
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.95 }}
+                className="w-full max-w-md bg-white dark:bg-[#161618] rounded-2xl border border-slate-100 dark:border-white/5 p-6 shadow-2xl relative"
+              >
+                <div className="flex items-center gap-3 text-rose-500 mb-4">
+                  <div className="p-2.5 bg-rose-500/10 rounded-xl">
+                    <Trash2 className="w-6 h-6" />
+                  </div>
+                  <div>
+                    <h3 className="text-base font-serif font-bold text-slate-900 dark:text-white">
+                      Confirm Permanent Deletion
+                    </h3>
+                    <p className="text-[10px] font-mono uppercase tracking-widest text-slate-400">
+                      Irreversible Operation
+                    </p>
+                  </div>
+                </div>
+
+                <p className="text-xs text-slate-600 dark:text-gray-350 leading-relaxed mb-6">
+                  Are you absolutely sure you want to delete the record of <strong className="font-bold text-slate-900 dark:text-white">{userToDelete.name}</strong> ({userToDelete.role})? This will permanently purge their profile logs, class registers, and academic histories.
+                </p>
+
+                <div className="flex justify-end gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setUserToDelete(null)}
+                    className="px-4 py-2.5 text-xs bg-slate-100 dark:bg-white/5 text-slate-705 dark:text-gray-300 font-bold hover:bg-slate-200 dark:hover:bg-white/10 rounded-xl cursor-pointer transition active:scale-[0.98]"
+                  >
+                    No, Cancel
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (userToDelete.role === 'student') {
+                        onRemoveStudent(userToDelete.id);
+                      } else if (userToDelete.role === 'instructor') {
+                        if (onRemoveInstructor) onRemoveInstructor(userToDelete.id);
+                      } else if (userToDelete.role === 'sub-admin') {
+                        if (onRemoveSubAdmin) onRemoveSubAdmin(userToDelete.id);
+                      }
+                      setUserToDelete(null);
+                    }}
+                    className="px-5 py-2.5 text-xs bg-rose-500 hover:bg-rose-600 text-white font-bold rounded-xl cursor-pointer transition shadow-md active:scale-[0.98]"
+                  >
+                    Yes, Delete Record
+                  </button>
+                </div>
+              </motion.div>
+            </div>
+          )}
+        </AnimatePresence>
+
+        {/* Edit Student Confirmation Modal */}
+        <AnimatePresence>
+          {pendingStudentUpdate && (
+            <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-sm">
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.95 }}
+                className="w-full max-w-md bg-white dark:bg-[#161618] rounded-2xl border border-slate-100 dark:border-white/5 p-6 shadow-2xl relative"
+              >
+                <div className="flex items-center gap-3 text-amber-500 mb-4">
+                  <div className="p-2.5 bg-amber-500/10 rounded-xl">
+                    <Pencil className="w-6 h-6" />
+                  </div>
+                  <div>
+                    <h3 className="text-base font-serif font-bold text-slate-900 dark:text-white">
+                      Confirm Profile Modifications
+                    </h3>
+                    <p className="text-[10px] font-mono uppercase tracking-widest text-slate-400">
+                      Directory Updates
+                    </p>
+                  </div>
+                </div>
+
+                <p className="text-xs text-slate-600 dark:text-gray-350 leading-relaxed mb-6">
+                  Do you want to save the new information for <strong className="font-bold text-slate-900 dark:text-white">{pendingStudentUpdate.name}</strong>? These updates will immediately synchronize with our secure Firebase storage and react on other browsers.
+                </p>
+
+                <div className="flex justify-end gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setPendingStudentUpdate(null)}
+                    className="px-4 py-2.5 text-xs bg-slate-100 dark:bg-white/5 text-slate-705 dark:text-gray-300 font-bold hover:bg-slate-200 dark:hover:bg-white/10 rounded-xl cursor-pointer transition active:scale-[0.98]"
+                  >
+                    Discard Changes
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (onUpdateStudent) {
+                        onUpdateStudent(pendingStudentUpdate);
+                      }
+                      setPendingStudentUpdate(null);
+                      setEditingStudent(null);
+                    }}
+                    className="px-5 py-2.5 text-xs bg-amber-500 hover:bg-amber-600 text-amber-950 font-bold rounded-xl cursor-pointer transition shadow-md active:scale-[0.98]"
+                  >
+                    Confirm & Update
+                  </button>
+                </div>
+              </motion.div>
+            </div>
+          )}
+        </AnimatePresence>
       </div>
     </div>
   );
