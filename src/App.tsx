@@ -1332,7 +1332,7 @@ function AppContent() {
               <div className="p-5 border-b border-slate-100 dark:border-white/5 flex items-center justify-between bg-slate-50 dark:bg-[#0F0F11]">
                 <div className="flex items-center gap-3">
                   <div className="p-2 bg-amber-500/10 rounded-xl">
-                    <LogOut className="w-5 h-5 text-amber-500 rotate-180" />
+                    <Mail className="w-5 h-5 text-amber-500" />
                   </div>
                   <div>
                     <h3 className="text-base font-serif italic text-slate-900 dark:text-white font-bold">Inbox Simulator</h3>
@@ -1345,7 +1345,7 @@ function AppContent() {
                     setShowMailbox(false);
                     setSelectedMail(null);
                   }}
-                  className="p-1 px-3 rounded-lg border dark:border-white/5 text-xs text-slate-500 hover:text-slate-800 dark:hover:text-gray-200 hover:bg-slate-100 dark:hover:bg-white/5 cursor-pointer font-bold transition"
+                  className="p-1 px-3.5 rounded-lg bg-red-700 hover:bg-red-800 text-xs text-white shadow-sm border border-red-800 cursor-pointer font-bold transition active:scale-95"
                 >
                   Close Mailbox
                 </button>
@@ -1418,10 +1418,17 @@ function AppContent() {
       {!currentUser ? (
         showPortal ? (
           /* Dynamic Role-Based Sandbox Access & Create Account Page */
-          <div className="min-h-screen flex flex-col justify-center items-center py-12 px-4 bg-slate-100 dark:bg-[#0A0A0B] dark:text-gray-200 animate-fadeIn font-sans">
-            <div className={`w-full bg-white dark:bg-[#0F0F11] border border-slate-150/80 dark:border-white/5 rounded-3xl p-6 md:p-10 shadow-xl relative overflow-hidden transition-all duration-300 ${
+          <div className="min-h-screen relative overflow-hidden flex flex-col justify-center items-center py-12 px-4 bg-[#cfd1d4] dark:bg-[#0A0A0B] dark:text-gray-200 animate-fadeIn font-sans z-0">
+            {/* Background Blob - Orange/Peach top right */}
+            <div className="absolute top-[-20%] right-[-10%] w-[80vw] h-[80vw] md:w-[60vw] md:h-[60vw] rounded-full bg-gradient-to-bl from-[#ff7a45] via-[#ff9a5e] to-transparent opacity-60 dark:opacity-20 blur-[100px] md:blur-[140px] pointer-events-none mix-blend-multiply dark:mix-blend-lighten z-0" />
+            
+            {/* Background Blob - Light blue bottom left */}
+            <div className="absolute bottom-[-20%] left-[-10%] w-[70vw] h-[70vw] md:w-[50vw] md:h-[50vw] rounded-full bg-gradient-to-tr from-[#8ab4f8] via-[#a8c7fa] to-transparent opacity-50 dark:opacity-15 blur-[100px] md:blur-[140px] pointer-events-none mix-blend-multiply dark:mix-blend-lighten z-0" />
+
+            <div className={`w-full bg-white/80 backdrop-blur-xl dark:bg-[#0F0F11]/90 border border-white/40 dark:border-white/5 rounded-3xl p-6 md:p-10 shadow-2xl relative overflow-hidden transition-all duration-300 z-10 ${
               onboardingTab === 'fastReg' ? 'max-w-2xl' : 'max-w-5xl grid grid-cols-1 lg:grid-cols-12 gap-8 items-stretch'
             }`}>
+
               
               {/* Ambient branding ornament */}
               <div className="absolute top-0 right-0 h-40 w-40 bg-gradient-to-bl from-amber-500/10 to-transparent rounded-full pointer-events-none" />
@@ -2357,7 +2364,76 @@ function AppContent() {
         )
       ) : (
         /* Core UI Application Shell */
-        <div className="min-h-screen flex flex-col md:flex-row bg-gradient-to-tr from-[#FFF3F5] via-[#FFF8F9] to-[#FFFBFB] dark:from-[#110D12] dark:via-[#160E14] dark:to-[#0A0A0B]">
+        <div className="min-h-screen flex flex-col md:flex-row relative z-0 overflow-hidden font-sans bg-[linear-gradient(135deg,#E0E6ED_0%,#EDF2F7_50%,#E2E8F0_100%)] dark:bg-[linear-gradient(135deg,#0E131F_0%,#151D30_50%,#090D16_100%)]">
+          
+          {/* High-Resolution Modern Geometric & Wave Background (Matching the reference picture) */}
+          <div className="absolute inset-0 w-full h-full pointer-events-none select-none z-0 overflow-hidden">
+            {/* Subtle split plane layout backgrounds */}
+            <div className="absolute top-0 right-0 w-[60%] h-full bg-[#E5ECF6] dark:bg-[#131A2C] opacity-40 dark:opacity-20 [clip-path:polygon(40%_0,100%_0,100%_100%,0_100%)]" />
+            <div className="absolute bottom-0 left-0 w-[40%] h-full bg-[#D9E2EC] dark:bg-[#0D1525] opacity-35 dark:opacity-15 [clip-path:polygon(0_0,100%_100%,0_100%)]" />
+
+            <svg className="absolute w-full h-full opacity-80 dark:opacity-45" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 800" preserveAspectRatio="none">
+              <defs>
+                <linearGradient id="wave1App" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stopColor="#ffffff" stopOpacity="0.7"/>
+                  <stop offset="50%" stopColor="#D9E4F5" stopOpacity="0.45"/>
+                  <stop offset="100%" stopColor="#C4D4EC" stopOpacity="0.8"/>
+                </linearGradient>
+                <linearGradient id="wave2App" x1="100%" y1="0%" x2="0%" y2="100%">
+                  <stop offset="0%" stopColor="#B0CBE9" stopOpacity="0.3"/>
+                  <stop offset="50%" stopColor="#FFFFFF" stopOpacity="0.6"/>
+                  <stop offset="100%" stopColor="#9BBEE3" stopOpacity="0.25"/>
+                </linearGradient>
+                <linearGradient id="lineGradApp" x1="0%" y1="50%" x2="100%" y2="50%">
+                  <stop offset="0%" stopColor="#8DA9C4" stopOpacity="0"/>
+                  <stop offset="25%" stopColor="#8DA9C4" stopOpacity="0.35"/>
+                  <stop offset="50%" stopColor="#FFFFFF" stopOpacity="0.8"/>
+                  <stop offset="75%" stopColor="#6C8EBF" stopOpacity="0.5"/>
+                  <stop offset="100%" stopColor="#6C8EBF" stopOpacity="0"/>
+                </linearGradient>
+                <linearGradient id="darkLineGradApp" x1="0%" y1="50%" x2="100%" y2="50%">
+                  <stop offset="0%" stopColor="#334E68" stopOpacity="0"/>
+                  <stop offset="30%" stopColor="#486581" stopOpacity="0.4"/>
+                  <stop offset="50%" stopColor="#FFFFFF" stopOpacity="0.6"/>
+                  <stop offset="70%" stopColor="#243B53" stopOpacity="0.4"/>
+                  <stop offset="100%" stopColor="#243B53" stopOpacity="0"/>
+                </linearGradient>
+              </defs>
+
+              <path d="M-100,280 C300,120 500,450 900,220 C1100,105 1300,200 1600,150 L1600,850 L-100,850 Z" fill="url(#wave1App)" />
+              <path d="M-50,380 C250,520 600,180 1000,380 C1200,480 1350,350 1550,420 L1550,850 L-50,850 Z" fill="url(#wave2App)" />
+
+              <g stroke="url(#lineGradApp)" fill="none" strokeWidth="1.2" className="dark:hidden">
+                <path d="M-100,290 Q200,380 500,240 T1100,350 T1600,210" />
+                <path d="M-100,310 Q200,400 500,260 T1100,370 T1600,230" />
+                <path d="M-100,330 Q200,420 500,280 T1100,390 T1600,250" />
+                <path d="M-100,350 Q200,440 500,300 T1100,410 T1600,270" />
+                <path d="M-100,370 Q200,460 500,320 T1100,430 T1600,290" />
+                <path d="M-100,390 Q200,480 500,340 T1100,450 T1600,310" />
+                <path d="M-100,410 Q200,500 500,360 T1100,470 T1600,330" />
+                <path d="M-100,430 Q200,520 500,380 T1100,490 T1600,350" />
+                <path d="M-100,450 Q200,540 500,400 T1100,510 T1600,370" />
+                <path d="M-100,470 Q200,560 500,420 T1100,530 T1600,390" />
+                <path d="M-100,490 Q200,580 500,440 T1100,550 T1600,410" />
+              </g>
+
+              <g stroke="url(#darkLineGradApp)" fill="none" strokeWidth="1.2" className="hidden dark:g">
+                <path d="M-100,290 Q200,380 500,240 T1100,350 T1600,210" />
+                <path d="M-100,310 Q200,400 500,260 T1100,370 T1600,230" />
+                <path d="M-100,330 Q200,420 500,280 T1100,390 T1600,250" />
+                <path d="M-100,350 Q200,440 500,300 T1100,410 T1600,270" />
+                <path d="M-100,370 Q200,460 500,320 T1100,430 T1600,290" />
+                <path d="M-100,390 Q200,480 500,340 T1100,450 T1600,310" />
+                <path d="M-100,410 Q200,500 500,360 T1100,470 T1600,330" />
+                <path d="M-100,430 Q200,520 500,380 T1100,490 T1600,350" />
+                <path d="M-100,450 Q200,540 500,400 T1100,510 T1600,370" />
+              </g>
+            </svg>
+
+            <div className="absolute right-[10%] top-[25%] w-[450px] h-[450px] rounded-full bg-blue-400/20 dark:bg-blue-500/10 blur-[120px]" />
+            <div className="absolute left-[5%] bottom-[15%] w-[350px] h-[350px] rounded-full bg-slate-300/30 dark:bg-indigo-900/15 blur-[100px]" />
+          </div>
+
           
           {/* Responsive Navigation Rail */}
           <aside 
@@ -2370,7 +2446,7 @@ function AppContent() {
               setIsSidebarHovered(false);
               setIgnoreHover(false);
             }}
-            className={`w-full ${isActuallyCollapsed ? 'md:w-20' : 'md:w-64'} bg-white dark:bg-[#0F0F11] border-b md:border-b-0 md:border-r border-slate-150/80 dark:border-white/5 flex flex-col justify-between p-5 mr-0 md:mr-1 transition-all duration-300 ease-in-out select-none`}
+            className={`w-full ${isActuallyCollapsed ? 'md:w-20' : 'md:w-64'} relative z-10 bg-white/80 dark:bg-[#0A0A0C]/70 backdrop-blur-xl border-b md:border-b-0 md:border-r border-slate-200/50 dark:border-white/5 flex flex-col justify-between p-5 mr-0 transition-all duration-300 ease-in-out select-none`}
           >
             <div className="space-y-6">
               {/* Header Branding */}
@@ -2693,7 +2769,7 @@ function AppContent() {
           </aside>
 
           {/* Main Context Stage */}
-          <main className="flex-1 p-5 md:p-8 overflow-y-auto max-w-7xl mx-auto w-full">
+          <main className="flex-1 relative z-10 p-5 md:p-8 overflow-y-auto max-w-7xl mx-auto w-full">
             
             {/* Active Render Panels Routing based on Tab */}
             {activeTab === 'dashboard' && (
