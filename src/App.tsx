@@ -244,6 +244,7 @@ function AppContent() {
   const [emailVerState, setEmailVerState] = useState<'idle' | 'sending' | 'sent' | 'verifying'>('idle');
   const [otpCode, setOtpCode] = useState('');
   const [confirmationResult, setConfirmationResult] = useState<ConfirmationResult | null>(null);
+  const [resendRestrictedMessage, setResendRestrictedMessage] = useState('');
 
   const handleSendEmailOtp = async () => {
     if (!fastEmail || !/\S+@\S+\.\S+/.test(fastEmail)) {
@@ -251,6 +252,7 @@ function AppContent() {
       return;
     }
     setFastEmailError("");
+    setResendRestrictedMessage("");
     setEmailVerState('sending');
     
     try {
@@ -263,6 +265,10 @@ function AppContent() {
       
       if (!res.ok) {
         throw new Error(data.error || "Failed to send OTP");
+      }
+      
+      if (data.restricted) {
+        setResendRestrictedMessage(`Note: Your Resend account has a domain constraint. For testing on ${fastEmail}, please use OTP: ${data.debugOtp}`);
       }
       
       setEmailVerState('sent');
@@ -1860,7 +1866,7 @@ function AppContent() {
                                           </button>
                                         </div>
                                         <p className="text-[10px] text-amber-500 font-medium px-1">
-                                          An OTP has been sent to your email. (Please set RESEND_API_KEY if not receiving)
+                                          {resendRestrictedMessage || "An OTP has been sent to your email. (Please set RESEND_API_KEY if not receiving)"}
                                         </p>
                                       </div>
                                     )}
