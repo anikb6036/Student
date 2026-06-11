@@ -52,6 +52,7 @@ export default function EnrollmentManager({
 }: EnrollmentManagerProps) {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedInstructorId, setSelectedInstructorId] = useState<'all' | string>('all');
+  const [selectedCourseName, setSelectedCourseName] = useState<'all' | string>('all');
   const [showAddForm, setShowAddForm] = useState(false);
   const [addFormType, setAddFormType] = useState<'student' | 'instructor' | 'sub-admin'>('student');
   const [activeListView, setActiveListView] = useState<'students' | 'instructors' | 'sub-admins'>('students');
@@ -249,7 +250,8 @@ export default function EnrollmentManager({
     const matchesSearch = student.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
                           student.email.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesInstructor = selectedInstructorId === 'all' || student.assignedInstructorId === selectedInstructorId;
-    return matchesSearch && matchesInstructor;
+    const matchesCourse = selectedCourseName === 'all' || student.course === selectedCourseName;
+    return matchesSearch && matchesInstructor && matchesCourse;
   });
 
   const filteredInstructors = instructors.filter(ins => {
@@ -978,27 +980,6 @@ export default function EnrollmentManager({
                     </div>
 
                     <div className="space-y-1.5">
-                      <label className="text-[11px] font-mono uppercase text-slate-500 dark:text-slate-400 block">Student Batch Group</label>
-                      <select
-                        value={newBatch}
-                        onChange={e => setNewBatch(e.target.value)}
-                        className="w-full px-3 py-2 text-xs border border-slate-200 dark:border-slate-800 rounded-xl bg-white dark:bg-slate-900 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500/30 font-sans"
-                      >
-                        {batches.map(b => (
-                          <option key={b.id} value={b.name}>{b.name}</option>
-                        ))}
-                        {batches.length === 0 && (
-                          <>
-                            <option value="Batch A">Batch A</option>
-                            <option value="Batch B">Batch B</option>
-                            <option value="Batch C">Batch C</option>
-                            <option value="Batch D">Batch D</option>
-                          </>
-                        )}
-                      </select>
-                    </div>
-
-                    <div className="space-y-1.5">
                       <label className="text-[11px] font-mono uppercase text-slate-500 dark:text-slate-400 block">Enrolled Professional Course</label>
                       <select
                         value={newCourse}
@@ -1104,20 +1085,38 @@ export default function EnrollmentManager({
           </div>
 
           {activeListView === 'students' && (
-            <div className="flex items-center gap-2">
-              <Filter className="w-3.5 h-3.5 text-slate-400" />
-              <select
-                value={selectedInstructorId}
-                onChange={e => setSelectedInstructorId(e.target.value)}
-                className="border border-slate-200 dark:border-white/5 rounded-xl px-3 py-2.5 text-xs bg-white dark:bg-[#0F0F11] text-slate-705 dark:text-gray-300 focus:outline-none focus:ring-2 focus:ring-amber-500/20 font-sans"
-              >
-                <option value="all">Mentor Filter: All</option>
-                {instructors.map(ins => (
-                  <option key={ins.id} value={ins.id}>
-                    Mentor: {ins.name}
-                  </option>
-                ))}
-              </select>
+            <div className="flex flex-wrap items-center gap-2">
+              <div className="flex items-center gap-2">
+                <Filter className="w-3.5 h-3.5 text-slate-400" />
+                <select
+                  value={selectedInstructorId}
+                  onChange={e => setSelectedInstructorId(e.target.value)}
+                  className="border border-slate-200 dark:border-white/5 rounded-xl px-3 py-2.5 text-xs bg-white dark:bg-[#0F0F11] text-slate-705 dark:text-gray-300 focus:outline-none focus:ring-2 focus:ring-amber-500/20 font-sans"
+                >
+                  <option value="all">Mentor Filter: All</option>
+                  {instructors.map(ins => (
+                    <option key={ins.id} value={ins.id}>
+                      Mentor: {ins.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <BookOpen className="w-3.5 h-3.5 text-slate-400" />
+                <select
+                  value={selectedCourseName}
+                  onChange={e => setSelectedCourseName(e.target.value)}
+                  className="border border-slate-200 dark:border-white/5 rounded-xl px-3 py-2.5 text-xs bg-white dark:bg-[#0F0F11] text-slate-705 dark:text-gray-300 focus:outline-none focus:ring-2 focus:ring-amber-500/20 font-sans"
+                >
+                  <option value="all">Course Filter: All</option>
+                  {courses.map(c => (
+                    <option key={c.id} value={c.name}>
+                      {c.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
             </div>
           )}
         </div>
@@ -1163,9 +1162,6 @@ export default function EnrollmentManager({
                               <p className="font-semibold text-slate-900 dark:text-white text-sm">{student.name}</p>
                               <div className="flex flex-wrap items-center gap-1.5 mt-0.5">
                                 <p className="text-[10px] font-mono text-slate-400">ID: {student.id}</p>
-                                <span className="text-[9px] font-mono font-bold px-1.5 py-0 rounded bg-blue-500/10 text-blue-600 dark:text-blue-400 uppercase">
-                                  {student.batch || 'Batch A'}
-                                </span>
                                 {student.course && (
                                   <span className="text-[9px] font-mono font-bold px-1.5 py-0 rounded bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
                                     {student.course}
@@ -1785,28 +1781,6 @@ export default function EnrollmentManager({
                       onChange={e => setEditDob(e.target.value)}
                       className="w-full px-3 py-2 bg-slate-50 dark:bg-[#070708] border border-slate-200 dark:border-white/5 rounded-xl text-slate-805 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500"
                     />
-                  </div>
-
-                   {/* Student Batch Group */}
-                  <div className="space-y-1">
-                    <label className="text-[10px] font-mono text-slate-500 dark:text-gray-400 uppercase font-semibold">Student Batch Group</label>
-                    <select
-                      value={editBatch}
-                      onChange={e => setEditBatch(e.target.value)}
-                      className="w-full px-3 py-2 bg-slate-50 dark:bg-[#070708] border border-slate-200 dark:border-white/5 rounded-xl text-slate-805 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500"
-                    >
-                      {batches.map(b => (
-                        <option key={b.id} value={b.name}>{b.name}</option>
-                      ))}
-                      {batches.length === 0 && (
-                        <>
-                          <option value="Batch A">Batch A</option>
-                          <option value="Batch B">Batch B</option>
-                          <option value="Batch C">Batch C</option>
-                          <option value="Batch D">Batch D</option>
-                        </>
-                      )}
-                    </select>
                   </div>
 
                   {/* Enrolled Professional Course */}

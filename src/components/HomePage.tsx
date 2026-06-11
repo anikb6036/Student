@@ -1,13 +1,17 @@
-import React from 'react';
+import React, { useState } from 'react';
 import Logo from './Logo';
 import { ArrowRight, BookOpen, Users, Shield } from 'lucide-react';
+import { Course } from '../types';
 
 interface HomePageProps {
   isDark: boolean;
   onEnterPortal: (tab: 'fastReg' | 'authLogin' | 'adminLogin') => void;
+  courses?: Course[];
 }
 
-export default function HomePage({ isDark, onEnterPortal }: HomePageProps) {
+export default function HomePage({ isDark, onEnterPortal, courses = [] }: HomePageProps) {
+  const [hoveredCourseId, setHoveredCourseId] = useState<string | null>(null);
+  const activeCourseId = hoveredCourseId;
   return (
     <div className="min-h-screen bg-[linear-gradient(135deg,#E0E6ED_0%,#EDF2F7_50%,#E2E8F0_100%)] dark:bg-[linear-gradient(135deg,#0E131F_0%,#151D30_50%,#090D16_100%)] text-[#1E293B] dark:text-slate-200 transition-colors duration-300 flex flex-col justify-between relative overflow-hidden font-sans z-0">
       
@@ -185,6 +189,67 @@ export default function HomePage({ isDark, onEnterPortal }: HomePageProps) {
         </div>
 
       </main>
+
+      {/* Active Running Courses Section */}
+      <section className="w-full bg-[#fbd4d6] dark:bg-[#1a0e10] py-12 md:py-20 relative z-10 border-t border-slate-200/50 dark:border-white/5">
+        <div className="max-w-7xl mx-auto px-6 lg:px-12">
+          <div className="bg-white dark:bg-[#0B0C10] rounded-[2rem] md:rounded-[3rem] p-8 md:p-16 shadow-xl shadow-slate-200/50 dark:shadow-none border border-slate-100 dark:border-white/5 relative overflow-hidden">
+            <h2 className="text-3xl md:text-5xl font-sans font-bold text-center text-slate-900 dark:text-white tracking-tight mb-12">
+              Choose Your Area of Interest
+            </h2>
+
+            {courses.length === 0 ? (
+              <div className="p-8 md:p-12 text-center rounded-3xl bg-slate-50 dark:bg-white/5 border border-slate-200/50 dark:border-white/5">
+                <BookOpen className="w-10 h-10 text-slate-400 mx-auto mb-3" />
+                <p className="text-sm font-medium text-slate-600 dark:text-gray-305">No active academic cohorts published yet.</p>
+                <p className="text-xs text-slate-400 mt-1 max-w-md mx-auto">Please sign in as staff or administrator to build and publish learning programs into the registry.</p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {courses.map((course, idx) => {
+                  const isActive = activeCourseId === course.id;
+                  return (
+                    <div 
+                      key={course.id}
+                      onClick={() => onEnterPortal('fastReg')}
+                      onMouseEnter={() => setHoveredCourseId(course.id)}
+                      onMouseLeave={() => setHoveredCourseId(null)}
+                      className={`p-6 rounded-2xl bg-white dark:bg-[#15161A] border-2 transition-all duration-300 flex justify-between items-center group cursor-pointer shadow-sm hover:shadow-md ${
+                        isActive 
+                          ? 'border-red-500 ring-2 ring-red-500/10' 
+                          : 'border-slate-100 dark:border-white/5 hover:border-red-400'
+                      }`}
+                    >
+                      <div className="flex-1 pr-4">
+                        <h3 className={`text-lg md:text-xl font-bold leading-tight transition-colors ${
+                          isActive 
+                            ? 'text-red-600 dark:text-red-500 font-extrabold' 
+                            : 'text-slate-900 dark:text-white group-hover:text-red-500'
+                        }`}>
+                          {course.name}
+                        </h3>
+                        <p className="text-sm text-slate-500 dark:text-slate-400 mt-3 font-medium">
+                          {course.durationWeeks ? `${course.durationWeeks} Months` : '1 Course'}
+                        </p>
+                      </div>
+
+                      <div className={`w-16 h-16 flex items-center justify-center rounded-full transition-all duration-300 ${
+                        isActive 
+                          ? 'bg-red-50 dark:bg-red-500/10 text-red-500 scale-105 shadow-sm' 
+                          : 'bg-slate-50 dark:bg-white/5 text-slate-400 group-hover:bg-red-50 dark:group-hover:bg-red-500/10 group-hover:text-red-500 group-hover:scale-105'
+                      }`}>
+                        {idx % 3 === 0 ? <svg className="w-8 h-8" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="7" height="7" x="3" y="3" rx="1"/><rect width="7" height="7" x="14" y="3" rx="1"/><rect width="7" height="7" x="14" y="14" rx="1"/><rect width="7" height="7" x="3" y="14" rx="1"/></svg> : 
+                         idx % 3 === 1 ? <svg className="w-8 h-8" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 20V10"/><path d="M18 20V4"/><path d="M6 20v-4"/></svg> :
+                         <svg className="w-8 h-8" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/></svg>}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        </div>
+      </section>
       
       {/* Footer */}
       <footer className="w-full border-t border-slate-200/50 dark:border-white/5 pt-16 pb-8 mt-auto z-10 bg-white/40 dark:bg-black/40 backdrop-blur-md">

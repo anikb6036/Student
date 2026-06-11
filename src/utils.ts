@@ -149,9 +149,9 @@ export const INITIAL_BATCHES: StudentBatch[] = [
 ];
 
 export const INITIAL_COURSES: Course[] = [
-  { id: 'course-1', name: 'IIT-JEE Master Preparation', code: 'IITJEE', description: 'Advanced Physics, Chemistry & Mathematics Prep', durationWeeks: '52', createdDate: '2024-05-18' },
-  { id: 'course-2', name: 'Medical NEET Crash Course', code: 'NEET', description: 'Intensive Biology, Organic Chemistry & Physics', durationWeeks: '24', createdDate: '2024-05-19' },
-  { id: 'course-3', name: 'Foundation Olympiad Prep', code: 'FOPrep', description: 'Mathematics and Science Basics for Early Olympiad aspirants', durationWeeks: '36', createdDate: '2024-05-19' }
+  { id: 'course-1', name: 'IIT-JEE Master Preparation', code: 'IITJEE', description: 'Advanced Physics, Chemistry & Mathematics Prep', durationWeeks: '12', createdDate: '2024-05-18' },
+  { id: 'course-2', name: 'Medical NEET Crash Course', code: 'NEET', description: 'Intensive Biology, Organic Chemistry & Physics', durationWeeks: '6', createdDate: '2024-05-19' },
+  { id: 'course-3', name: 'Foundation Olympiad Prep', code: 'FOPrep', description: 'Mathematics and Science Basics for Early Olympiad aspirants', durationWeeks: '9', createdDate: '2024-05-19' }
 ];
 
 // Deprecated, maintained as a fallback. Replaced by useFirebaseState.

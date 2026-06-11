@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { UserAccount, ClassSchedule, ProgressRecord, AppNotification, BackupHistory, RegistrationRequest, SimulatedEmail, StudentBatch, Course } from './types';
 import {
   INITIAL_USERS,
@@ -60,7 +60,8 @@ import {
   Upload,
   X,
   AlertCircle,
-  ChevronLeft
+  ChevronLeft,
+  Menu
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { COUNTRY_PHONE_CONFIGS } from './countryPhoneData';
@@ -139,7 +140,7 @@ function AppContent() {
 
   // Security Session Activity Auto-Logout
   const AUTO_LOGOUT_TIME_MS = 15 * 60 * 1000; // 15 mins of inactivity
-  const [lastActivity, setLastActivity] = useState<number>(Date.now());
+  const lastActivityRef = useRef<number>(Date.now());
 
   useEffect(() => {
     if (!currentUser) return;
@@ -147,13 +148,13 @@ function AppContent() {
     // Auto logout timer check
     const interval = setInterval(() => {
       const now = Date.now();
-      if (now - lastActivity > AUTO_LOGOUT_TIME_MS) {
+      if (now - lastActivityRef.current > AUTO_LOGOUT_TIME_MS) {
         handleLogout('Your session expired due to inactivity. For your security, you have been logged out.');
       }
     }, 30000); // Check every 30 seconds
 
     return () => clearInterval(interval);
-  }, [currentUser, lastActivity]);
+  }, [currentUser]);
 
   useEffect(() => {
     if (!currentUser) return;
@@ -163,7 +164,7 @@ function AppContent() {
     const updateActivity = () => {
       if (!throttleTimeout) {
         throttleTimeout = setTimeout(() => {
-          setLastActivity(Date.now());
+          lastActivityRef.current = Date.now();
           throttleTimeout = null;
         }, 5000); // only update at most once every 5 seconds
       }
@@ -185,7 +186,7 @@ function AppContent() {
   }, [currentUser]);
 
   // Sidebar expand/collapse and hover active state checks
-  const [isSidebarCollapsed] = useState<boolean>(true);
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState<boolean>(true);
   const [isSidebarHovered, setIsSidebarHovered] = useState<boolean>(false);
   const [ignoreHover, setIgnoreHover] = useState<boolean>(false);
 
@@ -604,6 +605,22 @@ function AppContent() {
       id: generateUniqueId('notif'),
       title: 'New Course Registered & Published',
       message: `Course "${course.name}" (${course.code}) has been successfully registered and is now available.`,
+      timestamp: new Date().toISOString(),
+      read: false,
+      type: 'general',
+      channel: 'system'
+    };
+    setNotifications(prev => [notif, ...prev]);
+    triggerToast(notif);
+  };
+
+  const handleUpdateCourse = (updatedCourse: Course) => {
+    setCourses(prev => prev.map(c => c.id === updatedCourse.id ? updatedCourse : c));
+
+    const notif: AppNotification = {
+      id: generateUniqueId('notif'),
+      title: 'Course Updated',
+      message: `Course "${updatedCourse.name}" (${updatedCourse.code}) has been successfully updated.`,
       timestamp: new Date().toISOString(),
       read: false,
       type: 'general',
@@ -2356,6 +2373,7 @@ function AppContent() {
         ) : (
           <HomePage
             isDark={isDark}
+            courses={courses}
             onEnterPortal={(tab) => {
               setShowPortal(true);
               setOnboardingTab(tab);
@@ -2450,7 +2468,7 @@ function AppContent() {
           >
             <div className="space-y-6">
               {/* Header Branding */}
-              <div className={`flex items-center justify-center select-none`}>
+              <div className={`flex items-center justify-between md:justify-center select-none`}>
                 <div className={`flex items-center gap-2`}>
                   {!isActuallyCollapsed ? (
                     <div className="leading-none animate-fadeIn">
@@ -2465,6 +2483,15 @@ function AppContent() {
                     </div>
                   )}
                 </div>
+                
+                {/* Mobile Menu Toggle */}
+                <button
+                  type="button"
+                  onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
+                  className="md:hidden p-2 text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white rounded-lg hover:bg-slate-100 dark:hover:bg-white/5 transition"
+                >
+                  <Menu className="w-5 h-5" />
+                </button>
               </div>
 
               {/* Collapsed items wrapped in responsive block. On mobile, we hide menus when collapsed. */}
@@ -2556,7 +2583,10 @@ function AppContent() {
                 <nav className="space-y-1">
                   <button
                     type="button"
-                    onClick={() => setActiveTab('dashboard')}
+                    onClick={() => {
+                      setActiveTab('dashboard');
+                      if (window.innerWidth < 768) setIsSidebarCollapsed(true);
+                    }}
                     className={`w-full flex items-center ${isActuallyCollapsed ? 'justify-center p-2.5' : 'gap-3 px-3.5 py-2.5'} rounded-xl text-xs transition relative cursor-pointer ${
                       activeTab === 'dashboard'
                         ? 'bg-amber-500/10 border border-amber-500/20 text-amber-500 font-bold'
@@ -2570,7 +2600,10 @@ function AppContent() {
 
                   <button
                     type="button"
-                    onClick={() => setActiveTab('enrollments')}
+                    onClick={() => {
+                      setActiveTab('enrollments');
+                      if (window.innerWidth < 768) setIsSidebarCollapsed(true);
+                    }}
                     className={`w-full flex items-center ${isActuallyCollapsed ? 'justify-center p-2.5' : 'gap-3 px-3.5 py-2.5'} rounded-xl text-xs transition relative cursor-pointer ${
                       activeTab === 'enrollments'
                         ? 'bg-amber-500/10 border border-amber-500/20 text-amber-500 font-bold'
@@ -2599,6 +2632,7 @@ function AppContent() {
                       setScheduleShowAddForm(false);
                       setScheduleShowBatchManager(false);
                       setScheduleShowCourseDashboard(false);
+                      if (window.innerWidth < 768) setIsSidebarCollapsed(true);
                     }}
                     className={`w-full flex items-center ${isActuallyCollapsed ? 'justify-center p-2.5' : 'gap-3 px-3.5 py-2.5'} rounded-xl text-xs transition relative cursor-pointer ${
                       activeTab === 'schedule'
@@ -2632,26 +2666,6 @@ function AppContent() {
                         <span className="truncate">Schedule New Live Class</span>
                       </button>
 
-                      {/* Sub-item 2: Batch Management */}
-                      {['admin', 'sub-admin'].includes(currentUser.role) && (
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setScheduleShowBatchManager(!scheduleShowBatchManager);
-                            setScheduleShowAddForm(false);
-                            setScheduleShowCourseDashboard(false);
-                          }}
-                          className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-[10.5px] transition cursor-pointer ${
-                            scheduleShowBatchManager
-                              ? 'bg-amber-500/15 text-amber-500 font-bold'
-                              : 'text-slate-550 dark:text-gray-400 hover:text-amber-500 hover:bg-slate-50 dark:hover:bg-[#161618]'
-                          }`}
-                        >
-                          <Plus className="w-3 h-3 flex-shrink-0 text-amber-500" />
-                          <span className="truncate">Manage & Publish Batches</span>
-                        </button>
-                      )}
-
                       {/* Sub-item 3: Courses Publish */}
                       {['admin', 'sub-admin'].includes(currentUser.role) && (
                         <button
@@ -2676,7 +2690,10 @@ function AppContent() {
 
                   <button
                     type="button"
-                    onClick={() => setActiveTab('progress')}
+                    onClick={() => {
+                      setActiveTab('progress');
+                      if (window.innerWidth < 768) setIsSidebarCollapsed(true);
+                    }}
                     className={`w-full flex items-center ${isActuallyCollapsed ? 'justify-center p-2.5' : 'gap-3 px-3.5 py-2.5'} rounded-xl text-xs transition relative cursor-pointer ${
                       activeTab === 'progress'
                         ? 'bg-amber-500/10 border border-amber-500/20 text-amber-500 font-bold'
@@ -2690,7 +2707,10 @@ function AppContent() {
 
                   <button
                     type="button"
-                    onClick={() => setActiveTab('reports')}
+                    onClick={() => {
+                      setActiveTab('reports');
+                      if (window.innerWidth < 768) setIsSidebarCollapsed(true);
+                    }}
                     className={`w-full flex items-center ${isActuallyCollapsed ? 'justify-center p-2.5' : 'gap-3 px-3.5 py-2.5'} rounded-xl text-xs transition relative cursor-pointer ${
                       activeTab === 'reports'
                         ? 'bg-amber-500/10 border border-amber-500/20 text-amber-500 font-bold'
@@ -2704,7 +2724,10 @@ function AppContent() {
 
                   <button
                     type="button"
-                    onClick={() => setActiveTab('inbox')}
+                    onClick={() => {
+                      setActiveTab('inbox');
+                      if (window.innerWidth < 768) setIsSidebarCollapsed(true);
+                    }}
                     className={`w-full flex items-center ${isActuallyCollapsed ? 'justify-center p-2.5' : 'gap-3 px-3.5 py-2.5'} rounded-xl text-xs transition relative cursor-pointer ${
                       activeTab === 'inbox'
                         ? 'bg-amber-500/10 border border-amber-500/20 text-amber-500 font-bold'
@@ -2723,7 +2746,10 @@ function AppContent() {
 
                   <button
                     type="button"
-                    onClick={() => setActiveTab('profile')}
+                    onClick={() => {
+                      setActiveTab('profile');
+                      if (window.innerWidth < 768) setIsSidebarCollapsed(true);
+                    }}
                     className={`w-full flex items-center ${isActuallyCollapsed ? 'justify-center p-2.5' : 'gap-3 px-3.5 py-2.5'} rounded-xl text-xs transition relative cursor-pointer ${
                       activeTab === 'profile'
                         ? 'bg-amber-500/10 border border-amber-500/20 text-amber-500 font-bold'
@@ -2738,7 +2764,10 @@ function AppContent() {
                   {currentUser.role === 'admin' && (
                     <button
                       type="button"
-                      onClick={() => setActiveTab('backup')}
+                      onClick={() => {
+                        setActiveTab('backup');
+                        if (window.innerWidth < 768) setIsSidebarCollapsed(true);
+                      }}
                       className={`w-full flex items-center ${isActuallyCollapsed ? 'justify-center p-2.5' : 'gap-3 px-3.5 py-2.5'} rounded-xl text-xs transition relative cursor-pointer ${
                         activeTab === 'backup'
                           ? 'bg-amber-500/10 border border-amber-500/20 text-amber-500 font-bold'
@@ -3063,6 +3092,7 @@ function AppContent() {
                 onAddBatch={handleAddBatch}
                 onDeleteBatch={handleDeleteBatch}
                 onAddCourse={handleAddCourse}
+                onUpdateCourse={handleUpdateCourse}
                 onDeleteCourse={handleDeleteCourse}
                 showAddForm={scheduleShowAddForm}
                 setShowAddForm={setScheduleShowAddForm}

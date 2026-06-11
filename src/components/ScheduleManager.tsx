@@ -5,7 +5,7 @@
 
 import React, { useState } from 'react';
 import { UserAccount, ClassSchedule, StudentBatch, Course } from '../types';
-import { Calendar, Clock, MapPin, Users, Plus, CheckCircle, Ban, Filter, Search, User, Trash2, GraduationCap, Sparkles } from 'lucide-react';
+import { Calendar, Clock, MapPin, Users, Plus, CheckCircle, Ban, Filter, Search, User, Trash2, GraduationCap, Sparkles, Pencil } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 
 interface ScheduleManagerProps {
@@ -21,6 +21,7 @@ interface ScheduleManagerProps {
   onAddBatch?: (newBatch: Omit<StudentBatch, 'id' | 'createdDate'>) => void;
   onDeleteBatch?: (id: string) => void;
   onAddCourse?: (newCourse: Omit<Course, 'id' | 'createdDate'>) => void;
+  onUpdateCourse?: (updatedCourse: Course) => void;
   onDeleteCourse?: (id: string) => void;
   showAddForm?: boolean;
   setShowAddForm?: (val: boolean) => void;
@@ -43,6 +44,7 @@ export default function ScheduleManager({
   onAddBatch,
   onDeleteBatch,
   onAddCourse,
+  onUpdateCourse,
   onDeleteCourse,
   showAddForm: controlledShowAddForm,
   setShowAddForm: controlledSetShowAddForm,
@@ -89,6 +91,7 @@ export default function ScheduleManager({
   const [newCourseCode, setNewCourseCode] = useState('');
   const [newCourseWeeks, setNewCourseWeeks] = useState('');
   const [newCourseDesc, setNewCourseDesc] = useState('');
+  const [editingCourse, setEditingCourse] = useState<Course | null>(null);
 
   // New Class Form State
   const [title, setTitle] = useState('');
@@ -101,6 +104,10 @@ export default function ScheduleManager({
   const [location, setLocation] = useState('');
   const [classBatch, setClassBatch] = useState('All');
   const [classCourse, setClassCourse] = useState('All');
+
+  // State for internal delete confirmation
+  const [courseToDelete, setCourseToDelete] = useState<Course | null>(null);
+  const [batchToDelete, setBatchToDelete] = useState<StudentBatch | null>(null);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -149,14 +156,44 @@ export default function ScheduleManager({
   const handleCourseSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!newCourseName.trim() || !newCourseCode.trim()) return;
-    if (onAddCourse) {
-      onAddCourse({
-        name: newCourseName.trim(),
-        code: newCourseCode.trim().toUpperCase(),
-        durationWeeks: newCourseWeeks.trim() || undefined,
-        description: newCourseDesc.trim() || undefined
-      });
+    
+    if (editingCourse) {
+      if (onUpdateCourse) {
+        onUpdateCourse({
+          ...editingCourse,
+          name: newCourseName.trim(),
+          code: newCourseCode.trim().toUpperCase(),
+          durationWeeks: newCourseWeeks.trim() || undefined,
+          description: newCourseDesc.trim() || undefined
+        });
+      }
+      setEditingCourse(null);
+    } else {
+      if (onAddCourse) {
+        onAddCourse({
+          name: newCourseName.trim(),
+          code: newCourseCode.trim().toUpperCase(),
+          durationWeeks: newCourseWeeks.trim() || undefined,
+          description: newCourseDesc.trim() || undefined
+        });
+      }
     }
+    setNewCourseName('');
+    setNewCourseCode('');
+    setNewCourseWeeks('');
+    setNewCourseDesc('');
+  };
+
+  const startEditCourse = (course: Course) => {
+    setEditingCourse(course);
+    setNewCourseName(course.name);
+    setNewCourseCode(course.code);
+    setNewCourseWeeks(course.durationWeeks || '');
+    setNewCourseDesc(course.description || '');
+  };
+
+  const cancelEditCourse = () => {
+    setEditingCourse(null);
     setNewCourseName('');
     setNewCourseCode('');
     setNewCourseWeeks('');
@@ -170,27 +207,23 @@ export default function ScheduleManager({
     const matchesInstructor = instructorFilter === 'all' || cl.instructorId === instructorFilter;
     const matchesStatus = statusFilter === 'all' || cl.status === statusFilter;
 
-    // Role specific display constraints (Students see only classes they are enrolled in or that are assigned to their batch & course 'All')
+    // Role specific display constraints (Students see only classes they are enrolled in or that are assigned to their course or Course 'All')
     if (currentUser.role === 'student') {
-      const isMyBatch = cl.batch && currentUser.batch && cl.batch.toLowerCase() === currentUser.batch.toLowerCase();
-      const isAllBatch = !cl.batch || cl.batch === 'All';
       const isExplicitlyEnrolled = cl.enrolledStudentIds.includes(currentUser.id);
       
       const isMyCourse = cl.course && currentUser.course && cl.course.toLowerCase() === currentUser.course.toLowerCase();
       const isAllCourse = !cl.course || cl.course === 'All';
 
-      const matchesBatch = isMyBatch || isAllBatch || isExplicitlyEnrolled;
-      const matchesCourse = isMyCourse || isAllCourse;
+      const matchesCourse = isMyCourse || isAllCourse || isExplicitlyEnrolled;
 
-      if (!matchesBatch || !matchesCourse) {
+      if (!matchesCourse) {
         return false;
       }
     }
 
-    const matchesBatchFilter = batchFilter === 'all' || cl.batch === batchFilter;
     const matchesCourseFilter = courseFilter === 'all' || cl.course === courseFilter;
 
-    return matchesSearch && matchesSubject && matchesInstructor && matchesStatus && matchesBatchFilter && matchesCourseFilter;
+    return matchesSearch && matchesSubject && matchesInstructor && matchesStatus && matchesCourseFilter;
   });
 
   const isEnrolled = (cl: ClassSchedule) => {
@@ -237,7 +270,7 @@ export default function ScheduleManager({
                   <form onSubmit={handleCourseSubmit} className="space-y-3 bg-white dark:bg-[#060608] border border-slate-200/60 dark:border-white/5 p-4 rounded-xl">
                     <h4 className="text-xs font-bold text-slate-700 dark:text-zinc-300 uppercase tracking-widest font-mono flex items-center gap-1.5">
                       <Sparkles className="w-3.5 h-3.5 text-amber-500 animate-pulse" />
-                      Publish New Course
+                      {editingCourse ? 'Edit Published Course' : 'Publish New Course'}
                     </h4>
 
                     <div className="space-y-1">
@@ -265,10 +298,10 @@ export default function ScheduleManager({
                     </div>
 
                     <div className="space-y-1">
-                      <label className="text-[10px] font-mono uppercase text-slate-500 dark:text-slate-400 block font-bold">Duration (Weeks)</label>
+                      <label className="text-[10px] font-mono uppercase text-slate-500 dark:text-slate-400 block font-bold">Duration (Months)</label>
                       <input
                         type="number"
-                        placeholder="e.g. 52"
+                        placeholder="e.g. 12"
                         value={newCourseWeeks}
                         onChange={e => setNewCourseWeeks(e.target.value)}
                         className="w-full px-3 py-2 text-xs border border-slate-200 dark:border-white/5 rounded-xl bg-slate-50 dark:bg-[#0A0A0B] text-slate-895 dark:text-white focus:outline-none focus:ring-2 focus:ring-amber-500/20"
@@ -286,12 +319,23 @@ export default function ScheduleManager({
                       />
                     </div>
 
-                    <button
-                      type="submit"
-                      className="w-full py-2 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-amber-955 rounded-xl text-xs font-bold shadow-md transition cursor-pointer mt-2"
-                    >
-                      Publish Course Registry
-                    </button>
+                    <div className="flex gap-2">
+                      <button
+                        type="submit"
+                        className="flex-1 py-2 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-amber-955 rounded-xl text-xs font-bold shadow-md transition cursor-pointer mt-2"
+                      >
+                        {editingCourse ? 'Update Course Details' : 'Publish Course Registry'}
+                      </button>
+                      {editingCourse && (
+                        <button
+                          type="button"
+                          onClick={cancelEditCourse}
+                          className="px-3 py-2 bg-slate-100 hover:bg-slate-200 dark:bg-white/5 dark:hover:bg-white/10 text-slate-650 dark:text-zinc-300 rounded-xl text-xs font-bold shadow-sm transition cursor-pointer mt-2"
+                        >
+                          Cancel
+                        </button>
+                      )}
+                    </div>
                   </form>
 
                   {/* List of active courses */}
@@ -309,26 +353,32 @@ export default function ScheduleManager({
                                 {c.code}
                               </span>
                               <span className="text-[10px] font-mono font-bold px-1.5 py-0.5 bg-slate-100 dark:bg-white/5 text-slate-600 dark:text-zinc-300 rounded">
-                                {c.durationWeeks ? `${c.durationWeeks} Wks` : 'Ongoing'}
+                                {c.durationWeeks ? `${c.durationWeeks} Months` : 'Ongoing'}
                               </span>
                             </div>
                             <p className="text-xs font-bold text-slate-800 dark:text-zinc-200">{c.name}</p>
-                            <p className="text-[11px] text-slate-505 dark:text-slate-400 leading-normal">{c.description || 'No summary overview provided.'}</p>
+                            <p className="text-[11px] text-slate-550 dark:text-slate-400 leading-normal">{c.description || 'No summary overview provided.'}</p>
                             <p className="text-[9px] text-slate-400 font-mono">Date Published: {c.createdDate}</p>
                           </div>
 
-                          <button
-                            type="button"
-                            onClick={() => {
-                              if (window.confirm(`Are you sure you want to decommission and delete ${c.name}? This will remove it from admission listings.`)) {
-                                if (onDeleteCourse) onDeleteCourse(c.id);
-                              }
-                            }}
-                            className="p-1.5 hover:bg-red-500/10 text-slate-400 hover:text-red-500 rounded transition cursor-pointer flex-shrink-0"
-                            title="Decommission Course"
-                          >
-                            <Trash2 className="w-3.5 h-3.5" />
-                          </button>
+                          <div className="flex flex-col gap-1 flex-shrink-0">
+                            <button
+                              type="button"
+                              onClick={() => startEditCourse(c)}
+                              className="p-1.5 hover:bg-amber-500/10 text-slate-400 hover:text-amber-500 rounded transition cursor-pointer"
+                              title="Edit Course Details"
+                            >
+                              <Pencil className="w-3.5 h-3.5" />
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => setCourseToDelete(c)}
+                              className="p-1.5 hover:bg-red-500/10 text-slate-400 hover:text-red-500 rounded transition cursor-pointer"
+                              title="Decommission Course"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
                         </div>
                       ))}
 
@@ -345,109 +395,7 @@ export default function ScheduleManager({
           )}
         </AnimatePresence>
 
-        {/* Dynamic Batch Manager */}
-        <AnimatePresence>
-          {showBatchManager && (
-            <motion.div
-              initial={{ height: 0, opacity: 0 }}
-              animate={{ height: 'auto', opacity: 1 }}
-              exit={{ height: 0, opacity: 0 }}
-              className="overflow-hidden mb-6"
-            >
-              <div className="p-6 rounded-2xl bg-slate-50 dark:bg-[#0F0F11] border border-slate-100 dark:border-white/5 space-y-4">
-                <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b border-slate-200/60 dark:border-white/5 pb-3">
-                  <div>
-                    <h3 className="text-sm font-bold text-slate-800 dark:text-zinc-200 uppercase tracking-wider font-mono">
-                      Active Student Batches Registry
-                    </h3>
-                    <p className="text-xs text-slate-500 dark:text-slate-400">
-                      Create, overview, or decommission batches. Decommissioned cohorts will no longer be available when scheduling new sessions.
-                    </p>
-                  </div>
-                </div>
 
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                  {/* Publish form */}
-                  <form onSubmit={handleBatchSubmit} className="space-y-3 bg-white dark:bg-[#060608] border border-slate-200/60 dark:border-white/5 p-4 rounded-xl">
-                    <h4 className="text-xs font-bold text-slate-700 dark:text-zinc-300 uppercase tracking-widest font-mono">
-                      Publish New Batch
-                    </h4>
-
-                    <div className="space-y-1">
-                      <label className="text-[10px] font-mono uppercase text-slate-500 dark:text-slate-400 block font-bold">Batch Name</label>
-                      <input
-                        type="text"
-                        required
-                        placeholder="e.g. Batch E"
-                        value={newBatchName}
-                        onChange={e => setNewBatchName(e.target.value)}
-                        className="w-full px-3 py-2 text-xs border border-slate-200 dark:border-white/5 rounded-xl bg-white dark:bg-[#0A0A0B] text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-amber-500/20"
-                      />
-                    </div>
-
-                    <div className="space-y-1">
-                      <label className="text-[10px] font-mono uppercase text-slate-500 dark:text-slate-400 block font-bold">Description (Optional)</label>
-                      <input
-                        type="text"
-                        placeholder="e.g. Evening Fast-Track Cohort"
-                        value={newBatchDesc}
-                        onChange={e => setNewBatchDesc(e.target.value)}
-                        className="w-full px-3 py-2 text-xs border border-slate-200 dark:border-white/5 rounded-xl bg-white dark:bg-[#0A0A0B] text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-amber-500/20"
-                      />
-                    </div>
-
-                    <button
-                      type="submit"
-                      className="w-full py-2 bg-amber-500 hover:bg-amber-600 text-amber-950 rounded-xl text-xs font-bold shadow transition cursor-pointer mt-2"
-                    >
-                      Publish Batch Cohort
-                    </button>
-                  </form>
-
-                  {/* List of active batches */}
-                  <div className="lg:col-span-2 space-y-2 max-h-[250px] overflow-y-auto pr-1">
-                    <h4 className="text-xs font-bold text-slate-700 dark:text-zinc-300 uppercase tracking-widest font-mono mb-2">
-                      Registered Batches ({batches.length})
-                    </h4>
-
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5">
-                      {batches.map(b => (
-                        <div key={b.id} className="p-3 bg-white dark:bg-[#060608] border border-slate-200/60 dark:border-white/5 rounded-xl flex justify-between items-start gap-4">
-                          <div className="space-y-1">
-                            <span className="text-[10px] uppercase font-mono font-bold px-1.5 py-0.5 bg-blue-500/10 text-blue-600 dark:text-blue-400 rounded">
-                              {b.name}
-                            </span>
-                            <p className="text-[11px] text-slate-600 dark:text-slate-300 pt-1">{b.description || 'No description provided.'}</p>
-                            <p className="text-[9px] text-slate-400 font-mono">Created: {b.createdDate}</p>
-                          </div>
-
-                          <button
-                            type="button"
-                            onClick={() => {
-                              if (window.confirm(`Are you sure you want to unregister and decommission ${b.name}?`)) {
-                                if (onDeleteBatch) onDeleteBatch(b.id);
-                              }
-                            }}
-                            className="p-1 hover:bg-red-500/10 text-slate-400 hover:text-red-500 rounded transition cursor-pointer"
-                            title="Delete Batch"
-                          >
-                            <Trash2 className="w-3.5 h-3.5" />
-                          </button>
-                        </div>
-                      ))}
-
-                      {batches.length === 0 && (
-                        <div className="col-span-full py-6 text-center text-xs text-slate-400 dark:text-slate-500 font-mono">
-                          No active batches published in the system.
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
 
         {/* Dynamic Class Creator Form */}
         <AnimatePresence>
@@ -551,20 +499,6 @@ export default function ScheduleManager({
                     onChange={e => setMaxStudents(e.target.value)}
                     className="w-full px-3 py-2 text-xs border border-slate-200 dark:border-white/5 rounded-xl bg-white dark:bg-[#0A0A0B] text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-amber-500/20"
                   />
-                </div>
-
-                <div className="space-y-1.5">
-                  <label className="text-[11px] font-mono uppercase text-slate-500 dark:text-slate-400 block">Target Student Batch</label>
-                  <select
-                    value={classBatch}
-                    onChange={e => setClassBatch(e.target.value)}
-                    className="w-full px-3 py-2 text-xs border border-slate-200 dark:border-white/5 rounded-xl bg-white dark:bg-[#0A0A0B] text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-amber-500/20"
-                  >
-                    <option value="All">All Batches</option>
-                    {batches.map(b => (
-                      <option key={b.id} value={b.name}>{b.name}</option>
-                    ))}
-                  </select>
                 </div>
 
                 <div className="space-y-1.5">
@@ -672,20 +606,6 @@ export default function ScheduleManager({
           </div>
 
           <div className="flex items-center gap-1.5 border border-slate-200 dark:border-white/5 rounded-xl px-2.5 bg-white dark:bg-[#0A0A0B]">
-            <span className="h-2 w-2 rounded-full bg-blue-500"></span>
-            <select
-              value={batchFilter}
-              onChange={e => setBatchFilter(e.target.value)}
-              className="w-full py-2 text-xs bg-transparent text-slate-705 dark:text-zinc-300 focus:outline-none border-0"
-            >
-              <option value="all">Batch: All</option>
-              {batches.map(b => (
-                <option key={b.id} value={b.name}>{b.name}</option>
-              ))}
-            </select>
-          </div>
-
-          <div className="flex items-center gap-1.5 border border-slate-200 dark:border-white/5 rounded-xl px-2.5 bg-white dark:bg-[#0A0A0B]">
             <span className="h-2 w-2 rounded-full bg-emerald-500"></span>
             <select
               value={courseFilter}
@@ -725,9 +645,6 @@ export default function ScheduleManager({
                       <div className="flex flex-wrap gap-1">
                         <span className="text-[10px] font-bold px-2 py-0.5 rounded-lg uppercase bg-slate-100 dark:bg-white/5 text-slate-800 dark:text-zinc-300">
                           {cl.subject}
-                        </span>
-                        <span className="text-[10px] font-bold px-2 py-0.5 rounded-lg uppercase bg-blue-500/10 text-blue-600 dark:text-blue-300">
-                          Batch: {cl.batch || 'All'}
                         </span>
                         {cl.course && (
                           <span className="text-[10px] font-bold px-2 py-0.5 rounded-lg uppercase bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
@@ -836,6 +753,67 @@ export default function ScheduleManager({
           )}
         </div>
       </div>
+
+      {courseToDelete && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-fadeIn">
+          <div className="w-full max-w-sm bg-white dark:bg-[#161618] border border-slate-150/80 dark:border-white/5 rounded-3xl p-6 shadow-2xl space-y-4">
+            <h3 className="text-base font-serif italic font-bold text-slate-900 dark:text-white flex items-center gap-2">
+              <Trash2 className="w-4 h-4 text-red-500" /> Decommission Course?
+            </h3>
+            <p className="text-xs text-slate-600 dark:text-gray-400 leading-relaxed">
+              Are you sure you want to decommission and delete <span className="font-bold text-slate-900 dark:text-white">{courseToDelete.name}</span>? This will remove it from admission listings.
+            </p>
+            <div className="flex justify-end gap-3 pt-3 border-t border-slate-100 dark:border-white/5">
+              <button
+                onClick={() => setCourseToDelete(null)}
+                className="px-4 py-2 text-xs font-bold text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-body/50 rounded-xl transition cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => {
+                  if (onDeleteCourse) onDeleteCourse(courseToDelete.id);
+                  setCourseToDelete(null);
+                }}
+                className="px-4 py-2 text-xs font-bold text-white bg-rose-500 hover:bg-rose-600 rounded-xl transition cursor-pointer"
+              >
+                Confirm Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {batchToDelete && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-fadeIn">
+          <div className="w-full max-w-sm bg-white dark:bg-[#161618] border border-slate-150/80 dark:border-white/5 rounded-3xl p-6 shadow-2xl space-y-4">
+            <h3 className="text-base font-serif italic font-bold text-slate-900 dark:text-white flex items-center gap-2">
+              <Trash2 className="w-4 h-4 text-red-500" /> Delete Batch?
+            </h3>
+            <p className="text-xs text-slate-600 dark:text-gray-400 leading-relaxed">
+              Are you sure you want to unregister and decommission <span className="font-bold text-slate-900 dark:text-white">{batchToDelete.name}</span>?
+            </p>
+             <div className="flex justify-end gap-3 pt-3 border-t border-slate-100 dark:border-white/5">
+              <button
+                onClick={() => setBatchToDelete(null)}
+                className="px-4 py-2 text-xs font-bold text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-body/50 rounded-xl transition cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => {
+                  if (onDeleteBatch) onDeleteBatch(batchToDelete.id);
+                  setBatchToDelete(null);
+                }}
+                className="px-4 py-2 text-xs font-bold text-white bg-rose-500 hover:bg-rose-600 rounded-xl transition cursor-pointer"
+              >
+                Confirm Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 }
