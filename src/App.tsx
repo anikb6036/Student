@@ -239,11 +239,64 @@ function AppContent() {
 
   // Firebase Verification States - bypassed by user request
   const [phoneVerified, setPhoneVerified] = useState(true);
-  const [emailVerified, setEmailVerified] = useState(true);
+  const [emailVerified, setEmailVerified] = useState(false);
   const [phoneVerState, setPhoneVerState] = useState<'idle' | 'sending' | 'sent' | 'verifying'>('idle');
   const [emailVerState, setEmailVerState] = useState<'idle' | 'sending' | 'sent' | 'verifying'>('idle');
   const [otpCode, setOtpCode] = useState('');
   const [confirmationResult, setConfirmationResult] = useState<ConfirmationResult | null>(null);
+
+  const handleSendEmailOtp = async () => {
+    if (!fastEmail || !/\S+@\S+\.\S+/.test(fastEmail)) {
+      setFastEmailError("Enter a valid email first");
+      return;
+    }
+    setFastEmailError("");
+    setEmailVerState('sending');
+    
+    try {
+      const res = await fetch('/api/send-otp', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: fastEmail })
+      });
+      const data = await res.json();
+      
+      if (!res.ok) {
+        throw new Error(data.error || "Failed to send OTP");
+      }
+      
+      setEmailVerState('sent');
+    } catch (err: any) {
+      setEmailVerState('idle');
+      setFastEmailError(err.message || 'Error communicating with server');
+    }
+  };
+
+  const handleVerifyEmailOtp = async () => {
+    if (!otpCode || otpCode.length !== 6) {
+      setFastEmailError('Enter the 6-digit code');
+      return;
+    }
+    
+    try {
+      const res = await fetch('/api/verify-otp', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: fastEmail, code: otpCode })
+      });
+      const data = await res.json();
+      
+      if (!res.ok) {
+        throw new Error(data.error || "Invalid OTP");
+      }
+      
+      setEmailVerified(true);
+      setEmailVerState('idle');
+      setFastEmailError('');
+    } catch (err: any) {
+      setFastEmailError(err.message || 'Invalid OTP');
+    }
+  };
 
   const [fastRegSuccess, setFastRegSuccess] = useState<RegistrationRequest | null>(null);
 
@@ -1028,6 +1081,9 @@ function AppContent() {
         err = true;
       } else if (!/\S+@\S+\.\S+/.test(fastEmail)) {
         setFastEmailError('Please enter a valid email address');
+        err = true;
+      } else if (!emailVerified) {
+        setFastEmailError('Please verify your email address via OTP');
         err = true;
       }
 
@@ -1850,22 +1906,67 @@ function AppContent() {
                                 {/* Email address */}
                                 <div className="space-y-1.5">
                                   <label className="text-[10px] font-mono uppercase text-slate-400 dark:text-gray-500 block font-bold tracking-wider">Email Address *</label>
-                                  <div className="relative">
-                                    <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
-                                      <Mail className="h-4 w-4 text-slate-400 dark:text-gray-500" />
+                                  <div className="flex flex-col gap-2">
+                                    <div className="flex gap-2">
+                                      <div className="relative flex-1">
+                                        <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
+                                          <Mail className="h-4 w-4 text-slate-400 dark:text-gray-500" />
+                                        </div>
+                                        <input
+                                          type="email"
+                                          required
+                                          placeholder="sam@example.com"
+                                          value={fastEmail}
+                                          disabled={emailVerified}
+                                          onChange={e => {
+                                            setFastEmail(e.target.value);
+                                            if (e.target.value.trim()) setFastEmailError('');
+                                          }}
+                                          className={`w-full pl-10 pr-3 py-3 text-xs bg-slate-50 dark:bg-[#070708] rounded-xl border ${fastEmailError ? 'border-rose-500 ring-1 ring-rose-500' : 'border-slate-200 dark:border-white/5'} focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 text-slate-855 dark:text-gray-100 placeholder-slate-400 dark:placeholder-gray-600 transition-all font-sans disabled:opacity-75 disabled:cursor-not-allowed`}
+                                        />
+                                      </div>
+                                      {!emailVerified && (
+                                        <button
+                                          type="button"
+                                          onClick={handleSendEmailOtp}
+                                          disabled={emailVerState === 'sending' || emailVerState === 'sent'}
+                                          className="px-4 bg-slate-800 dark:bg-amber-500 hover:bg-slate-900 dark:hover:bg-amber-600 text-white text-xs font-bold rounded-xl transition-all disabled:opacity-50 whitespace-nowrap"
+                                        >
+                                          {emailVerState === 'sending' ? 'Sending...' : emailVerState === 'sent' ? 'Resend' : 'Send OTP'}
+                                        </button>
+                                      )}
                                     </div>
-                                    <input
-                                      type="email"
-                                      required
-                                      placeholder="sam@example.com"
-                                      value={fastEmail}
-                                      onChange={e => {
-                                        setFastEmail(e.target.value);
-                                        if (e.target.value.trim()) setFastEmailError('');
-                                      }}
-                                      className={`w-full pl-10 pr-3 py-3 text-xs bg-slate-50 dark:bg-[#070708] rounded-xl border ${fastEmailError ? 'border-rose-500 ring-1 ring-rose-500' : 'border-slate-200 dark:border-white/5'} focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 text-slate-855 dark:text-gray-100 placeholder-slate-400 dark:placeholder-gray-600 transition-all font-sans`}
-                                    />
+                                    {emailVerState === 'sent' && !emailVerified && (
+                                      <div className="flex flex-col gap-2 animate-fadeIn">
+                                        <div className="flex gap-2">
+                                          <input
+                                            type="text"
+                                            maxLength={6}
+                                            placeholder="Enter 6-digit OTP"
+                                            value={otpCode}
+                                            onChange={e => setOtpCode(e.target.value.replace(/\D/g, ''))}
+                                            className="flex-1 px-3 py-3 text-xs font-mono tracking-widest bg-slate-50 dark:bg-[#070708] rounded-xl border border-slate-200 dark:border-white/5 focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 text-slate-855 dark:text-gray-100 transition-all text-center"
+                                          />
+                                          <button
+                                            type="button"
+                                            onClick={handleVerifyEmailOtp}
+                                            disabled={otpCode.length !== 6}
+                                            className="px-6 bg-emerald-500 hover:bg-emerald-600 focus:ring-2 focus:ring-emerald-500/20 focus:outline-none text-white text-xs font-bold rounded-xl transition-all disabled:opacity-50 whitespace-nowrap"
+                                          >
+                                            Verify
+                                          </button>
+                                        </div>
+                                        <p className="text-[10px] text-amber-500 font-medium px-1">
+                                          An OTP has been sent to your email. (Please set RESEND_API_KEY if not receiving)
+                                        </p>
+                                      </div>
+                                    )}
                                   </div>
+                                  {emailVerified && (
+                                    <p className="text-[10.5px] text-emerald-500 mt-1 font-bold flex items-center gap-1.5 animate-fadeIn">
+                                      <Check className="w-3.5 h-3.5" /> Email successfully verified.
+                                    </p>
+                                  )}
                                   {fastEmailError && (
                                     <p className="text-[10px] text-rose-500 mt-1 font-semibold">{fastEmailError}</p>
                                   )}
