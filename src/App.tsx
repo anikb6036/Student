@@ -53,15 +53,22 @@ import {
   Lock,
   Sparkles,
   MapPin,
+  BookOpen,
   GraduationCap,
   Camera,
   Trash2,
   Plus,
   Upload,
+  Settings,
   X,
   AlertCircle,
   ChevronLeft,
-  Menu
+  Menu,
+  Search,
+  ChevronDown,
+  Download,
+  Code,
+  MoreHorizontal
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { COUNTRY_PHONE_CONFIGS } from './countryPhoneData';
@@ -92,6 +99,22 @@ declare global {
   }
 }
 
+const getSubjectIconObj = (subject?: string) => {
+  const norm = (subject || '').trim().toLowerCase();
+  if (norm.includes('physic')) {
+    return { icon: Sparkles, color: 'text-purple-600 dark:text-purple-400', bg: 'bg-purple-500/10 dark:bg-purple-500/20' };
+  } else if (norm.includes('math')) {
+    return { icon: BookOpen, color: 'text-blue-600 dark:text-blue-400', bg: 'bg-blue-500/10 dark:bg-blue-500/20' };
+  } else if (norm.includes('code') || norm.includes('coding') || norm.includes('program')) {
+    return { icon: GraduationCap, color: 'text-emerald-600 dark:text-emerald-400', bg: 'bg-emerald-500/10 dark:bg-emerald-500/20' };
+  } else if (norm.includes('logic')) {
+    return { icon: Clock, color: 'text-amber-600 dark:text-amber-400', bg: 'bg-amber-500/10 dark:bg-amber-500/20' };
+  } else if (norm.includes('biolog')) {
+    return { icon: Users, color: 'text-rose-600 dark:text-rose-400', bg: 'bg-rose-500/10 dark:bg-rose-500/20' };
+  }
+  return { icon: Calendar, color: 'text-slate-500 dark:text-slate-400', bg: 'bg-slate-500/10 dark:bg-slate-500/20' };
+};
+
 function AppContent() {
   const { isDark } = useTheme();
 
@@ -110,6 +133,8 @@ function AppContent() {
   // Pending admission registration requests state
   const [registrationRequests, setRegistrationRequests, registrationLoaded] = useFirebaseState<RegistrationRequest[]>('db-registration-requests', []);
 
+  const [studentScheduleTab, setStudentScheduleTab] = useState<'schedule'|'tasks'>('schedule');
+
   // Simulated student mailbox communications
   const [simulatedEmails, setSimulatedEmails, emailsLoaded] = useFirebaseState<SimulatedEmail[]>('db-simulated-emails', []);
 
@@ -124,6 +149,9 @@ function AppContent() {
 
   // Navigation tab state
   const [activeTab, setActiveTab] = useState<'dashboard' | 'enrollments' | 'schedule' | 'progress' | 'reports' | 'backup' | 'inbox' | 'profile'>('dashboard');
+
+  // Filter option state for course directory categories inside dashboard
+  const [dashboardCourseFilter, setDashboardCourseFilter] = useState<'all' | 'ongoing' | 'upcoming' | 'completed'>('all');
 
   // Control individual show variables inside ScheduleManager from the main sidebar
   const [scheduleShowAddForm, setScheduleShowAddForm] = useState(false);
@@ -186,9 +214,23 @@ function AppContent() {
   }, [currentUser]);
 
   // Sidebar expand/collapse and hover active state checks
-  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState<boolean>(true);
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState<boolean>(
+    typeof window !== 'undefined' ? window.innerWidth < 1024 : true
+  );
   const [isSidebarHovered, setIsSidebarHovered] = useState<boolean>(false);
   const [ignoreHover, setIgnoreHover] = useState<boolean>(false);
+
+  useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth < 1024) {
+        setIsSidebarCollapsed(true);
+      } else {
+        setIsSidebarCollapsed(false);
+      }
+    };
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   // Onboarding screens and fast registration workflow states
   const [onboardingTab, setOnboardingTab] = useState<'fastReg' | 'authLogin' | 'adminLogin'>('authLogin');
@@ -244,7 +286,6 @@ function AppContent() {
   const [emailVerState, setEmailVerState] = useState<'idle' | 'sending' | 'sent' | 'verifying'>('idle');
   const [otpCode, setOtpCode] = useState('');
   const [confirmationResult, setConfirmationResult] = useState<ConfirmationResult | null>(null);
-  const [resendRestrictedMessage, setResendRestrictedMessage] = useState('');
 
   const handleSendEmailOtp = async () => {
     if (!fastEmail || !/\S+@\S+\.\S+/.test(fastEmail)) {
@@ -252,7 +293,6 @@ function AppContent() {
       return;
     }
     setFastEmailError("");
-    setResendRestrictedMessage("");
     setEmailVerState('sending');
     
     try {
@@ -265,10 +305,6 @@ function AppContent() {
       
       if (!res.ok) {
         throw new Error(data.error || "Failed to send OTP");
-      }
-      
-      if (data.restricted) {
-        setResendRestrictedMessage(`Note: Your Resend account has a domain constraint. For testing on ${fastEmail}, please use OTP: ${data.debugOtp}`);
       }
       
       setEmailVerState('sent');
@@ -1866,7 +1902,7 @@ function AppContent() {
                                           </button>
                                         </div>
                                         <p className="text-[10px] text-amber-500 font-medium px-1">
-                                          {resendRestrictedMessage || "An OTP has been sent to your email. (Please set RESEND_API_KEY if not receiving)"}
+                                          An OTP has been sent to your email. (Please set RESEND_API_KEY if not receiving)
                                         </p>
                                       </div>
                                     )}
@@ -2350,13 +2386,13 @@ function AppContent() {
         )
       ) : (
         /* Core UI Application Shell */
-        <div className="min-h-screen flex flex-col md:flex-row relative z-0 overflow-hidden font-sans bg-[linear-gradient(135deg,#E0E6ED_0%,#EDF2F7_50%,#E2E8F0_100%)] dark:bg-[linear-gradient(135deg,#0E131F_0%,#151D30_50%,#090D16_100%)]">
+        <div className="min-h-screen flex flex-col md:flex-row relative z-0 overflow-hidden font-sans bg-white dark:bg-[#070708]">
           
           {/* High-Resolution Modern Geometric & Wave Background (Matching the reference picture) */}
           <div className="absolute inset-0 w-full h-full pointer-events-none select-none z-0 overflow-hidden">
             {/* Subtle split plane layout backgrounds */}
-            <div className="absolute top-0 right-0 w-[60%] h-full bg-[#E5ECF6] dark:bg-[#131A2C] opacity-40 dark:opacity-20 [clip-path:polygon(40%_0,100%_0,100%_100%,0_100%)]" />
-            <div className="absolute bottom-0 left-0 w-[40%] h-full bg-[#D9E2EC] dark:bg-[#0D1525] opacity-35 dark:opacity-15 [clip-path:polygon(0_0,100%_100%,0_100%)]" />
+            <div className="absolute top-0 right-0 w-[60%] h-full bg-[#E0E7FF]/20 dark:bg-[#1E1B4B]/15 opacity-50 dark:opacity-20 [clip-path:polygon(40%_0,100%_0,100%_100%,0_100%)]" />
+            <div className="absolute bottom-0 left-0 w-[40%] h-full bg-[#EEF2FF]/50 dark:bg-[#111827]/30 opacity-40 dark:opacity-15 [clip-path:polygon(0_0,100%_100%,0_100%)]" />
 
             <svg className="absolute w-full h-full opacity-80 dark:opacity-45" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 800" preserveAspectRatio="none">
               <defs>
@@ -2416,8 +2452,8 @@ function AppContent() {
               </g>
             </svg>
 
-            <div className="absolute right-[10%] top-[25%] w-[450px] h-[450px] rounded-full bg-blue-400/20 dark:bg-blue-500/10 blur-[120px]" />
-            <div className="absolute left-[5%] bottom-[15%] w-[350px] h-[350px] rounded-full bg-slate-300/30 dark:bg-indigo-900/15 blur-[100px]" />
+            <div className="absolute right-[10%] top-[20%] w-[500px] h-[500px] rounded-full bg-purple-400/25 dark:bg-purple-600/15 blur-[130px] animate-pulse" style={{ animationDuration: '8s' }} />
+            <div className="absolute left-[5%] bottom-[10%] w-[400px] h-[400px] rounded-full bg-teal-300/35 dark:bg-indigo-900/25 blur-[110px] animate-pulse" style={{ animationDuration: '12s' }} />
           </div>
 
           
@@ -2549,6 +2585,7 @@ function AppContent() {
 
                 {/* Central Navigation lists */}
                 <nav className="space-y-1">
+                  {/* Top Level Items */}
                   <button
                     type="button"
                     onClick={() => {
@@ -2565,6 +2602,29 @@ function AppContent() {
                     <LayoutDashboard className="w-4 h-4 flex-shrink-0" />
                     {!isActuallyCollapsed && <span className="truncate animate-fadeIn">Center Dashboard</span>}
                   </button>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setActiveTab('profile');
+                      if (window.innerWidth < 768) setIsSidebarCollapsed(true);
+                    }}
+                    className={`w-full flex items-center ${isActuallyCollapsed ? 'justify-center p-2.5' : 'gap-3 px-3.5 py-2.5'} rounded-xl text-xs transition relative cursor-pointer ${
+                      activeTab === 'profile'
+                        ? 'bg-amber-500/10 border border-amber-500/20 text-amber-500 font-bold'
+                        : 'text-slate-550 dark:text-gray-400 hover:text-amber-500 dark:hover:text-gray-100 hover:bg-slate-50 dark:hover:bg-[#161618] border border-transparent'
+                    }`}
+                    title={isActuallyCollapsed ? "Profile & Password Settings" : undefined}
+                  >
+                    <User className="w-4 h-4 flex-shrink-0 text-amber-500" />
+                    {!isActuallyCollapsed && <span className="truncate animate-fadeIn">Profile Settings</span>}
+                  </button>
+
+                  {!isActuallyCollapsed && (
+                    <div className="pt-4 pb-1 pl-3.5 pr-2">
+                      <p className="text-[11px] font-sans text-slate-500 dark:text-slate-400 mb-0.5">Academic shortcuts</p>
+                    </div>
+                  )}
 
                   <button
                     type="button"
@@ -2593,66 +2653,87 @@ function AppContent() {
                     )}
                   </button>
 
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setActiveTab('schedule');
-                      setScheduleShowAddForm(false);
-                      setScheduleShowBatchManager(false);
-                      setScheduleShowCourseDashboard(false);
-                      if (window.innerWidth < 768) setIsSidebarCollapsed(true);
-                    }}
-                    className={`w-full flex items-center ${isActuallyCollapsed ? 'justify-center p-2.5' : 'gap-3 px-3.5 py-2.5'} rounded-xl text-xs transition relative cursor-pointer ${
-                      activeTab === 'schedule'
-                        ? 'bg-amber-500/10 border border-amber-500/20 text-amber-500 font-bold'
-                        : 'text-slate-550 dark:text-gray-400 hover:text-amber-500 dark:hover:text-gray-100 hover:bg-slate-50 dark:hover:bg-[#161618] border border-transparent'
-                    }`}
-                    title={isActuallyCollapsed ? "Class Timetable Scheduling" : undefined}
-                  >
-                    <Calendar className="w-4 h-4 flex-shrink-0" />
-                    {!isActuallyCollapsed && <span className="truncate animate-fadeIn">Class Timetable Scheduling</span>}
-                  </button>
+                  {currentUser.role === 'student' && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setActiveTab('schedule');
+                        setScheduleShowAddForm(false);
+                        setScheduleShowBatchManager(false);
+                        setScheduleShowCourseDashboard(false);
+                        if (window.innerWidth < 768) setIsSidebarCollapsed(true);
+                      }}
+                      className={`w-full flex items-center ${isActuallyCollapsed ? 'justify-center p-2.5' : 'gap-3 px-3.5 py-2.5'} rounded-xl text-xs transition relative cursor-pointer ${
+                        activeTab === 'schedule'
+                          ? 'bg-amber-500/10 border border-amber-500/20 text-amber-500 font-bold'
+                          : 'text-slate-550 dark:text-gray-400 hover:text-amber-500 dark:hover:text-gray-100 hover:bg-slate-50 dark:hover:bg-[#161618] border border-transparent'
+                      }`}
+                      title={isActuallyCollapsed ? "Class Timetable Scheduling" : undefined}
+                    >
+                      <Calendar className="w-4 h-4 flex-shrink-0" />
+                      {!isActuallyCollapsed && <span className="truncate animate-fadeIn">Class Timetable Scheduling</span>}
+                    </button>
+                  )}
 
-                  {/* Sub-menu options nested beneath Class Timetable Scheduling */}
-                  {!isActuallyCollapsed && activeTab === 'schedule' && ['admin', 'sub-admin', 'instructor'].includes(currentUser.role) && (
-                    <div className="pl-4 pr-1 py-1 space-y-1 bg-slate-50/20 dark:bg-white/[0.01] rounded-xl border border-dotted border-slate-200/50 dark:border-white/5 animate-fadeIn">
-                      {/* Sub-item 1: Schedule New Class */}
+                  {['admin', 'sub-admin', 'instructor'].includes(currentUser.role) && (
+                    <>
+                      {/* First-level: Schedule New Live Class */}
                       <button
                         type="button"
                         onClick={() => {
-                          setScheduleShowAddForm(!scheduleShowAddForm);
-                          setScheduleShowBatchManager(false);
-                          setScheduleShowCourseDashboard(false);
+                          if (activeTab === 'schedule' && scheduleShowAddForm) {
+                            setScheduleShowAddForm(false);
+                          } else {
+                            setActiveTab('schedule');
+                            setScheduleShowAddForm(true);
+                            setScheduleShowCourseDashboard(false);
+                            setScheduleShowBatchManager(false);
+                          }
+                          if (window.innerWidth < 768) setIsSidebarCollapsed(true);
                         }}
-                        className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-[10.5px] transition cursor-pointer ${
-                          scheduleShowAddForm
-                            ? 'bg-amber-500/15 text-amber-500 font-bold'
-                            : 'text-slate-550 dark:text-gray-400 hover:text-amber-500 hover:bg-slate-50 dark:hover:bg-[#161618]'
+                        className={`w-full flex items-center ${isActuallyCollapsed ? 'justify-center p-2.5' : 'gap-3 px-3.5 py-2.5'} rounded-xl text-xs transition relative cursor-pointer ${
+                          activeTab === 'schedule' && scheduleShowAddForm
+                            ? 'bg-amber-500/10 border border-amber-500/20 text-amber-500 font-bold'
+                            : 'text-slate-550 dark:text-gray-400 hover:text-amber-500 dark:hover:text-gray-100 hover:bg-slate-50 dark:hover:bg-[#161618] border border-transparent'
                         }`}
+                        title={isActuallyCollapsed ? "Schedule New Live Class" : undefined}
                       >
-                        <Plus className="w-3 h-3 flex-shrink-0 text-amber-500" />
-                        <span className="truncate">Schedule New Live Class</span>
+                        <Plus className="w-4 h-4 flex-shrink-0 text-amber-500" />
+                        {!isActuallyCollapsed && <span className="truncate animate-fadeIn">Schedule New Live Class</span>}
                       </button>
 
-                      {/* Sub-item 3: Courses Publish */}
+                      {/* First-level: Courses Publish Dashboard */}
                       {['admin', 'sub-admin'].includes(currentUser.role) && (
                         <button
                           type="button"
                           onClick={() => {
-                            setScheduleShowCourseDashboard(!scheduleShowCourseDashboard);
-                            setScheduleShowAddForm(false);
-                            setScheduleShowBatchManager(false);
+                            if (activeTab === 'schedule' && scheduleShowCourseDashboard) {
+                              setScheduleShowCourseDashboard(false);
+                            } else {
+                              setActiveTab('schedule');
+                              setScheduleShowCourseDashboard(true);
+                              setScheduleShowAddForm(false);
+                              setScheduleShowBatchManager(false);
+                            }
+                            if (window.innerWidth < 768) setIsSidebarCollapsed(true);
                           }}
-                          className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-[10.5px] transition cursor-pointer ${
-                            scheduleShowCourseDashboard
-                              ? 'bg-amber-500/15 text-amber-500 font-bold'
-                              : 'text-slate-550 dark:text-gray-400 hover:text-amber-500 hover:bg-slate-50 dark:hover:bg-[#161618]'
+                          className={`w-full flex items-center ${isActuallyCollapsed ? 'justify-center p-2.5' : 'gap-3 px-3.5 py-2.5'} rounded-xl text-xs transition relative cursor-pointer ${
+                            activeTab === 'schedule' && scheduleShowCourseDashboard
+                              ? 'bg-amber-500/10 border border-amber-500/20 text-amber-500 font-bold'
+                              : 'text-slate-550 dark:text-gray-400 hover:text-amber-500 dark:hover:text-gray-100 hover:bg-slate-50 dark:hover:bg-[#161618] border border-transparent'
                           }`}
+                          title={isActuallyCollapsed ? "Courses Publish Dashboard" : undefined}
                         >
-                          <GraduationCap className="w-3 h-3 flex-shrink-0 text-amber-500" />
-                          <span className="truncate">Courses Publish Dashboard</span>
+                          <GraduationCap className="w-4 h-4 flex-shrink-0 text-amber-500" />
+                          {!isActuallyCollapsed && <span className="truncate animate-fadeIn">Courses Publish Dashboard</span>}
                         </button>
                       )}
+                    </>
+                  )}
+
+                  {!isActuallyCollapsed && (
+                    <div className="pt-4 pb-1 pl-3.5 pr-2">
+                      <p className="text-[11px] font-sans text-slate-500 dark:text-slate-400 mb-0.5">System Categories</p>
                     </div>
                   )}
 
@@ -2712,23 +2793,6 @@ function AppContent() {
                     )}
                   </button>
 
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setActiveTab('profile');
-                      if (window.innerWidth < 768) setIsSidebarCollapsed(true);
-                    }}
-                    className={`w-full flex items-center ${isActuallyCollapsed ? 'justify-center p-2.5' : 'gap-3 px-3.5 py-2.5'} rounded-xl text-xs transition relative cursor-pointer ${
-                      activeTab === 'profile'
-                        ? 'bg-amber-500/10 border border-amber-500/20 text-amber-500 font-bold'
-                        : 'text-slate-550 dark:text-gray-400 hover:text-amber-500 dark:hover:text-gray-100 hover:bg-slate-50 dark:hover:bg-[#161618] border border-transparent'
-                    }`}
-                    title={isActuallyCollapsed ? "Profile & Password Settings" : undefined}
-                  >
-                    <User className="w-4 h-4 flex-shrink-0 text-amber-500" />
-                    {!isActuallyCollapsed && <span className="truncate animate-fadeIn">Profile Settings</span>}
-                  </button>
-
                   {currentUser.role === 'admin' && (
                     <button
                       type="button"
@@ -2770,256 +2834,396 @@ function AppContent() {
             
             {/* Active Render Panels Routing based on Tab */}
             {activeTab === 'dashboard' && (
-              <div className="space-y-6">
-                
-                {/* Welcomes banner custom header */}
-                <div 
-                  className="p-6 md:p-8 rounded-3xl border border-white/10 flex flex-col md:flex-row items-start md:items-center justify-between gap-4 shadow-sm relative overflow-hidden select-none text-white"
-                  style={{
-                    backgroundColor: "#0B0C10",
-                    backgroundImage: `
-                      radial-gradient(at 20% 20%, #2f326a 0px, transparent 50%),
-                      radial-gradient(at 80% 0%, #4f549c 0px, transparent 50%),
-                      radial-gradient(at 100% 80%, #9194c4 0px, transparent 50%),
-                      radial-gradient(at 0% 100%, #1e1f3f 0px, transparent 50%)
-                    `
-                  }}
-                >
-                  {/* Branding background shape ornament */}
-                  <div className="absolute right-0 bottom-0 h-32 w-32 bg-white/10 rounded-full blur-2xl pointer-events-none" />
-                  
-                  <div className="space-y-1 relative z-10">
-                    <p className="text-[10px] font-bold text-slate-300 uppercase tracking-widest font-mono flex items-center gap-1.5">
-                      <span className="inline-block h-2 w-2 rounded-full bg-emerald-500 animate-pulse"></span>
-                      COACHING OFFICE SERVER CONNECTED
-                    </p>
-                    <h1 className="text-2xl md:text-3xl font-serif italic text-white font-bold tracking-tight mt-1">
-                      Welcome Back, {currentUser.name}!
-                    </h1>
-                    <p className="text-xs text-slate-300 pr-4 mt-0.5 leading-relaxed">
-                      Auditing center coordinates. Time check: {new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' })}. All automated reminders ready in queue.
-                    </p>
-                  </div>
+              <div className="space-y-6 max-w-6xl mx-auto w-full pt-4 font-sans">
+                <div className="mb-8">
+                  <h1 className="text-[28px] font-bold text-slate-900 dark:text-white mb-1 tracking-tight">Overview</h1>
+                  <p className="text-sm text-slate-500 dark:text-gray-400 mb-8">Welcome back, {currentUser.name}. Here's what's happening today.</p>
 
-                  <div className="bg-white/10 backdrop-blur-md border border-white/10 p-3.5 rounded-2xl text-xs space-y-1 font-mono text-white relative z-10">
-                    <p className="font-bold">
-                      STATUS Dashboard <span className="text-emerald-400 animate-pulse inline-block">Live</span>
-                    </p>
-                    <p className="text-slate-300 text-[10px]">RECORDS: {users.length} registered</p>
-                  </div>
-                </div>
-
-                {/* Dashboard summary stats based on current user role */}
-                {['admin', 'sub-admin'].includes(currentUser.role) && (
-                  <div className="grid grid-cols-1 md:grid-cols-4 gap-5">
-                    <div className="bg-white dark:bg-[#161618] border border-slate-150/80 dark:border-white/5 rounded-2xl p-5 shadow-sm space-y-1 flex flex-col justify-between">
-                      <div>
-                        <p className="text-xs text-slate-401 dark:text-gray-500 font-mono uppercase tracking-widest font-semibold">Total Students</p>
-                        <p className="text-3xl font-serif text-slate-900 dark:text-white mt-1.5">{users.filter(u => u.role === 'student').length}</p>
+                  {/* Dashboard summary stats based on current user role */}
+                  {['admin', 'sub-admin'].includes(currentUser.role) && (
+                    <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+                      <div className="bg-white dark:bg-[#0B0C10] border border-slate-200/80 dark:border-white/10 rounded-2xl p-5 shadow-sm hover:shadow-md transition-shadow">
+                        <p className="text-sm text-slate-500 dark:text-gray-400 font-medium">Total Students</p>
+                        <p className="text-3xl font-semibold text-slate-900 dark:text-white mt-2 mb-4">{users.filter(u => u.role === 'student').length}</p>
+                        <button onClick={() => setActiveTab('enrollments')} className="text-[13px] font-medium text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white flex items-center gap-1 transition-colors">
+                          View students <ChevronRight className="w-3.5 h-3.5" />
+                        </button>
                       </div>
-                      <span className="text-[10.5px] font-semibold text-[#000080] dark:text-[#000080] hover:text-[#0000CD] dark:hover:text-[#0000CD] hover:underline cursor-pointer flex items-center gap-0.5 mt-4" onClick={() => setActiveTab('enrollments')}>
-                        View folder registry &rarr;
-                      </span>
-                    </div>
 
-                    <div className="bg-white dark:bg-[#161618] border border-slate-150/80 dark:border-white/5 rounded-2xl p-5 shadow-sm space-y-1 flex flex-col justify-between">
-                      <div>
-                        <p className="text-xs text-slate-401 dark:text-gray-500 font-mono uppercase tracking-widest font-semibold">Instructors</p>
-                        <p className="text-3xl font-serif text-slate-900 dark:text-white mt-1.5">{users.filter(u => u.role === 'instructor').length}</p>
+                      <div className="bg-white dark:bg-[#0B0C10] border border-slate-200/80 dark:border-white/10 rounded-2xl p-5 shadow-sm hover:shadow-md transition-shadow">
+                        <p className="text-sm text-slate-500 dark:text-gray-400 font-medium">Instructors</p>
+                        <p className="text-3xl font-semibold text-slate-900 dark:text-white mt-2 mb-4">{users.filter(u => u.role === 'instructor').length}</p>
+                        <button onClick={() => setActiveTab('enrollments')} className="text-[13px] font-medium text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white flex items-center gap-1 transition-colors">
+                          Manage faculty <ChevronRight className="w-3.5 h-3.5" />
+                        </button>
                       </div>
-                      <p className="text-[10px] text-slate-400 dark:text-gray-500 mt-4">Full instructor workloads configured</p>
-                    </div>
 
-                    <div className="bg-white dark:bg-[#161618] border border-slate-150/80 dark:border-white/5 rounded-2xl p-5 shadow-sm space-y-1 flex flex-col justify-between">
-                      <div>
-                        <p className="text-xs text-slate-401 dark:text-gray-500 font-mono uppercase tracking-widest font-semibold">Scheduled Classes</p>
-                        <p className="text-3xl font-serif text-slate-900 dark:text-white mt-1.5">{schedules.filter(s => s.status === 'scheduled').length}</p>
+                      <div className="bg-white dark:bg-[#0B0C10] border border-slate-200/80 dark:border-white/10 rounded-2xl p-5 shadow-sm hover:shadow-md transition-shadow">
+                        <p className="text-sm text-slate-500 dark:text-gray-400 font-medium">Scheduled Classes</p>
+                        <p className="text-3xl font-semibold text-slate-900 dark:text-white mt-2 mb-4">{schedules.filter(s => s.status === 'scheduled').length}</p>
+                        <button onClick={() => setActiveTab('schedule')} className="text-[13px] font-medium text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white flex items-center gap-1 transition-colors">
+                          Open calendar <ChevronRight className="w-3.5 h-3.5" />
+                        </button>
                       </div>
-                      <span className="text-[10.5px] font-semibold text-[#000080] dark:text-[#000080] hover:text-[#0000CD] dark:hover:text-[#0000CD] hover:underline cursor-pointer flex items-center gap-0.5 mt-4" onClick={() => setActiveTab('schedule')}>
-                        Organize calendar &rarr;
-                      </span>
-                    </div>
 
-                    <div className="bg-white dark:bg-[#161618] border border-slate-150/80 dark:border-white/5 rounded-2xl p-5 shadow-sm space-y-1 flex flex-col justify-between">
-                      <div>
-                        <p className="text-xs text-slate-401 dark:text-gray-500 font-mono uppercase tracking-widest font-semibold">Academic average</p>
-                        <p className="text-3xl font-serif text-slate-900 dark:text-white mt-1.5">
-                          {(progressRecords.reduce((acc, r) => acc + r.score, 0) / progressRecords.length).toFixed(0)}%
+                      <div className="bg-white dark:bg-[#0B0C10] border border-slate-200/80 dark:border-white/10 rounded-2xl p-5 shadow-sm hover:shadow-md transition-shadow">
+                        <p className="text-sm text-slate-500 dark:text-gray-400 font-medium">Academic Average</p>
+                        <p className="text-3xl font-semibold text-slate-900 dark:text-white mt-2 mb-4">
+                          {progressRecords.length > 0 ? (progressRecords.reduce((acc, r) => acc + r.score, 0) / progressRecords.length).toFixed(0) : '0'}%
                         </p>
-                      </div>
-                      <span className="text-[10.5px] font-semibold text-[#000080] dark:text-[#000080] hover:text-[#0000CD] dark:hover:text-[#0000CD] hover:underline cursor-pointer flex items-center gap-0.5 mt-4" onClick={() => setActiveTab('reports')}>
-                        Explore insights &rarr;
-                      </span>
-                    </div>
-                  </div>
-                )}
-
-                {currentUser.role === 'student' && (
-                  <div className="space-y-6">
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-                      <div className="bg-white dark:bg-[#161618] border border-slate-150/80 dark:border-white/5 rounded-2xl p-5 shadow-sm space-y-1 flex flex-col justify-between">
-                        <div>
-                          <p className="text-xs text-slate-401 dark:text-gray-500 font-mono uppercase tracking-widest font-semibold">Your Enrolled Courses</p>
-                          <p className="text-3xl font-serif text-slate-900 dark:text-white mt-1.5">
-                            {schedules.filter(s => s.enrolledStudentIds.includes(currentUser.id)).length}
-                          </p>
-                        </div>
-                        <span className="text-[10.5px] font-semibold text-[#000080] dark:text-[#000080] hover:text-[#0000CD] dark:hover:text-[#0000CD] hover:underline cursor-pointer flex items-center gap-0.5 mt-4" onClick={() => setActiveTab('schedule')}>
-                          Check Timetables &rarr;
-                        </span>
-                      </div>
-
-                      <div className="bg-white dark:bg-[#161618] border border-slate-150/80 dark:border-white/5 rounded-2xl p-5 shadow-sm space-y-1 flex flex-col justify-between">
-                        <div>
-                          <p className="text-xs text-slate-401 dark:text-gray-500 font-mono uppercase tracking-widest font-semibold">My Evaluative Average Score</p>
-                          <p className="text-3xl font-serif text-slate-900 dark:text-white mt-1.5">
-                            {progressRecords.filter(r => r.studentId === currentUser.id).length > 0
-                              ? (progressRecords.filter(r => r.studentId === currentUser.id).reduce((acc, r) => acc + r.score, 0) / progressRecords.filter(r => r.studentId === currentUser.id).length).toFixed(0)
-                              : '0'}%
-                          </p>
-                        </div>
-                        <span className="text-[10.5px] font-semibold text-[#000080] dark:text-[#000080] hover:text-[#0000CD] dark:hover:text-[#0000CD] hover:underline cursor-pointer flex items-center gap-0.5 mt-4" onClick={() => setActiveTab('progress')}>
-                          View My Feedbacks &rarr;
-                        </span>
-                      </div>
-
-                      <div className="bg-white dark:bg-[#161618] border border-slate-150/80 dark:border-white/5 rounded-2xl p-5 shadow-sm space-y-1 flex flex-col justify-between">
-                        <div>
-                          <p className="text-xs text-slate-401 dark:text-gray-500 font-mono uppercase tracking-widest font-semibold">Assigned Mentor Advisor</p>
-                          <p className="text-xl font-serif text-amber-500 mt-2 italic font-bold">
-                            {users.find(i => i.id === currentUser.assignedInstructorId)?.name || 'No Assigned Advisor'}
-                          </p>
-                        </div>
-                        <p className="text-[10px] text-slate-400 dark:text-gray-500 mt-4">Profile synced successfully</p>
-                      </div>
-                    </div>
-
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
-                      {/* Upcoming Events Panel */}
-                      <div className="bg-white dark:bg-[#161618] border border-slate-150/80 dark:border-white/5 rounded-2xl p-6 shadow-sm">
-                        <h3 className="text-sm font-bold text-slate-900 dark:text-white mb-4 flex items-center gap-2 font-serif italic">
-                          <Calendar className="w-4 h-4 text-amber-500" /> Upcoming Events & Classes
-                        </h3>
-                        <div className="space-y-3">
-                          {schedules.filter(s => s.enrolledStudentIds.includes(currentUser.id) && s.status === 'scheduled').length === 0 ? (
-                            <p className="text-xs text-slate-500 dark:text-gray-400 font-sans">No upcoming events scheduled at the moment.</p>
-                          ) : (
-                            schedules.filter(s => s.enrolledStudentIds.includes(currentUser.id) && s.status === 'scheduled').slice(0, 3).map(sch => (
-                              <div key={sch.id} className="p-3.5 rounded-xl bg-slate-50/50 dark:bg-[#0F0F11] border border-slate-100 dark:border-white/5 transition hover:shadow-sm">
-                                <div className="flex justify-between items-start mb-1.5">
-                                  <p className="text-xs font-bold text-slate-800 dark:text-gray-100 leading-snug">{sch.title}</p>
-                                  <span className="text-[9px] font-mono px-2 py-0.5 rounded bg-amber-500/10 text-amber-500 font-semibold">{sch.subject}</span>
-                                </div>
-                                <p className="text-[10.5px] text-slate-500 dark:text-gray-400 flex items-center gap-1.5 font-sans mt-2">
-                                  <Clock className="w-3.5 h-3.5 text-slate-400" /> {sch.date} at {sch.time}
-                                </p>
-                              </div>
-                            ))
-                          )}
-                        </div>
-                        <button onClick={() => setActiveTab('schedule')} className="w-full text-xs font-bold text-amber-500 hover:text-amber-600 bg-amber-50/50 dark:bg-amber-500/5 py-2.5 mt-4 rounded-xl transition">
-                          View Academic Calendar
-                        </button>
-                      </div>
-
-                      {/* Recent Evaluations Panel */}
-                      <div className="bg-white dark:bg-[#161618] border border-slate-150/80 dark:border-white/5 rounded-2xl p-6 shadow-sm">
-                        <h3 className="text-sm font-bold text-slate-900 dark:text-white mb-4 flex items-center gap-2 font-serif italic">
-                          <Award className="w-4 h-4 text-emerald-500" /> Recent Evaluation Dates
-                        </h3>
-                        <div className="space-y-3">
-                          {progressRecords.filter(r => r.studentId === currentUser.id).length === 0 ? (
-                            <p className="text-xs text-slate-500 dark:text-gray-400 font-sans">No evaluations recorded yet.</p>
-                          ) : (
-                            progressRecords.filter(r => r.studentId === currentUser.id).sort((a,b) => new Date(b.evaluationDate).getTime() - new Date(a.evaluationDate).getTime()).slice(0, 3).map(rec => (
-                              <div key={rec.id} className="p-3.5 rounded-xl bg-slate-50/50 dark:bg-[#0F0F11] border border-slate-100 dark:border-white/5 flex items-center justify-between transition hover:shadow-sm">
-                                <div>
-                                  <p className="text-xs font-bold text-slate-800 dark:text-gray-100">{rec.className}</p>
-                                  <p className="text-[10.5px] text-slate-500 dark:text-gray-400 mt-1 font-sans flex items-center gap-1.5">
-                                    <Activity className="w-3.5 h-3.5 text-slate-400" /> Evaluated on: {rec.evaluationDate}
-                                  </p>
-                                </div>
-                                <div className="text-right">
-                                  <span className="text-sm font-serif font-bold text-emerald-500 bg-emerald-500/10 px-2 py-1 rounded-md">{rec.score}%</span>
-                                  <p className="text-[9px] text-slate-400 dark:text-gray-500 capitalize mt-1.5 font-mono">{rec.academicPerformance.replace('-', ' ')}</p>
-                                </div>
-                              </div>
-                            ))
-                          )}
-                        </div>
-                        <button onClick={() => setActiveTab('progress')} className="w-full text-xs font-bold text-emerald-600 hover:text-emerald-700 dark:text-emerald-500 dark:hover:text-emerald-400 bg-emerald-50/50 dark:bg-emerald-500/5 py-2.5 mt-4 rounded-xl transition">
-                          View Detailed Progress
+                        <button onClick={() => setActiveTab('reports')} className="text-[13px] font-medium text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white flex items-center gap-1 transition-colors">
+                          Explore insights <ChevronRight className="w-3.5 h-3.5" />
                         </button>
                       </div>
                     </div>
-                  </div>
-                )}
+                  )}
 
-                {currentUser.role === 'instructor' && (
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                    <div className="bg-white dark:bg-[#161618] border border-slate-150/80 dark:border-white/5 rounded-2xl p-5 shadow-sm space-y-1 flex flex-col justify-between">
-                      <div>
-                        <p className="text-xs text-slate-401 dark:text-gray-500 font-mono uppercase tracking-widest font-semibold">Your Teaching Live Sessions</p>
-                        <p className="text-3xl font-serif text-slate-900 dark:text-white mt-1.5">
+                  {currentUser.role === 'student' && (
+                    <>
+                    {/* Enrolled Classes List for Student */}
+                    <div className="space-y-4 pt-4 font-sans">
+                      <div className="flex items-center gap-3 mb-6">
+                        <button
+                          onClick={() => setStudentScheduleTab('schedule')}
+                          className={`px-4 py-2 text-sm font-semibold rounded-lg border transition-all ${
+                            studentScheduleTab === 'schedule'
+                              ? 'border-indigo-200 bg-indigo-50 text-indigo-700 dark:bg-indigo-500/10 dark:border-indigo-500/20 dark:text-indigo-400'
+                              : 'border-slate-200 bg-white text-slate-500 hover:bg-slate-50 dark:border-white/10 dark:bg-zinc-900 dark:text-slate-400 dark:hover:bg-white/[0.02]'
+                          }`}
+                        >
+                          <span className="flex items-center gap-2">
+                            <Calendar className="w-4 h-4" />
+                            My Schedule
+                          </span>
+                        </button>
+                        <button
+                          onClick={() => setStudentScheduleTab('tasks')}
+                          className={`px-4 py-2 text-sm font-semibold rounded-lg border transition-all ${
+                            studentScheduleTab === 'tasks'
+                              ? 'border-indigo-200 bg-indigo-50 text-indigo-700 dark:bg-indigo-500/10 dark:border-indigo-500/20 dark:text-indigo-400'
+                              : 'border-slate-200 bg-white text-slate-500 hover:bg-slate-50 dark:border-white/10 dark:bg-zinc-900 dark:text-slate-400 dark:hover:bg-white/[0.02]'
+                          }`}
+                        >
+                          <span className="flex items-center gap-2">
+                            <Clock className="w-4 h-4" />
+                            Pending Tasks
+                          </span>
+                        </button>
+                      </div>
+
+                      <div className="border border-slate-200 dark:border-white/10 rounded-2xl bg-white dark:bg-[#070708] p-4 md:p-6 shadow-sm">
+                        {studentScheduleTab === 'schedule' ? (
+                          <div className="space-y-6">
+                            <div className="text-sm font-medium text-slate-700 dark:text-slate-300 pb-2 border-b border-slate-100 dark:border-white/5 inline-block pr-12">
+                              {(() => {
+                                const today = new Date();
+                                const endDate = new Date();
+                                endDate.setDate(today.getDate() + 6);
+                                const startMonth = today.toLocaleString('default', { month: 'short' });
+                                const endMonth = endDate.toLocaleString('default', { month: 'short' });
+                                if (startMonth === endMonth) {
+                                  return `${startMonth} ${today.getDate()} - ${endDate.getDate()}`;
+                                }
+                                return `${startMonth} ${today.getDate()} - ${endMonth} ${endDate.getDate()}`;
+                              })()}
+                            </div>
+
+                            <div className="space-y-3">
+                              {Array.from({ length: 7 }).map((_, i) => {
+                                const d = new Date();
+                                d.setDate(d.getDate() + i);
+                                const yyyy = d.getFullYear();
+                                const mm = String(d.getMonth() + 1).padStart(2, '0');
+                                const dd = String(d.getDate()).padStart(2, '0');
+                                const dateStr = `${yyyy}-${mm}-${dd}`;
+                                
+                                const dayAbbr = d.toLocaleString('default', { weekday: 'short' });
+                                const dayNum = d.getDate();
+
+                                const daySchedules = schedules.filter(s => s.enrolledStudentIds.includes(currentUser.id) && s.date === dateStr);
+
+                                return (
+                                  <div key={dateStr} className="flex flex-col md:flex-row gap-4">
+                                    <div className={`w-14 h-14 shrink-0 flex flex-col items-center justify-center rounded-xl text-center border ${
+                                      i === 0 
+                                        ? 'bg-[#437bef] border-[#437bef] text-white' 
+                                        : 'bg-white border-transparent text-slate-700 dark:bg-transparent dark:text-slate-300'
+                                    }`}>
+                                      <span className="text-xs font-bold tracking-tight">{dayAbbr}</span>
+                                      <span className="text-sm font-bold leading-none mt-0.5">{dayNum}</span>
+                                    </div>
+
+                                    <div className="flex-1 min-w-0">
+                                      {daySchedules.length === 0 ? (
+                                        <div className="h-full w-full flex items-center px-5 py-4 bg-white border border-slate-200 rounded-[10px] text-[13px] text-slate-500 dark:bg-[#161618] dark:border-white/10 dark:text-slate-400">
+                                          No sessions scheduled for the day
+                                        </div>
+                                      ) : (
+                                        <div className="space-y-2">
+                                          {daySchedules.map(cl => {
+                                            const { icon: SubjectIcon, color: iconColor, bg: iconBg } = getSubjectIconObj(cl.subject);
+                                            return (
+                                              <div key={cl.id} className="grid grid-cols-1 md:grid-cols-12 gap-4 px-5 py-4 bg-white border border-slate-200 rounded-[10px] hover:border-blue-200 transition-colors dark:bg-[#161618] dark:border-white/10 dark:hover:border-blue-500/30 items-center">
+                                                <div className="md:col-span-4 flex items-center gap-3">
+                                                  <div className={`w-9 h-9 rounded-lg ${iconBg} border border-zinc-250/30 dark:border-white/5 flex items-center justify-center flex-shrink-0 ${iconColor}`}>
+                                                    <SubjectIcon className="w-4.5 h-4.5" />
+                                                  </div>
+                                                  <div className="min-w-0">
+                                                    <p className="font-semibold text-slate-900 dark:text-white truncate">{cl.subject}</p>
+                                                    <p className="text-xs text-slate-500 dark:text-gray-400 truncate">by {cl.instructorName}</p>
+                                                  </div>
+                                                </div>
+                                                
+                                                <div className="md:col-span-3">
+                                                   <span className={`inline-flex items-center px-2 py-0.5 rounded border text-[10px] font-bold uppercase tracking-tight ${
+                                                      cl.status === 'scheduled'
+                                                        ? 'bg-emerald-50 text-emerald-600 border-emerald-100 dark:bg-emerald-500/10 dark:text-emerald-400 dark:border-emerald-500/10'
+                                                        : cl.status === 'completed'
+                                                          ? 'bg-blue-50 text-blue-600 border-blue-100 dark:bg-blue-500/10 dark:text-blue-400 dark:border-blue-500/10'
+                                                          : 'bg-rose-50 text-rose-600 border-rose-100 dark:bg-rose-500/10 dark:text-rose-455 dark:border-rose-500/10'
+                                                    }`}>
+                                                      {cl.status}
+                                                    </span>
+                                                </div>
+
+                                                <div className="md:col-span-4 min-w-0 flex items-center justify-between gap-4">
+                                                  <div className="min-w-0">
+                                                    <p className="font-semibold text-slate-800 dark:text-slate-200 text-[13px] truncate">{cl.title}</p>
+                                                    <p className="text-[11px] text-slate-500 dark:text-slate-400 truncate">{cl.location}</p>
+                                                  </div>
+                                                  <div className="text-right shrink-0">
+                                                    <div className="text-[13px] font-bold text-slate-900 dark:text-white">{cl.time}</div>
+                                                    <div className="text-[10px] text-slate-500">{cl.duration}m</div>
+                                                  </div>
+                                                </div>
+                                              </div>
+                                            );
+                                          })}
+                                        </div>
+                                      )}
+                                    </div>
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          </div>
+                        ) : (
+                          <div className="py-24 text-center">
+                            <p className="text-sm text-slate-500 dark:text-slate-400">No pending tasks found</p>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                    </>
+                  )}
+
+                  {currentUser.role === 'instructor' && (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
+                      <div className="bg-white dark:bg-[#0B0C10] border border-slate-200/80 dark:border-white/10 rounded-2xl p-5 shadow-sm hover:shadow-md transition-shadow">
+                        <p className="text-sm text-slate-500 dark:text-gray-400 font-medium">Live Sessions</p>
+                        <p className="text-3xl font-semibold text-slate-900 dark:text-white mt-2 mb-4">
                           {schedules.filter(s => s.instructorId === currentUser.id && s.status === 'scheduled').length}
                         </p>
+                        <button onClick={() => setActiveTab('schedule')} className="text-[13px] font-medium text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white flex items-center gap-1 transition-colors">
+                          Manage schedule <ChevronRight className="w-3.5 h-3.5" />
+                        </button>
                       </div>
-                      <span className="text-[10.5px] font-semibold text-[#000080] dark:text-[#000080] hover:text-[#0000CD] dark:hover:text-[#0000CD] hover:underline cursor-pointer flex items-center gap-0.5 mt-4" onClick={() => setActiveTab('schedule')}>
-                        Mark Timetable completion &rarr;
-                      </span>
-                    </div>
 
-                    <div className="bg-white dark:bg-[#161618] border border-slate-150/80 dark:border-white/5 rounded-2xl p-5 shadow-sm space-y-1 flex flex-col justify-between">
-                      <div>
-                        <p className="text-xs text-slate-401 dark:text-gray-500 font-mono uppercase tracking-widest font-semibold">Registered Evaluations Logged</p>
-                        <p className="text-3xl font-serif text-slate-900 dark:text-white mt-1.5">
+                      <div className="bg-white dark:bg-[#0B0C10] border border-slate-200/80 dark:border-white/10 rounded-2xl p-5 shadow-sm hover:shadow-md transition-shadow">
+                        <p className="text-sm text-slate-500 dark:text-gray-400 font-medium">Evaluations Logged</p>
+                        <p className="text-3xl font-semibold text-slate-900 dark:text-white mt-2 mb-4">
                           {progressRecords.filter(r => r.instructorId === currentUser.id).length}
                         </p>
+                        <button onClick={() => setActiveTab('progress')} className="text-[13px] font-medium text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white flex items-center gap-1 transition-colors">
+                          Open gradebook <ChevronRight className="w-3.5 h-3.5" />
+                        </button>
                       </div>
-                      <span className="text-[10.5px] font-semibold text-[#000080] dark:text-[#000080] hover:text-[#0000CD] dark:hover:text-[#0000CD] hover:underline cursor-pointer flex items-center gap-0.5 mt-4" onClick={() => setActiveTab('progress')}>
-                        Grade more schedules progress &rarr;
-                      </span>
                     </div>
-                  </div>
-                )}
+                  )}
 
-                {/* Main alerts panels & Notification workspace inside Dashboard */}
-                <NotificationCenter
-                  currentUser={currentUser}
-                  notifications={notifications}
-                  onMarkAsRead={id => setNotifications(prev => prev.map(n => n.id === id ? { ...n, read: true } : n))}
-                  onClearAll={() => setNotifications([])}
-                  onTriggerTestNotification={handleTriggerTestNotification}
-                />
 
-                {/* Mini Schedule overview feed inside main Dashboard */}
-                <div className="bg-white dark:bg-[#161618] border border-slate-150/80 dark:border-white/5 p-6 md:p-8 rounded-3xl space-y-4">
-                  <div className="flex justify-between items-center">
-                    <div>
-                      <h3 className="text-lg font-serif italic text-slate-900 dark:text-white">Active Classroom Sessions Timetable</h3>
-                      <p className="text-xs text-slate-500 dark:text-gray-400 mt-0.5 font-sans">Quick lookup of classes registered currently</p>
+
+                  {/* Academic Course Categories Section */}
+                  {['admin', 'sub-admin'].includes(currentUser.role) && (
+                    <div className="space-y-4 pt-6">
+                      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                        <div>
+                          <h2 className="text-lg font-semibold text-slate-900 dark:text-white flex items-center gap-2">
+                          <GraduationCap className="w-5 h-5 text-blue-500" />
+                          Academic Programs & Courses Directory
+                        </h2>
+                        <p className="text-xs text-slate-500 dark:text-gray-400">
+                          Structured layout of complete, ongoing (current), and impending (upcoming) course frameworks.
+                        </p>
+                      </div>
+
+                      {/* Interactive Option Filters requested by user */}
+                      <div className="flex flex-wrap items-center gap-1.5 bg-slate-100/80 dark:bg-white/[0.03] p-1 rounded-xl border border-slate-200/40 dark:border-white/5">
+                        <button
+                          type="button"
+                          onClick={() => setDashboardCourseFilter('all')}
+                          className={`px-3 py-1.5 rounded-lg text-xs font-bold font-mono transition-all duration-200 cursor-pointer ${
+                            dashboardCourseFilter === 'all'
+                              ? 'bg-white dark:bg-white/10 text-slate-900 dark:text-white shadow-xs'
+                              : 'text-slate-500 hover:text-slate-800 dark:text-gray-400 dark:hover:text-white'
+                          }`}
+                        >
+                          Show All
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setDashboardCourseFilter('ongoing')}
+                          className={`px-3 py-1.5 rounded-lg text-xs font-bold font-mono flex items-center gap-1.5 transition-all duration-200 cursor-pointer ${
+                            dashboardCourseFilter === 'ongoing'
+                              ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 shadow-xs ring-1 ring-emerald-500/20'
+                              : 'text-slate-500 hover:text-slate-800 dark:text-gray-400 dark:hover:text-white'
+                          }`}
+                        >
+                          <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                          Current ({courses.filter(c => !c.status || c.status === 'ongoing').length})
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setDashboardCourseFilter('upcoming')}
+                          className={`px-3 py-1.5 rounded-lg text-xs font-bold font-mono flex items-center gap-1.5 transition-all duration-200 cursor-pointer ${
+                            dashboardCourseFilter === 'upcoming'
+                              ? 'bg-blue-500/10 text-blue-600 dark:text-blue-400 shadow-xs ring-1 ring-blue-500/20'
+                              : 'text-slate-500 hover:text-slate-800 dark:text-gray-400 dark:hover:text-white'
+                          }`}
+                        >
+                          <span className="w-1.5 h-1.5 rounded-full bg-blue-500" />
+                          Upcoming ({courses.filter(c => c.status === 'upcoming').length})
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setDashboardCourseFilter('completed')}
+                          className={`px-3 py-1.5 rounded-lg text-xs font-bold font-mono flex items-center gap-1.5 transition-all duration-200 cursor-pointer ${
+                            dashboardCourseFilter === 'completed'
+                              ? 'bg-slate-500/15 text-slate-650 dark:text-zinc-300 shadow-xs ring-1 ring-slate-500/10'
+                              : 'text-slate-500 hover:text-slate-800 dark:text-gray-400 dark:hover:text-white'
+                          }`}
+                        >
+                          <span className="w-1.5 h-1.5 rounded-full bg-slate-400" />
+                          Complete ({courses.filter(c => c.status === 'completed').length})
+                        </button>
+                      </div>
                     </div>
-                    <button onClick={() => setActiveTab('schedule')} className="text-xs font-bold text-[#FF3B5C] hover:text-[#E11D48] hover:underline">
-                      See full list &rarr;
-                    </button>
-                  </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {schedules.slice(0, 4).map(sch => (
-                      <div key={sch.id} className="p-4 rounded-xl bg-slate-50/50 dark:bg-[#0F0F11] border border-slate-100 dark:border-white/5 flex items-center justify-between gap-4">
-                        <div className="space-y-1">
-                          <span className="text-[9px] font-mono px-2 py-0.5 rounded bg-slate-100 dark:bg-[#161618] text-slate-700 dark:text-gray-400 border dark:border-white/5">{sch.subject}</span>
-                          <p className="text-xs font-bold text-slate-800 dark:text-gray-100 leading-snug">{sch.title}</p>
-                          <p className="text-[10.5px] text-slate-500 dark:text-gray-500 flex items-center gap-1 font-sans">
-                            <Clock className="w-3.5 h-3.5" /> {sch.date} • {sch.time}
-                          </p>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                      {/* Ongoing / Current Courses */}
+                      {(dashboardCourseFilter === 'all' || dashboardCourseFilter === 'ongoing') && (
+                        <div className={`p-5 rounded-2xl bg-white dark:bg-[#070708] border border-slate-200/80 dark:border-white/10 shadow-xs flex flex-col justify-between ${dashboardCourseFilter !== 'all' ? 'md:col-span-3' : ''}`}>
+                          <div className="space-y-3">
+                            <div className="flex items-center justify-between border-b border-slate-100 dark:border-white/5 pb-2">
+                              <span className="text-xs font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider font-mono flex items-center gap-1.5">
+                                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                                Current Course (Ongoing)
+                              </span>
+                              <span className="text-xs font-semibold px-2 py-0.5 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 rounded-full font-mono">
+                                {courses.filter(c => !c.status || c.status === 'ongoing').length}
+                              </span>
+                            </div>
+                            <div className={`space-y-2 max-h-[350px] overflow-y-auto pr-1 ${dashboardCourseFilter !== 'all' ? 'grid grid-cols-1 md:grid-cols-3 gap-4 space-y-0' : ''}`}>
+                              {courses.filter(c => !c.status || c.status === 'ongoing').length === 0 ? (
+                                <p className="text-xs text-slate-400 dark:text-slate-500 italic py-4 text-center col-span-full">No ongoing courses.</p>
+                              ) : (
+                                courses.filter(c => !c.status || c.status === 'ongoing').map(c => (
+                                  <div key={c.id} className="p-3 bg-slate-50 dark:bg-white/[0.02] border border-slate-100 dark:border-white/5 rounded-xl space-y-1.5 hover:border-emerald-500/20 transition-all">
+                                    <div className="flex justify-between items-center">
+                                      <span className="text-[10px] font-bold font-mono px-1.5 py-0.5 bg-slate-200 dark:bg-white/10 text-slate-700 dark:text-zinc-350 rounded">
+                                        {c.code}
+                                      </span>
+                                      {c.durationWeeks && (
+                                        <span className="text-[10px] font-mono text-slate-400">{c.durationWeeks} Months</span>
+                                      )}
+                                    </div>
+                                    <p className="text-xs font-bold text-slate-800 dark:text-zinc-200">{c.name}</p>
+                                    {c.description && <p className="text-[10.5px] text-slate-500 dark:text-gray-400 font-sans leading-relaxed">{c.description}</p>}
+                                  </div>
+                                ))
+                              )}
+                            </div>
+                          </div>
                         </div>
-                        <span className="text-xs font-mono font-bold text-amber-500 capitalize">{sch.status}</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
+                      )}
 
+                      {/* Upcoming Courses */}
+                      {(dashboardCourseFilter === 'all' || dashboardCourseFilter === 'upcoming') && (
+                        <div className={`p-5 rounded-2xl bg-white dark:bg-[#070708] border border-slate-200/80 dark:border-white/10 shadow-xs flex flex-col justify-between ${dashboardCourseFilter !== 'all' ? 'md:col-span-3' : ''}`}>
+                          <div className="space-y-3">
+                            <div className="flex items-center justify-between border-b border-slate-100 dark:border-white/5 pb-2">
+                              <span className="text-xs font-bold text-blue-600 dark:text-blue-400 uppercase tracking-wider font-mono flex items-center gap-1.5">
+                                <span className="w-2 h-2 rounded-full bg-blue-500" />
+                                Upcoming Course
+                              </span>
+                              <span className="text-xs font-semibold px-2 py-0.5 bg-blue-500/10 text-blue-600 dark:text-blue-400 rounded-full font-mono">
+                                {courses.filter(c => c.status === 'upcoming').length}
+                              </span>
+                            </div>
+                            <div className={`space-y-2 max-h-[350px] overflow-y-auto pr-1 ${dashboardCourseFilter !== 'all' ? 'grid grid-cols-1 md:grid-cols-3 gap-4 space-y-0' : ''}`}>
+                              {courses.filter(c => c.status === 'upcoming').length === 0 ? (
+                                <p className="text-xs text-slate-400 dark:text-slate-500 italic py-4 text-center col-span-full">No upcoming courses planned.</p>
+                              ) : (
+                                courses.filter(c => c.status === 'upcoming').map(c => (
+                                  <div key={c.id} className="p-3 bg-slate-50 dark:bg-white/[0.02] border border-slate-100 dark:border-white/5 rounded-xl space-y-1.5 hover:border-blue-500/20 transition-all">
+                                    <div className="flex justify-between items-center">
+                                      <span className="text-[10px] font-bold font-mono px-1.5 py-0.5 bg-slate-200 dark:bg-white/10 text-slate-700 dark:text-zinc-350 rounded">
+                                        {c.code}
+                                      </span>
+                                      {c.durationWeeks && (
+                                        <span className="text-[10px] font-mono text-slate-400">{c.durationWeeks} Months</span>
+                                      )}
+                                    </div>
+                                    <p className="text-xs font-bold text-slate-800 dark:text-zinc-200">{c.name}</p>
+                                    {c.description && <p className="text-[10.5px] text-slate-500 dark:text-gray-400 font-sans leading-relaxed">{c.description}</p>}
+                                  </div>
+                                ))
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Completed Courses */}
+                      {(dashboardCourseFilter === 'all' || dashboardCourseFilter === 'completed') && (
+                        <div className={`p-5 rounded-2xl bg-white dark:bg-[#070708] border border-slate-200/80 dark:border-white/10 shadow-xs flex flex-col justify-between ${dashboardCourseFilter !== 'all' ? 'md:col-span-3' : ''}`}>
+                          <div className="space-y-3">
+                            <div className="flex items-center justify-between border-b border-slate-100 dark:border-white/5 pb-2">
+                              <span className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider font-mono flex items-center gap-1.5">
+                                <span className="w-2 h-2 rounded-full bg-slate-400" />
+                                Complete Course
+                              </span>
+                              <span className="text-xs font-semibold px-2 py-0.5 bg-slate-500/10 text-slate-500 dark:text-slate-400 rounded-full font-mono">
+                                {courses.filter(c => c.status === 'completed').length}
+                              </span>
+                            </div>
+                            <div className={`space-y-2 max-h-[350px] overflow-y-auto pr-1 ${dashboardCourseFilter !== 'all' ? 'grid grid-cols-1 md:grid-cols-3 gap-4 space-y-0' : ''}`}>
+                              {courses.filter(c => c.status === 'completed').length === 0 ? (
+                                <p className="text-xs text-slate-400 dark:text-slate-500 italic py-4 text-center col-span-full">No completed archives yet.</p>
+                              ) : (
+                                courses.filter(c => c.status === 'completed').map(c => (
+                                  <div key={c.id} className="p-3 bg-slate-50 dark:bg-white/[0.02] border border-slate-100 dark:border-white/5 rounded-xl space-y-1.5 hover:border-slate-500/25 transition-all">
+                                    <div className="flex justify-between items-center">
+                                      <span className="text-[10px] font-bold font-mono px-1.5 py-0.5 bg-slate-200 dark:bg-white/10 text-slate-700 dark:text-zinc-350 rounded">
+                                        {c.code}
+                                      </span>
+                                      {c.durationWeeks && (
+                                        <span className="text-[10px] font-mono text-slate-400">{c.durationWeeks} Months</span>
+                                      )}
+                                    </div>
+                                    <p className="text-xs font-bold text-slate-800 dark:text-zinc-200">{c.name}</p>
+                                    {c.description && <p className="text-[10.5px] text-slate-500 dark:text-gray-400 font-sans leading-relaxed">{c.description}</p>}
+                                  </div>
+                                ))
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                  )}
+                </div>
               </div>
             )}
 
@@ -3083,6 +3287,8 @@ function AppContent() {
 
             {activeTab === 'reports' && (
               <ReportingDashboard
+                currentUser={currentUser}
+                users={users}
                 students={users.filter(u => u.role === 'student')}
                 schedules={schedules}
                 progressRecords={progressRecords}
@@ -3127,9 +3333,9 @@ function AppContent() {
 
       {forgotEmailModalOpen && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-fadeIn">
-          <div className="w-full max-w-md bg-white dark:bg-[#161618] border border-slate-150/80 dark:border-white/5 rounded-3xl p-6 shadow-2xl space-y-4">
+          <div className="w-full max-w-md bg-white dark:bg-[#070708] border border-slate-200/80 dark:border-white/10 rounded-3xl p-6 shadow-2xl space-y-4">
             <div className="flex items-center justify-between border-b border-slate-100 dark:border-white/5 pb-3">
-              <h3 className="text-base font-serif italic font-bold text-slate-900 dark:text-white flex items-center gap-2">
+              <h3 className="text-base font-sans font-bold text-slate-900 dark:text-white flex items-center gap-2">
                 <Lock className="w-4 h-4 text-red-500" /> Recover Account Credentials
               </h3>
               <button 

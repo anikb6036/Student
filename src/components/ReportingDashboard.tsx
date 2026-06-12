@@ -10,12 +10,16 @@ import { Download, FileSpreadsheet, BarChart2, TrendingUp, Star, Users, GitCompa
 import { exportToCSV } from '../utils';
 
 interface ReportingDashboardProps {
+  currentUser?: UserAccount;
+  users?: UserAccount[];
   students: UserAccount[];
   schedules: ClassSchedule[];
   progressRecords: ProgressRecord[];
 }
 
 export default function ReportingDashboard({
+  currentUser,
+  users = [],
   students,
   schedules,
   progressRecords
@@ -193,15 +197,43 @@ export default function ReportingDashboard({
 
   return (
     <div className="space-y-8 font-sans">
+      {currentUser?.role === 'student' && (
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+          <div className="bg-white dark:bg-[#0B0C10] border border-slate-200/80 dark:border-white/10 rounded-2xl p-5 shadow-sm hover:shadow-md transition-shadow">
+            <p className="text-sm text-slate-500 dark:text-gray-400 font-medium">Enrolled Courses</p>
+            <p className="text-3xl font-semibold text-slate-900 dark:text-white mt-2 mb-4">
+              {schedules.filter(s => s.enrolledStudentIds.includes(currentUser.id)).length}
+            </p>
+          </div>
+
+          <div className="bg-white dark:bg-[#0B0C10] border border-slate-200/80 dark:border-white/10 rounded-2xl p-5 shadow-sm hover:shadow-md transition-shadow">
+            <p className="text-sm text-slate-500 dark:text-gray-400 font-medium">My Average Score</p>
+            <p className="text-3xl font-semibold text-slate-900 dark:text-white mt-2 mb-4">
+              {progressRecords.filter(r => r.studentId === currentUser.id).length > 0
+                ? (progressRecords.filter(r => r.studentId === currentUser.id).reduce((acc, r) => acc + r.score, 0) / progressRecords.filter(r => r.studentId === currentUser.id).length).toFixed(0)
+                : '0'}%
+            </p>
+          </div>
+
+          <div className="bg-white dark:bg-[#0B0C10] border border-slate-200/80 dark:border-white/10 rounded-2xl p-5 shadow-sm hover:shadow-md transition-shadow">
+            <p className="text-sm text-slate-500 dark:text-gray-400 font-medium">Assigned Advisor</p>
+            <p className="text-xl font-semibold text-slate-900 dark:text-white mt-3 mb-5">
+              {users.find(i => i.id === currentUser.assignedInstructorId)?.name || 'Not Assigned'}
+            </p>
+            <p className="text-[13px] text-slate-500">Profile synced</p>
+          </div>
+        </div>
+      )}
+
       {/* Student Peer-to-Peer Progress Comparison Console */}
-      <div className="bg-white dark:bg-[#161618] rounded-3xl border border-slate-150/80 dark:border-white/5 p-6 shadow-sm space-y-6">
+      <div className="bg-white dark:bg-[#070708] rounded-3xl border border-slate-200/80 dark:border-white/10 p-6 md:p-8 shadow-sm space-y-6">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
-            <h3 className="text-base font-serif italic text-amber-500 font-bold flex items-center gap-2">
-              <GitCompare className="w-5 h-5 text-amber-500" />
-              Student Peer-to-Peer Progress Comparison Console
-            </h3>
-            <p className="text-xs text-slate-500 dark:text-gray-400 mt-0.5">
+            <h1 className="text-xl font-bold font-sans text-slate-900 dark:text-white flex items-center gap-2">
+              <GitCompare className="w-5 h-5 text-blue-500" />
+              Student Peer-to-Peer Comparison Console
+            </h1>
+            <p className="text-sm text-slate-555 dark:text-gray-400 mt-0.5">
               Select two students to evaluate their chronological performance trends and subject score averages side-by-side.
             </p>
           </div>
@@ -419,11 +451,11 @@ export default function ReportingDashboard({
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         
         {/* Subject KPI Scoring */}
-        <div className="bg-white dark:bg-[#161618] rounded-3xl border border-slate-150/80 dark:border-white/5 p-6 shadow-sm">
+        <div className="bg-white dark:bg-[#070708] rounded-3xl border border-slate-200/80 dark:border-white/10 p-6 md:p-8 shadow-sm">
           <div className="flex justify-between items-center mb-4">
             <div>
-              <h3 className="text-base font-serif italic text-amber-500 font-bold flex items-center gap-2">
-                <BarChart2 className="w-5 h-5 text-amber-500" />
+              <h3 className="text-base font-bold font-sans text-slate-900 dark:text-white flex items-center gap-2">
+                <BarChart2 className="w-5 h-5 text-blue-500" />
                 Instructional Domains Academic Performance
               </h3>
               <p className="text-xs text-slate-500 dark:text-gray-400 mt-0.5">Average grades scored across distinct student sectors</p>
@@ -440,18 +472,18 @@ export default function ReportingDashboard({
                   contentStyle={{ background: '#0F0F11', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '8px', color: '#f8fafc', fontSize: '11px' }}
                   cursor={{ fill: 'rgba(255, 255, 255, 0.03)' }}
                 />
-                <Bar dataKey="Average Score" fill="#f59e0b" radius={[8, 8, 0, 0]} barSize={40} />
+                <Bar dataKey="Average Score" fill="#3b82f6" radius={[8, 8, 0, 0]} barSize={40} />
               </BarChart>
             </ResponsiveContainer>
           </div>
         </div>
 
         {/* Enrollment Distribution */}
-        <div className="bg-white dark:bg-[#161618] rounded-3xl border border-slate-150/80 dark:border-white/5 p-6 shadow-sm">
+        <div className="bg-white dark:bg-[#070708] rounded-3xl border border-slate-200/80 dark:border-white/10 p-6 md:p-8 shadow-sm">
           <div className="flex justify-between items-center mb-4">
             <div>
-              <h3 className="text-base font-serif italic text-white dark:text-gray-200 font-bold flex items-center gap-2">
-                <Users className="w-5 h-5 text-amber-500" />
+              <h3 className="text-base font-bold font-sans text-slate-900 dark:text-white flex items-center gap-2">
+                <Users className="w-5 h-5 text-blue-500" />
                 Student Enrollment Concentration
               </h3>
               <p className="text-xs text-slate-500 dark:text-gray-400 mt-0.5">Ratio distribution of seats registered by courses</p>
@@ -475,14 +507,14 @@ export default function ReportingDashboard({
         </div>
 
         {/* Student Grade Distribution Histogram */}
-        <div className="bg-white dark:bg-[#161618] rounded-3xl border border-slate-150/80 dark:border-white/5 p-6 shadow-sm lg:col-span-2">
+        <div className="bg-white dark:bg-[#070708] rounded-3xl border border-slate-200/80 dark:border-white/10 p-6 md:p-8 shadow-sm lg:col-span-2">
           <div className="flex justify-between items-center mb-4">
             <div>
-              <h3 className="text-base font-serif italic text-amber-500 font-bold flex items-center gap-2">
-                <Percent className="w-5 h-5 text-amber-500" />
+              <h3 className="text-base font-bold font-sans text-slate-900 dark:text-white flex items-center gap-2">
+                <Percent className="w-5 h-5 text-blue-500" />
                 Student Grade Distribution Histogram
               </h3>
-              <p className="text-xs text-slate-500 dark:text-gray-400 mt-0.5">
+              <p className="text-xs text-slate-550 dark:text-gray-400 mt-0.5">
                 Frequency analysis representing the count of students falling into distinct score ranges across all evaluative progress records
               </p>
             </div>
@@ -498,21 +530,21 @@ export default function ReportingDashboard({
                   contentStyle={{ background: '#0F0F11', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '8px', color: '#f8fafc', fontSize: '11px' }}
                   cursor={{ fill: 'rgba(255, 255, 255, 0.03)' }}
                 />
-                <Bar dataKey="Record Count" fill="#f59e0b" radius={[8, 8, 0, 0]} barSize={50} />
+                <Bar dataKey="Record Count" fill="#3b82f6" radius={[8, 8, 0, 0]} barSize={50} />
               </BarChart>
             </ResponsiveContainer>
           </div>
         </div>
 
         {/* Temporal Progress Chart */}
-        <div className="bg-white dark:bg-[#161618] rounded-3xl border border-slate-150/80 dark:border-white/5 p-6 shadow-sm lg:col-span-2">
+        <div className="bg-white dark:bg-[#070708] rounded-3xl border border-slate-200/80 dark:border-white/10 p-6 md:p-8 shadow-sm lg:col-span-2">
           <div className="flex justify-between items-center mb-4">
             <div>
-              <h3 className="text-base font-serif italic text-amber-500 font-bold flex items-center gap-2">
-                <TrendingUp className="w-5 h-5 text-amber-500" />
+              <h3 className="text-base font-bold font-sans text-slate-900 dark:text-white flex items-center gap-2">
+                <TrendingUp className="w-5 h-5 text-blue-500" />
                 Academic Progression Index (Timeline)
               </h3>
-              <p className="text-xs text-slate-500 dark:text-gray-400 mt-0.5">Continuous tracking of lesson evaluations, showing grade trends over dates</p>
+              <p className="text-xs text-slate-550 dark:text-gray-400 mt-0.5">Continuous tracking of lesson evaluations, showing grade trends over dates</p>
             </div>
           </div>
 
@@ -521,17 +553,17 @@ export default function ReportingDashboard({
               <AreaChart data={timelineData} margin={{ top: 10, right: 15, left: -25, bottom: 0 }}>
                 <defs>
                   <linearGradient id="scoreGrad" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#f59e0b" stopOpacity={0.2}/>
-                    <stop offset="95%" stopColor="#f59e0b" stopOpacity={0}/>
+                    <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.2}/>
+                    <stop offset="95%" stopColor="#3b82f6" stopOpacity={0}/>
                   </linearGradient>
                 </defs>
                 <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" vertical={false} />
                 <XAxis dataKey="date" fontSize={11} stroke="#94a3b8" />
                 <YAxis domain={[0, 100]} fontSize={11} stroke="#94a3b8" />
                 <Tooltip
-                  contentStyle={{ background: '#0F0F11', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '8px', color: '#f8fafc', fontSize: '11px' }}
+                  contentStyle={{ background: '#070708', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '8px', color: '#f8fafc', fontSize: '11px' }}
                 />
-                <Area type="monotone" dataKey="score" stroke="#f59e0b" strokeWidth={2} fillOpacity={1} fill="url(#scoreGrad)" />
+                <Area type="monotone" dataKey="score" stroke="#3b82f6" strokeWidth={2} fillOpacity={1} fill="url(#scoreGrad)" />
               </AreaChart>
             </ResponsiveContainer>
           </div>
@@ -539,17 +571,17 @@ export default function ReportingDashboard({
       </div>
 
       {/* CSV Export Desk */}
-      <div className="bg-gradient-to-r from-neutral-900 via-[#161618] to-black text-white rounded-3xl p-6 md:p-8 flex flex-col md:flex-row items-center justify-between gap-6 overflow-hidden border border-white/5 relative shadow-md">
+      <div className="bg-gradient-to-r from-neutral-900 via-[#070708] to-slate-950 text-white rounded-3xl p-6 md:p-8 flex flex-col md:flex-row items-center justify-between gap-6 overflow-hidden border border-white/10 relative shadow-md">
         <div className="absolute right-0 bottom-0 opacity-5 rotate-12 pointer-events-none">
-          <FileSpreadsheet className="w-60 h-60 text-amber-500" />
+          <FileSpreadsheet className="w-60 h-60 text-blue-500" />
         </div>
         
         <div className="space-y-1.5 z-10">
-          <h3 className="text-lg font-serif italic text-amber-500 font-bold flex items-center gap-2">
-            <Download className="w-5 h-5 text-amber-500" />
-            Performance & Census Analytics Transcripts Export
+          <h3 className="text-lg font-bold font-sans text-white flex items-center gap-2">
+            <Download className="w-5 h-5 text-blue-500" />
+            Performance & Analytics Export
           </h3>
-          <p className="text-xs text-slate-300 dark:text-gray-400 pr-4 leading-relaxed max-w-2xl">
+          <p className="text-xs text-slate-300 dark:text-gray-400 pr-4 leading-relaxed max-w-2xl font-sans">
             Audit coaching performance externally. Pick the target module sector from the list below to instantaneously save structured Spreadsheet layouts with fully compiled student, class timings, and feedback logs.
           </p>
         </div>
@@ -558,7 +590,7 @@ export default function ReportingDashboard({
           <select
             value={exportTarget}
             onChange={e => setExportTarget(e.target.value as any)}
-            className="bg-slate-800 dark:bg-[#0F0F11] text-white dark:text-gray-300 border border-slate-700 dark:border-white/5 px-3 py-2.5 rounded-xl text-xs font-semibold focus:outline-none"
+            className="bg-slate-800 dark:bg-[#070708] text-white dark:text-gray-300 border border-slate-700 dark:border-white/10 px-3 py-2.5 rounded-xl text-xs font-semibold focus:outline-none"
           >
             <option value="students">Student Registry Directory</option>
             <option value="schedules">Live Classes Timetable</option>
@@ -566,7 +598,7 @@ export default function ReportingDashboard({
           </select>
           <button
             onClick={handleExport}
-            className="bg-amber-500 hover:bg-amber-600 active:scale-95 text-amber-950 whitespace-nowrap text-xs font-bold px-5 py-2.5 rounded-xl shadow-md transition flex items-center gap-1.5"
+            className="bg-blue-600 hover:bg-blue-700 active:scale-95 text-white whitespace-nowrap text-xs font-semibold px-5 py-2.5 rounded-xl shadow-md transition flex items-center gap-1.5 select-none"
           >
             <FileSpreadsheet className="w-4 h-4" /> Export CSV
           </button>

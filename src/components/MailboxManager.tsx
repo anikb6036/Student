@@ -103,22 +103,22 @@ export default function MailboxManager({
   return (
     <div className="space-y-6">
       {/* Page Title & Intro */}
-      <div className="p-6 md:p-8 rounded-3xl bg-white dark:bg-[#161618] border border-slate-150/80 dark:border-white/5 text-slate-900 dark:text-gray-200 shadow-md flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+      <div className="bg-white dark:bg-[#070708] rounded-3xl border border-slate-200/80 dark:border-white/10 shadow-sm p-6 md:p-8 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <span className="p-1 px-2.5 border border-amber-500/15 bg-amber-500/5 text-amber-500 rounded-xl text-[10px] font-mono font-bold uppercase select-none tracking-widest leading-none">
-            📥 Internal Messaging System
+          <span className="p-1 px-3 border border-blue-550/15 bg-blue-500/5 text-blue-500 rounded-full text-[10px] font-mono font-bold uppercase select-none tracking-widest leading-none">
+            📥 Internal Message Dispatch
           </span>
-          <h1 className="text-2xl md:text-3xl font-serif italic text-amber-500 font-bold tracking-tight mt-1.5">
+          <h1 className="text-[28px] font-bold text-slate-900 dark:text-white mt-2 mb-1 tracking-tight">
             Secure Student Communications
           </h1>
-          <p className="text-xs text-slate-500 dark:text-gray-400 mt-1 leading-relaxed">
+          <p className="text-sm text-slate-500 dark:text-gray-400 mt-1 leading-relaxed">
             Send, receive, and browse secure simulated emails within our administrative network.
           </p>
         </div>
 
         <button
           onClick={handleStartCompose}
-          className="flex items-center gap-2 px-4 py-2 bg-amber-500 hover:bg-amber-600 font-bold text-xs text-amber-950 rounded-xl transition active:scale-98 cursor-pointer shadow-md"
+          className="flex items-center gap-2 px-4 py-2 bg-slate-900 text-white hover:bg-slate-800 dark:bg-white dark:text-black dark:hover:bg-slate-200 text-xs font-semibold rounded-xl tracking-tight cursor-pointer shadow-md select-none"
         >
           <Plus className="w-4 h-4" />
           Compose Message
@@ -128,7 +128,7 @@ export default function MailboxManager({
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
         
         {/* Left pane: Feed Folders & Correspondence list */}
-        <div className="lg:col-span-5 bg-white dark:bg-[#161618] border border-slate-150/80 dark:border-white/5 rounded-3xl p-5 flex flex-col justify-between shadow-sm min-h-[500px]">
+        <div className="lg:col-span-5 bg-white dark:bg-[#070708] border border-slate-200/80 dark:border-white/10 rounded-3xl p-5 flex flex-col justify-between shadow-sm min-h-[500px]">
           <div className="space-y-4">
             
             {/* Folder Toggle */}
@@ -233,7 +233,7 @@ export default function MailboxManager({
               >
                 <div>
                   <div className="flex justify-between items-center border-b border-slate-100 dark:border-white/5 pb-3">
-                    <h3 className="text-base font-serif italic text-slate-900 dark:text-white font-bold">New Despatch Communication</h3>
+                    <h3 className="text-base font-sans text-slate-900 dark:text-white font-bold">New Despatch Communication</h3>
                     <button
                       onClick={() => setIsComposing(false)}
                       className="text-xs text-slate-400 hover:text-slate-600 dark:hover:text-gray-200 cursor-pointer"
@@ -251,7 +251,7 @@ export default function MailboxManager({
                       >
                         <CheckCircle className="w-8 h-8" />
                       </motion.div>
-                      <p className="text-sm font-bold text-slate-800 dark:text-gray-200 font-serif">Message Dispatched Successfully</p>
+                      <p className="text-sm font-bold text-slate-800 dark:text-gray-200 font-sans">Message Dispatched Successfully</p>
                       <p className="text-[11px] text-slate-400 text-center max-w-xs leading-relaxed">
                         Secure connection established. Recipient inbox model parsed and updated in local ledger database.
                       </p>
@@ -369,18 +369,18 @@ export default function MailboxManager({
                 animate={{ opacity: 1 }}
                 className="flex-1 flex flex-col justify-center items-center py-16 text-center space-y-4"
               >
-                <div className="p-4 bg-amber-500/5 rounded-full border border-amber-500/10">
-                  <Mail className="w-8 h-8 text-amber-500 animate-pulse" />
+                <div className="p-4 bg-blue-500/5 rounded-full border border-blue-500/10">
+                  <Mail className="w-8 h-8 text-blue-500 animate-pulse" />
                 </div>
                 <div>
-                  <h4 className="text-sm font-serif italic text-slate-800 dark:text-gray-200 font-bold">Select a Correspondence Package</h4>
+                  <h4 className="text-sm font-sans text-slate-900 dark:text-white font-bold">Select a Correspondence Package</h4>
                   <p className="text-[11.5px] text-slate-500 dark:text-gray-400 mt-1 max-w-sm leading-relaxed">
                     Click any communications item in the left folder pane list to open its details, or compose a new package.
                   </p>
                 </div>
                 <button
                   onClick={handleStartCompose}
-                  className="px-4 py-1.5 border border-amber-500/30 hover:bg-amber-500/5 text-amber-500 text-xs font-bold rounded-xl transition cursor-pointer"
+                  className="px-4 py-1.5 border border-blue-500/30 hover:bg-blue-500/5 text-blue-500 text-xs font-semibold rounded-xl transition cursor-pointer"
                 >
                   Create New Despatch Package
                 </button>

@@ -140,13 +140,13 @@ export default function CloudBackup({
 
   return (
     <div className="space-y-6 font-sans">
-      <div className="bg-white dark:bg-[#161618] rounded-3xl border border-slate-150/80 dark:border-white/5 shadow-sm p-6 md:p-8">
+      <div className="bg-white dark:bg-[#070708] rounded-3xl border border-slate-200/80 dark:border-white/10 shadow-sm p-6 md:p-8">
         <div>
-          <h2 className="text-2xl font-bold font-serif italic text-slate-900 dark:text-white tracking-tight flex items-center gap-2">
-            <Cloud className="w-5 h-5 text-amber-500" />
-            Cloud Database Backups & Redundancy
-          </h2>
-          <p className="text-sm text-slate-500 dark:text-zinc-400 mt-1">
+          <h1 className="text-[28px] font-bold text-slate-900 dark:text-white mb-1 tracking-tight flex items-center gap-2">
+            <Cloud className="w-5 h-5 text-blue-500" />
+            Database Backups & Redundancy
+          </h1>
+          <p className="text-sm text-slate-500 dark:text-gray-400">
             Synchronize active lesson databases with secure cloud replica targets, download standalone snapshots, or revert the system past states.
           </p>
         </div>
@@ -154,9 +154,9 @@ export default function CloudBackup({
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 mt-6">
           {/* Main Action syncing */}
           <div className="lg:col-span-7 space-y-6">
-            <div className="p-6 rounded-2xl bg-[#0F0F11]/50 dark:bg-[#0F0F11] border border-slate-200 dark:border-white/5 flex flex-col justify-between">
+            <div className="p-6 rounded-2xl bg-[#070708] dark:bg-[#070708] border border-slate-200/80 dark:border-white/10 flex flex-col justify-between">
               <div>
-                <h3 className="text-base font-bold text-slate-850 dark:text-white flex items-center gap-2 select-none font-serif">
+                <h3 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2 select-none font-sans">
                   Snapshot synchronization
                 </h3>
                 <p className="text-xs text-slate-500 dark:text-zinc-400 mt-2 leading-relaxed">
@@ -227,10 +227,10 @@ export default function CloudBackup({
 
           {/* Standalone Restoration Upload Box - Supporting drag & drop AND click selection */}
           <div className="lg:col-span-5">
-            <h3 className="text-sm font-bold text-slate-800 dark:text-white select-none mb-3 font-serif">
+            <h3 className="text-sm font-bold text-slate-900 dark:text-white select-none mb-3 font-sans">
               Restore System Backup Snapshots
             </h3>
-            <p className="text-xs text-slate-500 dark:text-zinc-400 mb-4 leading-relaxed pr-2">
+            <p className="text-xs text-slate-550 dark:text-zinc-400 mb-4 leading-relaxed pr-2 font-sans">
               Have database JSON snapshots generated priorly? Drop the snapshot or click selection below to instantly populate student schedules, evaluations, progress checklists, and assignments back to live servers.
             </p>
 
@@ -242,8 +242,8 @@ export default function CloudBackup({
               onClick={triggerFileInput}
               className={`border-2 border-dashed rounded-2xl p-8 text-center cursor-pointer transition flex flex-col items-center justify-center min-h-[220px] select-none ${
                 dragActive
-                  ? 'border-amber-500 bg-amber-500/[0.05] dark:bg-amber-500/[0.02]'
-                  : 'border-slate-200 dark:border-white/5 hover:border-amber-500/50 dark:hover:border-amber-500/30 bg-slate-50/40 dark:bg-[#0A0A0B]/50'
+                  ? 'border-blue-500 bg-blue-500/[0.05] dark:bg-blue-500/[0.02]'
+                  : 'border-slate-200 dark:border-white/10 hover:border-blue-500/50 dark:hover:border-blue-500/30 bg-slate-50/45 dark:bg-[#070708]'
               }`}
             >
               <input

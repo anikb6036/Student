@@ -129,5 +129,6 @@ export interface Course {
   description?: string;
   durationWeeks?: string;
   createdDate: string;
+  status?: 'completed' | 'ongoing' | 'upcoming';
 }
 

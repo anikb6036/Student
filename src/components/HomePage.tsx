@@ -267,7 +267,7 @@ export default function HomePage({ isDark, onEnterPortal, courses = [] }: HomePa
             <div className="flex flex-col lg:flex-row gap-12 xl:gap-16">
               <div className="flex-1">
                 <h2 className="text-3xl md:text-5xl font-sans font-bold text-slate-900 dark:text-white tracking-tight mb-12">
-                  Choose Your Area of Interest
+                  Upcoming Best Course
                 </h2>
 
                 {courses.length === 0 ? (

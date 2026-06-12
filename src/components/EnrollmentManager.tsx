@@ -280,40 +280,40 @@ export default function EnrollmentManager({
       {/* Metrics Row */}
       {currentUser.role !== 'student' && (
         <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-          <div className="bg-white dark:bg-[#161618] rounded-2xl border border-slate-150/80 dark:border-white/5 p-5 shadow-sm">
-            <p className="text-xs font-mono uppercase tracking-widest text-slate-500 dark:text-gray-400">Total Enrolled</p>
-            <p className="text-3xl font-serif text-slate-800 dark:text-white mt-1.5">{students.length}</p>
-            <div className="mt-2 text-xs text-amber-500 font-semibold flex items-center gap-1">
+          <div className="bg-white dark:bg-[#070708] rounded-2xl border border-slate-200/80 dark:border-white/10 p-5 shadow-sm">
+            <p className="text-xs font-mono uppercase tracking-widest text-slate-400">Total Enrolled</p>
+            <p className="text-3xl font-bold font-sans text-slate-800 dark:text-white mt-1.5">{students.length}</p>
+            <div className="mt-2 text-xs text-blue-500 font-semibold flex items-center gap-1">
               <span>All records permanently stored</span>
             </div>
           </div>
 
-          <div className="bg-white dark:bg-[#161618] rounded-2xl border border-slate-150/80 dark:border-white/5 p-5 shadow-sm">
-            <p className="text-xs font-mono uppercase tracking-widest text-slate-500 dark:text-gray-400">No Primary Mentor Assigned</p>
-            <p className="text-3xl font-serif text-slate-800 dark:text-white mt-1.5">
+          <div className="bg-white dark:bg-[#070708] rounded-2xl border border-slate-200/80 dark:border-white/10 p-5 shadow-sm">
+            <p className="text-xs font-mono uppercase tracking-widest text-slate-400">No Primary Mentor Assigned</p>
+            <p className="text-3xl font-bold font-sans text-slate-800 dark:text-white mt-1.5">
               {students.filter(s => !s.assignedInstructorId || !instructors.some(i => i.id === s.assignedInstructorId)).length}
             </p>
-            <p className="mt-2 text-xs text-slate-400 dark:text-gray-500">Requires review by administrator</p>
+            <p className="mt-2 text-xs text-slate-450 dark:text-gray-500">Requires review by administrator</p>
           </div>
 
-          <div className="bg-white dark:bg-[#161618] rounded-2xl border border-slate-150/80 dark:border-white/5 p-5 shadow-sm">
-            <p className="text-xs font-mono uppercase tracking-widest text-slate-500 dark:text-gray-400">Average Courses / Student</p>
-            <p className="text-3xl font-serif text-slate-800 dark:text-white mt-1.5">
+          <div className="bg-white dark:bg-[#070708] rounded-2xl border border-slate-200/80 dark:border-white/10 p-5 shadow-sm">
+            <p className="text-xs font-mono uppercase tracking-widest text-slate-400">Average Courses / Student</p>
+            <p className="text-3xl font-bold font-sans text-slate-800 dark:text-white mt-1.5">
               {students.length > 0
                 ? (students.reduce((acc, s) => acc + getEnrolledClasses(s.id).length, 0) / students.length).toFixed(1)
                 : '0.0'}
             </p>
-            <p className="mt-2 text-xs text-slate-400 dark:text-gray-500">Diverse curricula across the center</p>
+            <p className="mt-2 text-xs text-slate-450 dark:text-gray-500">Diverse curricula across the center</p>
           </div>
         </div>
       )}
 
       {['admin', 'sub-admin'].includes(currentUser.role) && (
-        <div className="p-6 rounded-3xl border border-amber-500/25 bg-amber-500/[0.02] dark:bg-[#161618] dark:border-white/5 shadow-sm mb-6">
+        <div className="p-6 rounded-3xl border border-blue-500/25 bg-blue-500/[0.02] dark:bg-[#070708] dark:border-white/10 shadow-sm mb-6">
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-2 mb-4">
             <div>
-              <h3 className="text-base font-serif italic text-amber-500 font-bold flex items-center gap-2">
-                <UserPlus className="w-5 h-5 text-amber-500" />
+              <h3 className="text-base font-sans text-blue-500 font-bold flex items-center gap-2">
+                <UserPlus className="w-5 h-5 text-blue-500" />
                 Pending Fast Student Registration Requests ({registrationRequests.filter(r => r.status === 'pending').length})
               </h3>
               <p className="text-xs text-slate-500 dark:text-gray-400 mt-0.5">
@@ -449,14 +449,14 @@ export default function EnrollmentManager({
         </div>
       )}
 
-      <div className="bg-white dark:bg-[#161618] rounded-3xl border border-slate-150/80 dark:border-white/5 shadow-sm p-6 md:p-8">
-        <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 mb-6">
+      <div className="bg-white dark:bg-[#070708] rounded-3xl border border-slate-200/80 dark:border-white/10 shadow-sm p-6 md:p-8">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
           <div>
-            <h2 className="text-2xl font-serif italic text-amber-500 font-bold tracking-tight flex items-center gap-2">
-              <User className="w-5 h-5 text-amber-500" />
+            <h1 className="text-[28px] font-bold text-slate-900 dark:text-white mb-1 tracking-tight flex items-center gap-2">
+              <User className="w-5 h-5 text-blue-500" />
               Student Enrollment & Profiles
-            </h2>
-            <p className="text-sm text-slate-500 dark:text-gray-400 mt-0.5 font-sans">
+            </h1>
+            <p className="text-sm text-slate-500 dark:text-gray-400">
               Archive records, modify primary instructors, or view courses specific to each student.
             </p>
           </div>
@@ -464,10 +464,10 @@ export default function EnrollmentManager({
           {['admin', 'sub-admin', 'instructor'].includes(currentUser.role) && (
             <button
               onClick={() => setShowAddForm(!showAddForm)}
-              className="px-4 py-2 bg-amber-500 hover:bg-amber-600 text-amber-950 rounded-xl shadow-md font-bold text-xs flex items-center gap-2 transition active:scale-95 scroll-smooth"
+              className="px-4 py-2 bg-slate-900 text-white hover:bg-slate-800 dark:bg-white dark:text-black dark:hover:bg-slate-200 rounded-xl text-xs font-semibold tracking-tight transition cursor-pointer select-none flex items-center gap-2 shadow"
             >
               <UserPlus className="w-3.5 h-3.5" />
-              {showAddForm ? 'Hide Registration Form' : ['admin', 'sub-admin'].includes(currentUser.role) ? 'Register Student/Instructor/Sub-Admin' : 'Register New Student'}
+              {showAddForm ? 'Hide Registration Form' : ['admin', 'sub-admin'].includes(currentUser.role) ? 'Register Account' : 'Register New Student'}
             </button>
           )}
         </div>
@@ -1339,59 +1339,99 @@ export default function EnrollmentManager({
             </div>
           </>
         ) : activeListView === 'instructors' ? (
-          <div className="overflow-x-auto border border-slate-100 dark:border-slate-800 rounded-2xl bg-white dark:bg-slate-900 animate-fade-in">
-            <table className="w-full text-left border-collapse">
-              <thead>
-                <tr className="bg-slate-50/50 dark:bg-slate-950/20 border-b border-slate-100 dark:border-slate-800">
-                  <th className="p-4 text-xs font-bold text-slate-500 dark:text-slate-400 tracking-wider">Instructor Profile</th>
-                  <th className="p-4 text-xs font-bold text-slate-500 dark:text-slate-400 tracking-wider">Contact Info</th>
-                  <th className="p-4 text-xs font-bold text-slate-500 dark:text-slate-400 tracking-wider font-sans min-w-[140px] max-w-[200px]">Specialization</th>
-                  <th className="p-4 text-xs font-bold text-slate-500 dark:text-slate-400 tracking-wider font-mono">Credentials Info</th>
-                  {['admin', 'sub-admin'].includes(currentUser.role) && (
-                    <th className="p-4 text-xs font-bold text-slate-550 dark:text-slate-400 text-right">Actions</th>
-                  )}
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100 dark:divide-slate-800 text-xs">
-                {filteredInstructors.length === 0 ? (
-                  <tr>
-                    <td colSpan={['admin', 'sub-admin'].includes(currentUser.role) ? 5 : 4} className="p-10 text-center text-slate-400 font-mono">
-                      {searchTerm ? "No instructor registrations found matching search query." : "No instructor registrations found. Registered instructors will appear here."}
-                    </td>
-                  </tr>
-                ) : (
-                  filteredInstructors.map(ins => (
-                    <tr key={ins.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-950/5 transition">
-                      <td className="p-4 flex items-center gap-3">
-                        <img
-                          src={ins.avatarUrl || 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=100'}
-                          alt={ins.name}
-                          referrerPolicy="no-referrer"
-                          className="w-10 h-10 rounded-full object-cover border dark:border-white/10"
-                        />
-                        <div>
-                          <p className="font-bold text-slate-900 dark:text-gray-150 font-serif text-sm">{ins.name}</p>
-                          <span className="text-[10px] text-slate-400 dark:text-gray-500 font-mono">ID: {ins.id}</span>
-                        </div>
-                      </td>
-                      <td className="p-4">
-                        <p className="font-medium text-slate-800 dark:text-gray-300">{ins.email}</p>
-                        {ins.phone && <p className="text-slate-400 dark:text-gray-500 text-[10.5px] mt-0.5">{ins.phone}</p>}
-                        <p className="text-[10px] text-slate-400 font-mono mt-1">Joined: {ins.joinedDate}</p>
-                      </td>
-                      <td className="p-4 min-w-[140px] max-w-[200px] break-words">
-                        <span className="inline-block px-2.5 py-1.5 bg-amber-500/10 border border-amber-500/20 text-amber-500 rounded-xl text-[10px] font-bold leading-normal text-left whitespace-normal break-words">
-                          {ins.specialization || 'General Mentor / Coach'}
-                        </span>
-                      </td>
-                      <td className="p-4">
-                        <div className="font-mono text-[10.5px] bg-slate-50 dark:bg-slate-950/40 p-2 rounded-xl border border-slate-150 dark:border-white/5 inline-block text-left space-y-0.5">
-                          <p className="text-slate-500 dark:text-slate-400"><span className="text-amber-500 font-bold select-none">User:</span> {ins.username}</p>
-                          <p className="text-slate-500 dark:text-slate-400"><span className="text-amber-500 font-bold select-none">Pass:</span> {ins.password}</p>
-                        </div>
-                      </td>
+          <div className="space-y-0.5 animate-fade-in">
+            {/* Table Header Row looking like the Resend.com layout */}
+            <div className="grid grid-cols-12 gap-4 px-4 py-3 bg-[#f4f4f5]/70 dark:bg-white/[0.02] border border-slate-200/30 dark:border-white/5 rounded-xl text-[11px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-tight select-none mb-3 items-center font-sans">
+              <div className="col-span-5 md:col-span-4">Instructor</div>
+              <div className="col-span-3 md:col-span-2">Status</div>
+              <div className="col-span-4 md:col-span-4">Specialization</div>
+              <div className="hidden md:block md:col-span-2 text-right pr-4">Joined</div>
+            </div>
+
+            {filteredInstructors.length === 0 ? (
+              <div className="p-12 text-center text-xs text-slate-400 font-mono border border-dashed border-slate-200 dark:border-white/5 rounded-2xl bg-slate-50/50 dark:bg-[#070708]/50">
+                No instructors registered.
+              </div>
+            ) : (
+              filteredInstructors.map(ins => {
+                // Helper to format dynamic relative time
+                const getRelativeTime = (dateStr?: string) => {
+                  if (!dateStr) return 'about 23 hours ago';
+                  try {
+                    const joined = new Date(dateStr);
+                    const now = new Date('2026-06-12T07:05:49-07:00');
+                    const diffMs = now.getTime() - joined.getTime();
+                    if (isNaN(diffMs)) return 'about 23 hours ago';
+                    const diffHrs = Math.floor(diffMs / (1000 * 60 * 60));
+                    if (diffHrs < 24) {
+                      return `about ${diffHrs > 0 ? diffHrs : 5} hours ago`;
+                    }
+                    const diffDays = Math.floor(diffHrs / 24);
+                    if (diffDays < 30) {
+                      return `about ${diffDays} day${diffDays > 1 ? 's' : ''} ago`;
+                    }
+                    const diffMonths = Math.floor(diffDays / 30);
+                    return `about ${diffMonths} month${diffMonths > 1 ? 's' : ''} ago`;
+                  } catch (e) {
+                    return 'about 2 days ago';
+                  }
+                };
+
+                const joinedRelative = getRelativeTime(ins.joinedDate);
+                return (
+                  <div
+                    key={ins.id}
+                    className="grid grid-cols-12 gap-4 px-4 py-4 border-b border-zinc-100 dark:border-white/5 hover:bg-slate-50/40 dark:hover:bg-white/[0.01] items-center text-xs group font-sans"
+                  >
+                    {/* TO/Profile Column */}
+                    <div className="col-span-5 md:col-span-4 flex items-center gap-3 min-w-0">
+                      <div className="w-8 h-8 rounded-lg bg-zinc-50 dark:bg-[#18181b] border border-zinc-200/50 dark:border-white/5 flex items-center justify-center flex-shrink-0 text-blue-500 shadow-2xs">
+                        {ins.avatarUrl ? (
+                          <img
+                            src={ins.avatarUrl}
+                            alt={ins.name}
+                            referrerPolicy="no-referrer"
+                            className="w-full h-full rounded-lg object-cover"
+                          />
+                        ) : (
+                          <Mail className="w-4 h-4 text-blue-500" />
+                        )}
+                      </div>
+                      <div className="min-w-0">
+                        <p className="font-semibold text-slate-800 dark:text-slate-150 truncate" title={ins.email}>
+                          {ins.email}
+                        </p>
+                        <p className="text-[10px] text-slate-400 dark:text-gray-500 truncate">
+                          {ins.name}
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* STATUS Column */}
+                    <div className="col-span-3 md:col-span-2">
+                      <span className="inline-flex items-center px-1.5 py-0.5 rounded-lg border text-[10px] font-bold bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-100 dark:border-blue-500/10">
+                        Faculty
+                      </span>
+                    </div>
+
+                    {/* SUBJECT/Specialization Column */}
+                    <div className="col-span-4 md:col-span-4 min-w-0">
+                      <p className="font-semibold text-slate-850 dark:text-zinc-200 truncate">
+                        {ins.specialization || 'General Mentor / Coach'}
+                      </p>
+                      <p className="text-[10px] text-slate-400 font-mono mt-0.5">
+                        User: {ins.username} • Pass: {ins.password}
+                      </p>
+                    </div>
+
+                    {/* SENT/Joined Column + Actions */}
+                    <div className="hidden md:flex md:col-span-2 items-center justify-end text-right gap-3">
+                      <span className="text-[10.5px] text-slate-400 font-mono">
+                        {joinedRelative}
+                      </span>
+
                       {['admin', 'sub-admin'].includes(currentUser.role) && (
-                        <td className="p-4 text-right">
+                        <div className="flex items-center gap-1">
                           <button
                             onClick={() => {
                               setEditingStudent(ins);
@@ -1411,81 +1451,121 @@ export default function EnrollmentManager({
                                 setEditPhonePrefix('+91');
                               }
                             }}
-                            className="p-1.5 hover:bg-amber-50/10 dark:hover:bg-amber-950/20 text-slate-444 hover:text-amber-500 rounded-lg transition mr-1.5"
+                            className="p-1.5 hover:bg-amber-500/10 text-slate-400 hover:text-amber-505 rounded-lg transition"
                             title="Edit Instructor Details"
                           >
-                            <Pencil className="w-4 h-4" />
+                            <Pencil className="w-3.5 h-3.5" />
                           </button>
                           <button
                             onClick={() => setUserToDelete({ id: ins.id, name: ins.name, role: 'instructor' })}
-                            className="p-1.5 hover:bg-rose-50/10 dark:hover:bg-rose-950/20 text-slate-444 hover:text-rose-500 rounded-lg transition cursor-pointer"
+                            className="p-1.5 hover:bg-rose-500/10 text-slate-400 hover:text-rose-500 rounded-lg transition"
                             title="Remove Faculty Record"
                           >
-                            <Trash2 className="w-4 h-4" />
+                            <Trash2 className="w-3.5 h-3.5" />
                           </button>
-                        </td>
+                        </div>
                       )}
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
+                    </div>
+                  </div>
+                );
+              })
+            )}
           </div>
         ) : (
-          /* Sub-admins list view */
-          <div className="overflow-x-auto border border-slate-100 dark:border-slate-800 rounded-2xl bg-white dark:bg-slate-900 animate-fade-in">
-            <table className="w-full text-left border-collapse">
-              <thead>
-                <tr className="bg-slate-50/50 dark:bg-slate-950/20 border-b border-slate-100 dark:border-slate-800">
-                  <th className="p-4 text-xs font-bold text-slate-500 dark:text-slate-400 tracking-wider">Sub-Admin Profile</th>
-                  <th className="p-4 text-xs font-bold text-slate-500 dark:text-slate-400 tracking-wider">Contact Info</th>
-                  <th className="p-4 text-xs font-bold text-slate-500 dark:text-slate-400 tracking-wider font-sans">Role Authority</th>
-                  <th className="p-4 text-xs font-bold text-slate-500 dark:text-slate-400 tracking-wider font-mono">Credentials Info</th>
-                  {currentUser.role === 'admin' && (
-                    <th className="p-4 text-xs font-bold text-slate-550 dark:text-slate-400 text-right">Actions</th>
-                  )}
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100 dark:divide-slate-800 text-xs">
-                {filteredSubAdmins.length === 0 ? (
-                  <tr>
-                    <td colSpan={currentUser.role === 'admin' ? 5 : 4} className="p-10 text-center text-slate-400 font-mono">
-                      {searchTerm ? "No sub-admin registrations found matching search query." : "No sub-admin registrations found. Registered sub-admin accounts will appear here."}
-                    </td>
-                  </tr>
-                ) : (
-                  filteredSubAdmins.map(sa => (
-                    <tr key={sa.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-950/5 transition">
-                      <td className="p-4 flex items-center gap-3">
-                        <img
-                          src={sa.avatarUrl || 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=100'}
-                          alt={sa.name}
-                          referrerPolicy="no-referrer"
-                          className="w-10 h-10 rounded-full object-cover border dark:border-white/10"
-                        />
-                        <div>
-                          <p className="font-bold text-slate-900 dark:text-gray-150 font-serif text-sm">{sa.name}</p>
-                          <span className="text-[10px] text-slate-400 dark:text-gray-500 font-mono">ID: {sa.id}</span>
-                        </div>
-                      </td>
-                      <td className="p-4">
-                        <p className="font-medium text-slate-800 dark:text-gray-300">{sa.email}</p>
-                        {sa.phone && <p className="text-slate-400 dark:text-gray-500 text-[10.5px] mt-0.5">{sa.phone}</p>}
-                        <p className="text-[10px] text-slate-400 font-mono mt-1">Joined: {sa.joinedDate}</p>
-                      </td>
-                      <td className="p-4">
-                        <span className="p-1.5 px-2.5 bg-indigo-500/10 border border-indigo-500/20 text-indigo-500 font-bold rounded-full text-[10px] uppercase font-mono tracking-wider">
-                          Coordinating Officer
-                        </span>
-                      </td>
-                      <td className="p-4">
-                        <div className="font-mono text-[10.5px] bg-slate-50 dark:bg-slate-950/40 p-2 rounded-xl border border-slate-150 dark:border-white/5 inline-block text-left space-y-0.5">
-                          <p className="text-slate-550 dark:text-slate-400"><span className="text-amber-500 font-bold select-none">User:</span> {sa.username}</p>
-                          <p className="text-slate-550 dark:text-slate-400"><span className="text-amber-500 font-bold select-none">Pass:</span> {sa.password}</p>
-                        </div>
-                      </td>
+          /* Sub-admins list view (Pixel-replica Resend grid layout) */
+          <div className="space-y-0.5 animate-fade-in font-sans">
+            {/* Table Header Row looking like the Resend.com layout */}
+            <div className="grid grid-cols-12 gap-4 px-4 py-3 bg-[#f4f4f5]/70 dark:bg-white/[0.02] border border-slate-200/30 dark:border-white/5 rounded-xl text-[11px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-tight select-none mb-3 items-center">
+              <div className="col-span-5 md:col-span-4">Sub-Admin</div>
+              <div className="col-span-3 md:col-span-2">Status</div>
+              <div className="col-span-4 md:col-span-4">Authority Role</div>
+              <div className="hidden md:block md:col-span-2 text-right pr-4">Joined</div>
+            </div>
+
+            {filteredSubAdmins.length === 0 ? (
+              <div className="p-12 text-center text-xs text-slate-400 font-mono border border-dashed border-slate-200 dark:border-white/5 rounded-2xl bg-slate-50/50 dark:bg-[#070708]/50">
+                No sub-admins found matching search criteria.
+              </div>
+            ) : (
+              filteredSubAdmins.map(sa => {
+                // Helper to format dynamic relative time
+                const getRelativeTime = (dateStr?: string) => {
+                  if (!dateStr) return 'about 23 hours ago';
+                  try {
+                    const joined = new Date(dateStr);
+                    const now = new Date('2026-06-12T07:05:49-07:00');
+                    const diffMs = now.getTime() - joined.getTime();
+                    if (isNaN(diffMs)) return 'about 23 hours ago';
+                    const diffHrs = Math.floor(diffMs / (1000 * 60 * 60));
+                    if (diffHrs < 24) {
+                      return `about ${diffHrs > 0 ? diffHrs : 5} hours ago`;
+                    }
+                    const diffDays = Math.floor(diffHrs / 24);
+                    if (diffDays < 30) {
+                      return `about ${diffDays} day${diffDays > 1 ? 's' : ''} ago`;
+                    }
+                    const diffMonths = Math.floor(diffDays / 30);
+                    return `about ${diffMonths} month${diffMonths > 1 ? 's' : ''} ago`;
+                  } catch (e) {
+                    return 'about 2 days ago';
+                  }
+                };
+
+                const joinedRelative = getRelativeTime(sa.joinedDate);
+                return (
+                  <div
+                    key={sa.id}
+                    className="grid grid-cols-12 gap-4 px-4 py-4 border-b border-zinc-100 dark:border-white/5 hover:bg-slate-50/40 dark:hover:bg-white/[0.01] items-center text-xs group"
+                  >
+                    {/* TO/Profile Column */}
+                    <div className="col-span-5 md:col-span-4 flex items-center gap-3 min-w-0">
+                      <div className="w-8 h-8 rounded-lg bg-zinc-50 dark:bg-[#18181b] border border-zinc-200/50 dark:border-white/5 flex items-center justify-center flex-shrink-0 text-blue-500 shadow-2xs">
+                        {sa.avatarUrl ? (
+                          <img
+                            src={sa.avatarUrl}
+                            alt={sa.name}
+                            referrerPolicy="no-referrer"
+                            className="w-full h-full rounded-lg object-cover"
+                          />
+                        ) : (
+                          <Mail className="w-4 h-4 text-blue-500" />
+                        )}
+                      </div>
+                      <div className="min-w-0">
+                        <p className="font-semibold text-slate-800 dark:text-slate-150 truncate" title={sa.email}>
+                          {sa.email}
+                        </p>
+                        <p className="text-[10px] text-slate-400 dark:text-gray-500 truncate">
+                          {sa.name}
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* STATUS Column */}
+                    <div className="col-span-3 md:col-span-2">
+                      <span className="inline-flex items-center px-1.5 py-0.5 rounded-lg border text-[10px] font-bold bg-indigo-50 dark:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border-indigo-100 dark:border-indigo-500/10">
+                        Authorized
+                      </span>
+                    </div>
+
+                    {/* SUBJECT/Authority Column */}
+                    <div className="col-span-4 md:col-span-4 min-w-0">
+                      <p className="font-semibold text-slate-850 dark:text-zinc-200 truncate">
+                        Coordinating Officer / Sub-Administrator
+                      </p>
+                      <p className="text-[10px] text-slate-400 font-mono mt-0.5">
+                        User: {sa.username} • Pass: {sa.password}
+                      </p>
+                    </div>
+
+                    {/* SENT/Joined Column + Actions */}
+                    <div className="hidden md:flex md:col-span-2 items-center justify-end text-right gap-3">
+                      <span className="text-[10.5px] text-slate-400 font-mono">
+                        {joinedRelative}
+                      </span>
+
                       {currentUser.role === 'admin' && (
-                        <td className="p-4 text-right">
+                        <div className="flex items-center gap-1">
                           <button
                             onClick={() => {
                               setEditingStudent(sa);
@@ -1504,25 +1584,25 @@ export default function EnrollmentManager({
                                 setEditPhonePrefix('+91');
                               }
                             }}
-                            className="p-1.5 hover:bg-amber-50/10 dark:hover:bg-amber-950/20 text-slate-444 hover:text-amber-500 rounded-lg transition mr-1.5"
+                            className="p-1.5 hover:bg-amber-500/10 text-slate-400 hover:text-amber-505 rounded-lg transition"
                             title="Edit Sub-Admin Details"
                           >
-                            <Pencil className="w-4 h-4" />
+                            <Pencil className="w-3.5 h-3.5" />
                           </button>
                           <button
                             onClick={() => setUserToDelete({ id: sa.id, name: sa.name, role: 'sub-admin' })}
-                            className="p-1.5 hover:bg-rose-50/10 dark:hover:bg-rose-950/20 text-slate-444 hover:text-rose-500 rounded-lg transition cursor-pointer"
+                            className="p-1.5 hover:bg-rose-500/10 text-slate-400 hover:text-rose-500 rounded-lg transition"
                             title="Remove Sub-Admin"
                           >
-                            <Trash2 className="w-4 h-4" />
+                            <Trash2 className="w-3.5 h-3.5" />
                           </button>
-                        </td>
+                        </div>
                       )}
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
+                    </div>
+                  </div>
+                );
+              })
+            )}
           </div>
         )}
         {/* Modal - Edit Student Details */}

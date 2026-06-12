@@ -71,17 +71,17 @@ export default function NotificationCenter({
   };
 
   return (
-    <div className="bg-white dark:bg-[#161618] rounded-3xl border border-slate-100 dark:border-white/5 p-6 md:p-8 shadow-sm">
-      <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 mb-6">
+    <div>
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
         <div>
-          <h2 className="text-2xl font-serif italic text-amber-500 font-bold tracking-tight flex items-center gap-2">
-            <Bell className="w-6 h-6 text-amber-500 animate-pulse" />
-            {isStudent ? 'Important Notifications' : 'Notification & Automated Email Dispatcher'}
-          </h2>
-          <p className="text-sm text-slate-500 dark:text-gray-400 mt-1">
+          <h1 className="text-[28px] font-bold text-slate-900 dark:text-white mb-1 tracking-tight flex items-center gap-2">
+            <Bell className="w-5 h-5 text-blue-500 animate-pulse" />
+            {isStudent ? 'Notifications' : 'Notification & Email Dispatcher'}
+          </h1>
+          <p className="text-sm text-slate-500 dark:text-gray-400">
             {isStudent 
               ? 'Stay updated on your grades, schedule changes, and important alerts.'
-              : 'Real-time triggers, live push notification previews, and automatic cron-based student/instructor reminders.'}
+              : 'Real-time triggers, live push notification previews, and automatic student/instructor reminders.'}
           </p>
         </div>
 
@@ -89,15 +89,15 @@ export default function NotificationCenter({
           <div className="flex flex-wrap gap-2">
             <button
               onClick={() => onTriggerTestNotification('grade')}
-              className="px-3.5 py-1.5 bg-slate-100 hover:bg-slate-200 dark:bg-[#0F0F11] dark:hover:bg-white/5 text-slate-800 dark:text-amber-500 border dark:border-white/5 font-semibold text-xs rounded-xl transition duration-200"
+              className="px-3 py-1.5 bg-slate-900 hover:bg-slate-800 dark:bg-white dark:text-black dark:hover:bg-slate-200 text-white text-xs font-semibold rounded-xl tracking-tight transition cursor-pointer select-none"
             >
-              + Test Grade Push Alert
+              + Test Grade Alert
             </button>
             <button
               onClick={() => onTriggerTestNotification('enrollment')}
-              className="px-3.5 py-1.5 bg-slate-100 hover:bg-slate-200 dark:bg-[#0F0F11] dark:hover:bg-white/5 text-slate-800 dark:text-gray-300 border dark:border-white/5 font-semibold text-xs rounded-xl transition duration-200"
+              className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 dark:bg-white/10 dark:hover:bg-white/15 text-slate-900 dark:text-white text-xs font-semibold rounded-xl tracking-tight transition cursor-pointer select-none"
             >
-              + Test Enrollment In-App
+              + Test Enrollment Alert
             </button>
           </div>
         )}

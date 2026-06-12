@@ -63,46 +63,13 @@ async function startServer() {
 
       if (error) {
          console.error("Resend API Error:", error);
-         
-         const errorMsg = error.message || "";
-         const isRestriction = error.name === "validation_error" ||
-                               errorMsg.includes("testing emails") || 
-                               errorMsg.includes("own email address") ||
-                               errorMsg.includes("resend.com/domains");
-         
-         if (isRestriction) {
-           console.log(`[Developer Bypass] Resend API restriction detected. Direct OTP: ${code} for email: ${email}`);
-           return res.status(200).json({ 
-             success: true, 
-             message: "OTP generated", 
-             restricted: true,
-             errorDetails: errorMsg,
-             debugOtp: code 
-           });
-         }
-         return res.status(500).json({ error: errorMsg || "Failed to send OTP via email provider." });
+         return res.status(500).json({ error: error.message || "Failed to send OTP via email provider." });
       }
 
       res.status(200).json({ success: true, message: "OTP sent successfully" });
     } catch (err: any) {
        console.error("Failed to send OTP:", err);
-       const errMsg = err.message || "";
-       const isRestriction = err.name === "validation_error" ||
-                             errMsg.includes("testing emails") || 
-                             errMsg.includes("own email address") ||
-                             errMsg.includes("resend.com/domains");
-
-       if (isRestriction) {
-         console.log(`[Developer Bypass] Resend catch restriction detected. Direct OTP: ${code} for email: ${email}`);
-         return res.status(200).json({ 
-           success: true, 
-           message: "OTP generated", 
-           restricted: true,
-           errorDetails: errMsg,
-           debugOtp: code 
-         });
-       }
-       res.status(500).json({ error: "Failed to send OTP via email provider. Please try again." });
+       res.status(500).json({ error: err.message || "Failed to send OTP via email provider. Please try again." });
     }
   });
 
