@@ -23,7 +23,9 @@ import {
   BookOpen,
   X,
   LockKeyhole,
-  UserCheck
+  UserCheck,
+  Users,
+  GraduationCap
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 
@@ -74,6 +76,7 @@ export default function ProfileSettings({
   // Student guardian details
   const [fatherName, setFatherName] = useState(currentUser.fatherName || '');
   const [fatherPhone, setFatherPhone] = useState(currentUser.fatherPhone || '');
+  const [lastQualification, setLastQualification] = useState(currentUser.lastQualification || '');
   
   const [fatherPhonePrefix, setFatherPhonePrefix] = useState(() => {
     if (currentUser.fatherPhone) {
@@ -179,6 +182,7 @@ export default function ProfileSettings({
       specialization: currentUser.role === 'instructor' ? specialization.trim() : currentUser.specialization,
       fatherName: currentUser.role === 'student' ? fatherName.trim() : currentUser.fatherName,
       fatherPhone: currentUser.role === 'student' ? finalFatherPhone : currentUser.fatherPhone,
+      lastQualification: currentUser.role === 'student' ? lastQualification.trim() : currentUser.lastQualification,
     };
 
     setPendingProfileUpdate(updatedUser);
@@ -254,6 +258,7 @@ export default function ProfileSettings({
     setAvatarUrl(currentUser.avatarUrl || '');
     setSpecialization(currentUser.specialization || '');
     setFatherName(currentUser.fatherName || '');
+    setLastQualification(currentUser.lastQualification || '');
     
     if (currentUser.phone) {
       const match = COUNTRY_PHONE_CONFIGS.find(cfg => currentUser.phone?.startsWith(cfg.code));
@@ -353,7 +358,7 @@ export default function ProfileSettings({
                   referrerPolicy="no-referrer"
                   className="w-[72px] h-[72px] rounded-full object-cover border border-slate-200 dark:border-white/10"
                 />
-                {!isStudent && isEditing && (
+                {isEditing && (
                   <>
                     <input
                       type="file"
@@ -381,9 +386,9 @@ export default function ProfileSettings({
             </div>
 
             {/* Editing Action Triggers */}
-            {!isStudent && (
-              <div>
-                {!isEditing ? (
+            <div>
+              {!isEditing ? (
+                <div className="flex flex-col sm:items-end gap-1.5">
                   <button
                     onClick={() => {
                       resetEditStates();
@@ -395,34 +400,37 @@ export default function ProfileSettings({
                   >
                     Edit profile
                   </button>
-                ) : (
-                  <div className="flex items-center gap-2">
-                    <button
-                      onClick={() => {
-                        setIsEditing(false);
-                        resetEditStates();
-                      }}
-                      className="px-3 py-1.5 border border-slate-200 dark:border-white/10 hover:bg-slate-100 dark:hover:bg-white/[0.04] text-slate-700 dark:text-slate-300 rounded-xl text-xs font-semibold transition cursor-pointer select-none"
-                    >
-                      Cancel
-                    </button>
-                    <button
-                      onClick={handleSaveProfile}
-                      className="px-3 py-1.5 bg-blue-600 hover:bg-blue-500 text-white rounded-xl text-xs font-semibold transition cursor-pointer select-none"
-                    >
-                      Save changes
-                    </button>
-                  </div>
-                )}
-              </div>
-            )}
-            
-            {isStudent && (
-              <div className="text-right">
+                  {isStudent && (
+                    <span className="text-[10px] text-slate-400 block sm:text-right">Self-updating enabled</span>
+                  )}
+                </div>
+              ) : (
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => {
+                      setIsEditing(false);
+                      resetEditStates();
+                    }}
+                    className="px-3 py-1.5 border border-slate-200 dark:border-white/10 hover:bg-slate-100 dark:hover:bg-white/[0.04] text-slate-700 dark:text-slate-300 rounded-xl text-xs font-semibold transition cursor-pointer select-none"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handleSaveProfile}
+                    className="px-3 py-1.5 bg-[#437bef] hover:bg-blue-600 text-white rounded-xl text-xs font-semibold transition cursor-pointer select-none"
+                  >
+                    Save changes
+                  </button>
+                </div>
+              )}
+            </div>
+
+            {isStudent && !isEditing && (
+              <div className="text-right hidden md:block">
                 <span className="inline-flex items-center gap-1.5 text-xs text-slate-400 select-none">
-                  <Lock className="w-3 h-3 text-slate-400" /> Read-only account
+                  <Lock className="w-3 h-3 text-slate-400" /> Partially managed account
                 </span>
-                <p className="text-[10px] text-slate-400 mt-1 max-w-[180px]">Contact the administration desk to request changes.</p>
+                <p className="text-[10px] text-slate-400 mt-1 max-w-[180px]">Course modifications must still be authorized by admin desks.</p>
               </div>
             )}
           </div>
@@ -506,9 +514,36 @@ export default function ProfileSettings({
                   </div>
                 )}
 
-                {/* Role specific - student's advisor and father info */}
+                {/* Role specific - student's advisor and guardian info */}
                 {isStudent && (
                   <>
+                    <div className="grid grid-cols-12 gap-4 px-5 py-3.5 items-center">
+                      <div className="col-span-4 text-slate-400 font-medium flex items-center gap-2.5">
+                        <BookOpen className="w-4 h-4 text-slate-400" />
+                        <span>Enrolled course</span>
+                      </div>
+                      <div className="col-span-8 font-semibold text-amber-600 dark:text-amber-400">
+                        {currentUser.course || 'Not Enrolled'}
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-12 gap-4 px-5 py-3.5 items-center">
+                      <div className="col-span-4 text-slate-400 font-medium flex items-center gap-2.5">
+                        <Users className="w-4 h-4 text-slate-400" />
+                        <span>Assigned batch</span>
+                      </div>
+                      <div className="col-span-8 font-medium text-slate-700 dark:text-slate-200">
+                        {currentUser.batch || 'Not Assigned'}
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-12 gap-4 px-5 py-3.5 items-center">
+                      <div className="col-span-4 text-slate-400 font-medium flex items-center gap-2.5">
+                        <GraduationCap className="w-4 h-4 text-slate-400" />
+                        <span>Last qualification</span>
+                      </div>
+                      <div className="col-span-8 font-medium text-slate-700 dark:text-slate-200">
+                        {currentUser.lastQualification || 'Not provided'}
+                      </div>
+                    </div>
                     <div className="grid grid-cols-12 gap-4 px-5 py-3.5 items-center">
                       <div className="col-span-4 text-slate-400 font-medium flex items-center gap-2.5">
                         <LockKeyhole className="w-4 h-4 text-slate-400" />
@@ -652,6 +687,61 @@ export default function ProfileSettings({
                         />
                       </div>
                     </div>
+                  )}
+
+                  {/* Student specific fields */}
+                  {isStudent && (
+                    <>
+                      <div className="grid grid-cols-12 gap-4 items-center">
+                        <label className="col-span-4 font-semibold text-slate-700 dark:text-slate-350">Last Qualification</label>
+                        <div className="col-span-8">
+                          <input
+                            type="text"
+                            value={lastQualification}
+                            onChange={e => setLastQualification(e.target.value)}
+                            placeholder="e.g. High School Diploma, Bachelor Science"
+                            className="w-full bg-slate-50/70 hover:bg-slate-100 dark:bg-white/5 dark:hover:bg-white/10 border border-transparent dark:border-white/5 rounded-xl px-4 py-2 text-[13px] text-slate-800 dark:text-white transition focus:outline-none focus:ring-1 focus:ring-slate-300 dark:focus:ring-white/20"
+                          />
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-12 gap-4 items-center">
+                        <label className="col-span-4 font-semibold text-slate-700 dark:text-slate-350">Father / Guardian Name</label>
+                        <div className="col-span-8">
+                          <input
+                            type="text"
+                            value={fatherName}
+                            onChange={e => setFatherName(e.target.value)}
+                            placeholder="Full name of guardian"
+                            className="w-full bg-slate-50/70 hover:bg-slate-100 dark:bg-white/5 dark:hover:bg-white/10 border border-transparent dark:border-white/5 rounded-xl px-4 py-2 text-[13px] text-slate-800 dark:text-white transition focus:outline-none focus:ring-1 focus:ring-slate-300 dark:focus:ring-white/20"
+                          />
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-12 gap-4 items-center">
+                        <label className="col-span-4 font-semibold text-slate-700 dark:text-slate-350">Guardian Contact</label>
+                        <div className="col-span-8 flex gap-2">
+                          <select
+                            value={fatherPhonePrefix}
+                            onChange={e => setFatherPhonePrefix(e.target.value)}
+                            className="bg-slate-50/70 hover:bg-slate-100 dark:bg-white/5 dark:hover:bg-white/10 border border-transparent dark:border-white/5 rounded-xl px-2 py-2 text-[13px] text-slate-800 dark:text-white transition-all focus:outline-none select-none cursor-pointer"
+                          >
+                            {COUNTRY_PHONE_CONFIGS.map(cfg => (
+                              <option key={cfg.code} value={cfg.code} className="text-slate-800 dark:text-gray-900">
+                                {cfg.flag} {cfg.code}
+                              </option>
+                            ))}
+                          </select>
+                          <input
+                            type="text"
+                            placeholder={selectedFatherCountryConfig?.placeholder || '10-digit number'}
+                            value={fatherPhoneRaw}
+                            onChange={e => setFatherPhoneRaw(e.target.value)}
+                            className="flex-1 bg-slate-50/70 hover:bg-slate-100 dark:bg-white/5 dark:hover:bg-white/10 border border-transparent dark:border-white/5 rounded-xl px-4 py-2 text-[13px] text-slate-800 dark:text-white transition focus:outline-none focus:ring-1 focus:ring-slate-300 dark:focus:ring-white/20"
+                          />
+                        </div>
+                      </div>
+                    </>
                   )}
 
                   {/* Save row */}

@@ -2504,7 +2504,7 @@ function AppContent() {
                 <div 
                   onClick={() => setActiveTab('profile')}
                   className={`p-3 bg-slate-50 dark:bg-[#161618] hover:bg-slate-100 dark:hover:bg-white/5 rounded-2xl border ${activeTab === 'profile' ? 'border-amber-500' : 'border-slate-100 dark:border-white/5'} flex items-center ${isActuallyCollapsed ? 'justify-center p-2' : 'gap-3'} select-none transition-all cursor-pointer`}
-                  title="Click to Open Profile Settings"
+                  title={currentUser.role === 'student' ? "Click to Open My Profile" : "Click to Open Profile Settings"}
                 >
                   <div className="relative group/avatar cursor-pointer flex-shrink-0">
                     <img
@@ -2614,44 +2614,50 @@ function AppContent() {
                         ? 'bg-amber-500/10 border border-amber-500/20 text-amber-500 font-bold'
                         : 'text-slate-550 dark:text-gray-400 hover:text-amber-500 dark:hover:text-gray-100 hover:bg-slate-50 dark:hover:bg-[#161618] border border-transparent'
                     }`}
-                    title={isActuallyCollapsed ? "Profile & Password Settings" : undefined}
+                    title={isActuallyCollapsed ? (currentUser.role === 'student' ? 'My Profile' : "Profile & Password Settings") : undefined}
                   >
                     <User className="w-4 h-4 flex-shrink-0 text-amber-500" />
-                    {!isActuallyCollapsed && <span className="truncate animate-fadeIn">Profile Settings</span>}
-                  </button>
-
-                  {!isActuallyCollapsed && (
-                    <div className="pt-4 pb-1 pl-3.5 pr-2">
-                      <p className="text-[11px] font-sans text-slate-500 dark:text-slate-400 mb-0.5">Academic shortcuts</p>
-                    </div>
-                  )}
-
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setActiveTab('enrollments');
-                      if (window.innerWidth < 768) setIsSidebarCollapsed(true);
-                    }}
-                    className={`w-full flex items-center ${isActuallyCollapsed ? 'justify-center p-2.5' : 'gap-3 px-3.5 py-2.5'} rounded-xl text-xs transition relative cursor-pointer ${
-                      activeTab === 'enrollments'
-                        ? 'bg-amber-500/10 border border-amber-500/20 text-amber-500 font-bold'
-                        : 'text-slate-550 dark:text-gray-400 hover:text-amber-500 dark:hover:text-gray-100 hover:bg-slate-50 dark:hover:bg-[#161618] border border-transparent'
-                    }`}
-                    title={isActuallyCollapsed ? (currentUser.role === 'admin' ? 'Accounts & Enrollments' : currentUser.role === 'sub-admin' ? 'Enrollments & Faculty' : currentUser.role === 'instructor' ? 'Student Profiles Registry' : 'My Profile') : undefined}
-                  >
-                    <Users className="w-4 h-4 flex-shrink-0" />
                     {!isActuallyCollapsed && (
                       <span className="truncate animate-fadeIn">
-                        {currentUser.role === 'admin' 
-                          ? 'Accounts & Enrollments' 
-                          : currentUser.role === 'sub-admin' 
-                            ? 'Enrollments & Faculty' 
-                            : currentUser.role === 'instructor' 
-                              ? 'Student Profiles Registry' 
-                              : 'My Profile'}
+                        {currentUser.role === 'student' ? 'My Profile' : 'Profile Settings'}
                       </span>
                     )}
                   </button>
+
+                  {currentUser.role !== 'student' && (
+                    <>
+                      {!isActuallyCollapsed && (
+                        <div className="pt-4 pb-1 pl-3.5 pr-2">
+                          <p className="text-[11px] font-sans text-slate-500 dark:text-slate-400 mb-0.5">Academic shortcuts</p>
+                        </div>
+                      )}
+
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setActiveTab('enrollments');
+                          if (window.innerWidth < 768) setIsSidebarCollapsed(true);
+                        }}
+                        className={`w-full flex items-center ${isActuallyCollapsed ? 'justify-center p-2.5' : 'gap-3 px-3.5 py-2.5'} rounded-xl text-xs transition relative cursor-pointer ${
+                          activeTab === 'enrollments'
+                            ? 'bg-amber-500/10 border border-amber-500/20 text-amber-500 font-bold'
+                            : 'text-slate-550 dark:text-gray-400 hover:text-amber-500 dark:hover:text-gray-100 hover:bg-slate-50 dark:hover:bg-[#161618] border border-transparent'
+                        }`}
+                        title={isActuallyCollapsed ? (currentUser.role === 'admin' ? 'Accounts & Enrollments' : currentUser.role === 'sub-admin' ? 'Enrollments & Faculty' : currentUser.role === 'instructor' ? 'Student Profiles Registry' : '') : undefined}
+                      >
+                        <Users className="w-4 h-4 flex-shrink-0" />
+                        {!isActuallyCollapsed && (
+                          <span className="truncate animate-fadeIn">
+                            {currentUser.role === 'admin' 
+                              ? 'Accounts & Enrollments' 
+                              : currentUser.role === 'sub-admin' 
+                                ? 'Enrollments & Faculty' 
+                                : 'Student Profiles Registry'}
+                          </span>
+                        )}
+                      </button>
+                    </>
+                  )}
 
                   {currentUser.role === 'student' && (
                     <button
