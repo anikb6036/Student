@@ -18,6 +18,7 @@ import {
   useFirebaseState
 } from './utils';
 import { ThemeProvider, useTheme } from './components/ThemeContext';
+import { compressImage } from './imageUtils';
 import NotificationCenter from './components/NotificationCenter';
 import EnrollmentManager from './components/EnrollmentManager';
 import ScheduleManager from './components/ScheduleManager';
@@ -28,6 +29,7 @@ import MailboxManager from './components/MailboxManager';
 import ProfileSettings from './components/ProfileSettings';
 import HomePage from './components/HomePage';
 import Logo from './components/Logo';
+import AdmissionsExamModal from './components/AdmissionsExamModal';
 import {
   LayoutDashboard,
   Users,
@@ -284,14 +286,35 @@ function AppContent() {
   const [emailVerified, setEmailVerified] = useState(false);
   const [phoneVerState, setPhoneVerState] = useState<'idle' | 'sending' | 'sent' | 'verifying'>('idle');
   const [emailVerState, setEmailVerState] = useState<'idle' | 'sending' | 'sent' | 'verifying'>('idle');
+  const [emailOtpCooldown, setEmailOtpCooldown] = useState(0);
   const [otpCode, setOtpCode] = useState('');
   const [confirmationResult, setConfirmationResult] = useState<ConfirmationResult | null>(null);
+
+  useEffect(() => {
+    let timer: any;
+    if (emailOtpCooldown > 0) {
+      timer = setInterval(() => setEmailOtpCooldown(c => c - 1), 1000);
+    }
+    return () => clearInterval(timer);
+  }, [emailOtpCooldown]);
 
   const handleSendEmailOtp = async () => {
     if (!fastEmail || !/\S+@\S+\.\S+/.test(fastEmail)) {
       setFastEmailError("Enter a valid email first");
       return;
     }
+
+    const emailLower = fastEmail.toLowerCase();
+    
+    // Check if email already registered
+    const isRegistered = users.some(u => u.email.toLowerCase() === emailLower);
+    const isPending = registrationRequests.some(r => r.email.toLowerCase() === emailLower);
+    
+    if (isRegistered || isPending) {
+      setFastEmailError("Mail id is already register");
+      return;
+    }
+
     setFastEmailError("");
     setEmailVerState('sending');
     
@@ -308,6 +331,7 @@ function AppContent() {
       }
       
       setEmailVerState('sent');
+      setEmailOtpCooldown(60);
     } catch (err: any) {
       setEmailVerState('idle');
       setFastEmailError(err.message || 'Error communicating with server');
@@ -337,6 +361,10 @@ function AppContent() {
       setFastEmailError('');
     } catch (err: any) {
       setFastEmailError(err.message || 'Invalid OTP');
+      if (err.message?.toLowerCase().includes("request a new one")) {
+        setEmailVerState('idle'); // allows them to request a new one
+        setOtpCode('');
+      }
     }
   };
 
@@ -362,6 +390,10 @@ function AppContent() {
   const [activeMailboxEmail, setActiveMailboxEmail] = useState<string | null>(null);
   const [showMailbox, setShowMailbox] = useState(false);
   const [selectedMail, setSelectedMail] = useState<SimulatedEmail | null>(null);
+
+  // English Placement Test Modal and Request state
+  const [showExamModal, setShowExamModal] = useState(false);
+  const [examRequest, setExamRequest] = useState<RegistrationRequest | null>(null);
 
 
 
@@ -951,11 +983,22 @@ function AppContent() {
 
     setRegistrationRequests(prev => [newRequest, ...prev]);
 
+    // Send simulated email containing the Placement Exam Link
+    const testEmail: SimulatedEmail = {
+      id: generateUniqueId('mail'),
+      to: cleanEmail,
+      from: 'admissions@learnora.edu',
+      subject: 'Learnora Admissions: Mandatory English Placement Exam Link',
+      body: `Dear ${cleanName},\n\nThank you for applying to Learnora Institute. We've received your fast student admission registration details!\n\nTo complete your enrollment automatically, you are required to take a brief, mandatory English Placement Examination. This test evaluates:\n\n1. English Reading Comprehension Test (2 multiple choice questions)\n2. English Speaking voice articulation evaluation test (read passage aloud)\n\nPassing Criteria: A score of 25% or more on this test will triggers INSTANT AUTOMATIC ADMISSION under the administration rules. Your permanent student username and login credentials will then be automatically generated and sent to you!\n\nClick the "Launch Admission Exam Now" button in this simulation screen to take the exam and claim automatic enrollment.`,
+      timestamp: new Date().toISOString()
+    };
+    setSimulatedEmails(prev => [testEmail, ...prev]);
+
     // Send a system event notice to the logs
     const notif: AppNotification = {
       id: generateUniqueId('notif-req'),
       title: 'Admission Request Pending',
-      message: `${cleanName} registered via fast student registration. Administrator approval required to release credentials.`,
+      message: `${cleanName} registered via fast student registration. English selection test dispatched to student inbox.`,
       timestamp: new Date().toISOString(),
       read: false,
       type: 'enrollment',
@@ -1027,6 +1070,71 @@ function AppContent() {
     }));
   };
 
+  const handleAutoApproveRegistration = (requestId: string, score: number) => {
+    const r = registrationRequests.find(req => req.id === requestId);
+    if (!r || r.status !== 'pending') return;
+
+    // Add user profile
+    const newStudent: UserAccount = {
+      id: generateUniqueId('student'),
+      name: r.name,
+      email: r.email,
+      phone: r.phone,
+      role: 'student',
+      joinedDate: new Date().toLocaleDateString('en-US'),
+      assignedInstructorId: r.assignedInstructorId,
+      username: r.username,
+      password: r.password,
+      avatarUrl: r.avatarUrl || `https://images.unsplash.com/photo-${['1534528741775-53994a69daeb', '1506794778202-cad84cf45f1d', '1517841905240-472988babdf9', '1492562080023-ab3db95bfbce'][Math.floor(Math.random() * 4)]}?w=150`,
+      fatherName: r.fatherName,
+      fatherPhone: r.fatherPhone,
+      address: r.address,
+      lastQualification: r.lastQualification,
+      gender: r.gender,
+      dob: r.dob,
+      batch: r.batch || 'Batch A',
+      course: r.course
+    };
+
+    // Send simulated email
+    const newEmail: SimulatedEmail = {
+      id: generateUniqueId('mail'),
+      to: r.email,
+      from: 'admissions@learnora.edu',
+      subject: 'Learnora Admission Automatic Approval! - Credentials Enclosed',
+      body: `Dear ${r.name},\n\nWe are absolutely delighted to inform you that you have PASSED the Mandatory English Placement Exam with a qualifying score of ${score}% (Threshold: 25% for auto-admission)!\n\nAs a result, your enrollment has been AUTOMATICALLY APPROVED and instantiated within our main Student Ledger database. Your auto-generated security credentials are listed below:\n\n-----------------------------\nUSERNAME: ${r.username}\nPASSWORD: ${r.password}\n-----------------------------\n\nPlease use these details to log in to the student onboarding portal (Approved Sign In) where you can track schedules, attend lectures, and receive mentor feedback.\n\nBest regards,\nAnik Baidya,\nHead Administrator, Learnora Institute`,
+      timestamp: new Date().toISOString()
+    };
+
+    // Trigger Notification
+    const notif: AppNotification = {
+      id: generateUniqueId('notif-appr'),
+      title: 'Auto Admission Passed!',
+      message: `${r.name} achieved a scoring grade of ${score}% on their entrance test. Admitted automatically.`,
+      timestamp: new Date().toISOString(),
+      read: false,
+      type: 'enrollment',
+      channel: 'push'
+    };
+
+    setUsers(u => [...u, newStudent]);
+    setSimulatedEmails(m => [newEmail, ...m]);
+    setNotifications(n => [notif, ...n]);
+    triggerToast(notif);
+
+    setRegistrationRequests(prev => prev.map(req => {
+      if (req.id === requestId) {
+        return { 
+          ...req, 
+          status: 'approved',
+          examScore: score,
+          examPassed: true
+        };
+      }
+      return req;
+    }));
+  };
+
   const handleRejectRegistration = (requestId: string) => {
     const r = registrationRequests.find(req => req.id === requestId);
     if (!r || r.status !== 'pending') return;
@@ -1049,6 +1157,39 @@ function AppContent() {
       }
       return req;
     }));
+  };
+
+  const handleUpdateRegistrationRequest = (updatedReq: RegistrationRequest) => {
+    const originalReq = registrationRequests.find(r => r.id === updatedReq.id);
+    const dateChanged = originalReq?.interviewDate !== updatedReq.interviewDate || originalReq?.interviewTime !== updatedReq.interviewTime;
+    const statusChanged = originalReq?.interviewStatus !== updatedReq.interviewStatus;
+
+    if (updatedReq.interviewStatus === 'scheduled' && (dateChanged || statusChanged)) {
+      // Send simulated interview invite email
+      const newEmail: SimulatedEmail = {
+        id: generateUniqueId('mail'),
+        to: updatedReq.email,
+        from: 'admissions@learnora.edu',
+        subject: `Learnora Admission - Interview Scheduled for ${updatedReq.name}`,
+        body: `Dear ${updatedReq.name},\n\nWe are pleased to inform you that we have scheduled an interview regarding your admission application at Learnora Institute.\n\nHere are your scheduled details:\n\n- Date: ${updatedReq.interviewDate || 'To be selected'}\n- Time: ${updatedReq.interviewTime || 'To be selected'}\n- Status: Scheduled\n- Notes: ${updatedReq.interviewNotes || 'No notes provided.'}\n\nOur system will simulate this interview session. Please make sure to be available at this designated slot.\n\nBest regards,\nAdmissions Office,\nLearnora Institute`,
+        timestamp: new Date().toISOString()
+      };
+      setSimulatedEmails(m => [newEmail, ...m]);
+    }
+
+    setRegistrationRequests(prev => prev.map(req => req.id === updatedReq.id ? updatedReq : req));
+    
+    const notif: AppNotification = {
+      id: generateUniqueId('notif-int'),
+      title: 'Interview System Sync',
+      message: `Interview details for ${updatedReq.name} have been updated.`,
+      timestamp: new Date().toISOString(),
+      read: false,
+      type: 'enrollment',
+      channel: 'push'
+    };
+    setNotifications(prev => [notif, ...prev]);
+    triggerToast(notif);
   };
 
   const handleSendEmail = (toEmail: string, subject: string, body: string, fromOverride?: string) => {
@@ -1186,6 +1327,9 @@ function AppContent() {
     // Check Email
     if (!fastEmail.trim()) {
       setFastEmailError('Email address is required');
+      hasError = true;
+    } else if (!emailVerified) {
+      setFastEmailError('Please verify your email address via OTP');
       hasError = true;
     }
 
@@ -1489,6 +1633,42 @@ function AppContent() {
                     <div className="p-5 rounded-2xl border dark:border-white/5 bg-slate-50 dark:bg-[#0A0A0B] whitespace-pre-line text-xs leading-relaxed text-slate-800 dark:text-gray-300 font-sans border-l-2 border-l-amber-500">
                       {selectedMail.body}
                     </div>
+
+                    {/* Interactive Exam Link / Action Button */}
+                    {selectedMail.subject.includes("Mandatory English Placement Exam Link") && (
+                      <div className="p-4 bg-amber-500/10 border border-amber-500/20 rounded-2xl flex flex-col items-center text-center space-y-2 mt-4">
+                        <p className="text-xs text-amber-600 dark:text-amber-400 font-semibold">
+                          Learnora Admissions Online Placement System
+                        </p>
+                        <p className="text-[11px] text-slate-500 dark:text-gray-400 max-w-md leading-relaxed">
+                          Clicking this button opens the remote examination interface, administering synchronous English Reading and Vocal speaking modules.
+                        </p>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const req = registrationRequests.find(r => r.email.toLowerCase() === selectedMail.to.toLowerCase());
+                            if (req) {
+                              setExamRequest(req);
+                              setShowExamModal(true);
+                              setShowMailbox(false);
+                            } else {
+                              triggerToast({
+                                id: generateUniqueId('notif-err'),
+                                title: 'Exam System Error',
+                                message: 'No registered applicant record matched this email address in the database ledger.',
+                                timestamp: new Date().toISOString(),
+                                read: false,
+                                type: 'enrollment',
+                                channel: 'system'
+                              });
+                            }
+                          }}
+                          className="px-5 py-2.5 bg-amber-500 hover:bg-amber-600 text-amber-955 font-bold rounded-xl text-xs flex items-center gap-1.5 transition cursor-pointer shadow-md animate-pulse"
+                        >
+                          Launch Admission Exam Now &rarr;
+                        </button>
+                      </div>
+                    )}
                   </div>
                 ) : (
                   /* Emails List View */
@@ -1735,22 +1915,18 @@ function AppContent() {
                                       type="file"
                                       id="fast-student-avatar-upload"
                                       accept="image/*"
-                                      onChange={(e) => {
+                                      onChange={async (e) => {
                                         const file = e.target.files?.[0];
                                         if (!file) return;
-                                        const limit = 2 * 1024 * 1024;
-                                        if (file.size > limit) {
-                                          setFastAvatarError("photo size more then 2mb please upload photo under 2mb");
+                                        try {
+                                          setFastAvatarError('');
+                                          const compressedUrl = await compressImage(file);
+                                          setFastAvatarUrl(compressedUrl);
+                                        } catch (err) {
+                                          setFastAvatarError("Could not process photo");
                                           setFastAvatarUrl('');
-                                          e.target.value = '';
-                                          return;
                                         }
-                                        setFastAvatarError('');
-                                        const reader = new FileReader();
-                                        reader.onloadend = () => {
-                                          setFastAvatarUrl(reader.result as string);
-                                        };
-                                        reader.readAsDataURL(file);
+                                        e.target.value = '';
                                       }}
                                       className="hidden"
                                     />
@@ -1870,10 +2046,16 @@ function AppContent() {
                                         <button
                                           type="button"
                                           onClick={handleSendEmailOtp}
-                                          disabled={emailVerState === 'sending' || emailVerState === 'sent'}
+                                          disabled={emailVerState === 'sending' || emailOtpCooldown > 0}
                                           className="px-4 bg-slate-800 dark:bg-amber-500 hover:bg-slate-900 dark:hover:bg-amber-600 text-white text-xs font-bold rounded-xl transition-all disabled:opacity-50 whitespace-nowrap"
                                         >
-                                          {emailVerState === 'sending' ? 'Sending...' : emailVerState === 'sent' ? 'Resend' : 'Send OTP'}
+                                          {emailVerState === 'sending' 
+                                            ? 'Sending...' 
+                                            : emailOtpCooldown > 0 
+                                              ? `Resend in ${emailOtpCooldown}s` 
+                                              : emailVerState === 'sent' 
+                                                ? 'Resend OTP' 
+                                                : 'Send OTP'}
                                         </button>
                                       )}
                                     </div>
@@ -1898,7 +2080,7 @@ function AppContent() {
                                           </button>
                                         </div>
                                         <p className="text-[10px] text-amber-500 font-medium px-1">
-                                          An OTP has been sent to your email. (Please set RESEND_API_KEY if not receiving)
+                                          An OTP has been sent to your email.
                                         </p>
                                       </div>
                                     )}
@@ -2153,7 +2335,8 @@ function AppContent() {
                           <div className="flex justify-end pt-4 border-t border-slate-100 dark:border-white/5 mt-6">
                               <button
                                 type="submit"
-                                className="px-6 py-2.5 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-amber-950 rounded-xl text-xs font-extrabold transition-all duration-150 active:scale-95 shadow-md shadow-amber-500/10 cursor-pointer flex items-center gap-1.5 text-amber-955 font-sans ml-auto"
+                                disabled={!emailVerified}
+                                className={`px-6 py-2.5 rounded-xl text-xs font-extrabold transition-all duration-150 shadow-md flex items-center gap-1.5 font-sans ml-auto ${emailVerified ? 'bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-amber-950 active:scale-95 shadow-amber-500/10 cursor-pointer' : 'bg-slate-200 dark:bg-[#1C1C1F] text-slate-400 dark:text-slate-500 cursor-not-allowed'}`}
                               >
                                 <Sparkles className="w-3.5 h-3.5" />
                                 Submit Admission Application
@@ -2514,33 +2697,16 @@ function AppContent() {
                       type="file"
                       id="user-sidebar-avatar-upload"
                       accept="image/*"
-                      onChange={(e) => {
+                      onChange={async (e) => {
                         const file = e.target.files?.[0];
                         if (!file) return;
-                        const limit = 2 * 1024 * 1024;
-                        if (file.size > limit) {
-                          const errNotif: AppNotification = {
-                            id: generateUniqueId('notif-err'),
-                            title: 'Upload Limitation Met',
-                            message: 'Photo size exceeds the 2MB size threshold. Please resize or select an alternate.',
-                            timestamp: new Date().toISOString(),
-                            read: false,
-                            type: 'general',
-                            channel: 'push'
-                          };
-                          triggerToast(errNotif);
-                          e.target.value = '';
-                          return;
-                        }
-                        const reader = new FileReader();
-                        reader.onloadend = () => {
-                          const base64Url = reader.result as string;
-                          // Update currentUser state
-                          setCurrentUser(prev => prev ? { ...prev, avatarUrl: base64Url } : null);
-                          // Update users state
+                        
+                        try {
+                          const compressedUrl = await compressImage(file);
+                          setCurrentUser(prev => prev ? { ...prev, avatarUrl: compressedUrl } : null);
                           setUsers(prev => prev.map(u => {
                             if (u.id === currentUser.id) {
-                              return { ...u, avatarUrl: base64Url };
+                              return { ...u, avatarUrl: compressedUrl };
                             }
                             return u;
                           }));
@@ -2556,8 +2722,19 @@ function AppContent() {
                           };
                           setNotifications(prev => [notif, ...prev]);
                           triggerToast(notif);
-                        };
-                        reader.readAsDataURL(file);
+                        } catch (err) {
+                          const errNotif: AppNotification = {
+                            id: generateUniqueId('notif-err'),
+                            title: 'Avatar Update Failed',
+                            message: 'Could not process the selected image.',
+                            timestamp: new Date().toISOString(),
+                            read: false,
+                            type: 'general',
+                            channel: 'push'
+                          };
+                          triggerToast(errNotif);
+                        }
+                        e.target.value = '';
                       }}
                       className="hidden"
                     />
@@ -3249,6 +3426,7 @@ function AppContent() {
                 onApproveRequest={handleApproveRegistration}
                 onRejectRequest={handleRejectRegistration}
                 onUpdateStudent={handleUpdateProfile}
+                onUpdateRegistrationRequest={handleUpdateRegistrationRequest}
               />
             )}
 
@@ -3442,6 +3620,22 @@ function AppContent() {
             )}
           </div>
         </div>
+      )}
+
+      {showExamModal && examRequest && (
+        <AdmissionsExamModal
+          isOpen={showExamModal}
+          onClose={() => {
+            setShowExamModal(false);
+            setExamRequest(null);
+          }}
+          request={examRequest}
+          onExamPass={(score) => {
+            handleAutoApproveRegistration(examRequest.id, score);
+            setShowExamModal(false);
+            setExamRequest(null);
+          }}
+        />
       )}
     </div>
   );

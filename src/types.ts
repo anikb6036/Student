@@ -46,6 +46,12 @@ export interface RegistrationRequest {
   avatarUrl?: string;
   batch?: string; // Added student batch
   course?: string; // Added student course
+  interviewDate?: string;
+  interviewTime?: string;
+  interviewStatus?: 'not_scheduled' | 'scheduled' | 'completed' | 'cancelled';
+  interviewNotes?: string;
+  examScore?: number;
+  examPassed?: boolean;
 }
 
 export interface SimulatedEmail {

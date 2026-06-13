@@ -7,7 +7,7 @@ import dotenv from 'dotenv';
 dotenv.config();
 
 // Simple in-memory store for OTPs (In production, use Redis or a DB)
-const otpStore: Record<string, { code: string, expiresAt: number }> = {};
+const otpStore: Record<string, { code: string, expiresAt: number, attempts: number, lastSentAt: number }> = {};
 
 async function startServer() {
   const app = express();
@@ -20,6 +20,11 @@ async function startServer() {
     const { email } = req.body;
     if (!email || typeof email !== 'string') {
       return res.status(400).json({ error: "Valid email is required" });
+    }
+
+    const now = Date.now();
+    if (otpStore[email] && (now - otpStore[email].lastSentAt < 60000)) {
+      return res.status(400).json({ error: "Please wait 60 seconds before requesting a new OTP." });
     }
 
     const API_KEY = process.env.RESEND_API_KEY || process.env.VITE_RESEND_API_KEY;
@@ -38,18 +43,23 @@ async function startServer() {
     // Store code to verify later (valid for 10 minutes)
     otpStore[email] = {
       code,
-      expiresAt: Date.now() + 10 * 60 * 1000
+      expiresAt: Date.now() + 10 * 60 * 1000,
+      attempts: 0,
+      lastSentAt: now
     };
 
-    // Make Sender completely configurable so users with verified Resend domains can send to any student address
-    const senderEmail = process.env.SENDER_EMAIL || 'onboarding@resend.dev';
+    // Fallback to ensuring learnora.in is the default, but if user has process.env.SENDER_EMAIL that contains learnora.com, we should override it.
+    let senderEmail = process.env.SENDER_EMAIL || 'admissions@learnora.in';
+    if (senderEmail.includes('learnora.com')) {
+      senderEmail = 'admissions@learnora.in';
+    }
     const senderName = process.env.SENDER_NAME || 'Learnora Admissions';
-    const fromAddress = `${senderName} <${senderEmail}>`;
+    const fromAddress = senderEmail.includes('resend.dev') ? senderEmail : `${senderName} <${senderEmail}>`;
 
     try {
       const { data, error } = await resend.emails.send({
         from: fromAddress,
-        to: email,
+        to: [email],
         subject: 'Learnora Admissions OTP Verification',
         html: `
           <div style="font-family: sans-serif; max-w: 600px; margin: 0 auto;">
@@ -62,7 +72,7 @@ async function startServer() {
       });
 
       if (error) {
-         console.error("Resend API Error:", error);
+         console.error("Resend API Error details:", JSON.stringify(error, null, 2));
          return res.status(500).json({ error: error.message || "Failed to send OTP via email provider." });
       }
 
@@ -91,7 +101,12 @@ async function startServer() {
     }
 
     if (storedOtp.code !== code) {
-      return res.status(400).json({ error: "Invalid OTP code." });
+      storedOtp.attempts = (storedOtp.attempts || 0) + 1;
+      if (storedOtp.attempts >= 3) {
+        delete otpStore[email];
+        return res.status(400).json({ error: "Maximum attempts reached. please wait 60 seconds and request a new one." });
+      }
+      return res.status(400).json({ error: `Invalid OTP code. ${3 - storedOtp.attempts} attempts remaining.` });
     }
 
     // Success! Clear the OTP.

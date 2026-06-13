@@ -5,6 +5,7 @@
 
 import React, { useState } from 'react';
 import { UserAccount, AppNotification } from '../types';
+import { compressImage } from '../imageUtils';
 import { COUNTRY_PHONE_CONFIGS } from '../countryPhoneData';
 import { 
   User, 
@@ -221,29 +222,25 @@ export default function ProfileSettings({
     setPendingPasswordUpdate(updatedUser);
   };
 
-  const handleAvatarFile = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleAvatarFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    const limit = 150 * 1024; // 150KB limit
-    if (file.size > limit) {
+    try {
+      const compressedUrl = await compressImage(file);
+      setAvatarUrl(compressedUrl);
+    } catch (err) {
+      console.error(err);
       onTriggerToast({
         id: `notif-err-${Date.now()}`,
-        title: 'Avatar Size Limitation',
-        message: 'Photo exceeds 150KB. Please resize or optimize the file before choosing.',
+        title: 'Avatar Update Failed',
+        message: 'Could not process the selected image.',
         timestamp: new Date().toISOString(),
         read: false,
         type: 'general',
         channel: 'push'
       });
-      return;
     }
-
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      setAvatarUrl(reader.result as string);
-    };
-    reader.readAsDataURL(file);
   };
 
   const selectedCountryConfig = COUNTRY_PHONE_CONFIGS.find(cfg => cfg.code === phonePrefix);

@@ -5,9 +5,10 @@
 
 import React, { useState } from 'react';
 import { UserAccount, ClassSchedule, RegistrationRequest, StudentBatch, Course } from '../types';
-import { UserPlus, Search, User, Filter, Trash2, Mail, Phone, Calendar, ArrowRight, BookOpen, Check, X, ShieldAlert, MapPin, GraduationCap, Camera, Upload, Pencil } from 'lucide-react';
+import { UserPlus, Search, User, Filter, Trash2, Mail, Phone, Calendar, ArrowRight, BookOpen, Check, X, ShieldAlert, MapPin, GraduationCap, Camera, Upload, Pencil, Clock, Video, CheckCircle2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { COUNTRY_PHONE_CONFIGS } from '../countryPhoneData';
+import { compressImage } from '../imageUtils';
 
 interface EnrollmentManagerProps {
   currentUser: UserAccount;
@@ -28,6 +29,7 @@ interface EnrollmentManagerProps {
   onApproveRequest: (id: string) => void;
   onRejectRequest: (id: string) => void;
   onUpdateStudent?: (updatedStudent: UserAccount) => void;
+  onUpdateRegistrationRequest?: (updatedReq: RegistrationRequest) => void;
 }
 
 export default function EnrollmentManager({
@@ -48,7 +50,8 @@ export default function EnrollmentManager({
   registrationRequests,
   onApproveRequest,
   onRejectRequest,
-  onUpdateStudent
+  onUpdateStudent,
+  onUpdateRegistrationRequest
 }: EnrollmentManagerProps) {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedInstructorId, setSelectedInstructorId] = useState<'all' | string>('all');
@@ -56,6 +59,33 @@ export default function EnrollmentManager({
   const [showAddForm, setShowAddForm] = useState(false);
   const [addFormType, setAddFormType] = useState<'student' | 'instructor' | 'sub-admin'>('student');
   const [activeListView, setActiveListView] = useState<'students' | 'instructors' | 'sub-admins'>('students');
+
+  // Interview schedule system states
+  const [schedulingRequest, setSchedulingRequest] = useState<RegistrationRequest | null>(null);
+  const [interviewDate, setInterviewDate] = useState('');
+  const [interviewTime, setInterviewTime] = useState('');
+  const [interviewStatus, setInterviewStatus] = useState<'not_scheduled' | 'scheduled' | 'completed' | 'cancelled'>('not_scheduled');
+  const [interviewNotes, setInterviewNotes] = useState('');
+
+  const handleOpenInterviewScheduler = (req: RegistrationRequest) => {
+    setSchedulingRequest(req);
+    setInterviewDate(req.interviewDate || '');
+    setInterviewTime(req.interviewTime || '');
+    setInterviewStatus(req.interviewStatus || 'not_scheduled');
+    setInterviewNotes(req.interviewNotes || '');
+  };
+
+  const handleSaveInterview = () => {
+    if (!schedulingRequest || !onUpdateRegistrationRequest) return;
+    onUpdateRegistrationRequest({
+      ...schedulingRequest,
+      interviewDate,
+      interviewTime,
+      interviewStatus,
+      interviewNotes
+    });
+    setSchedulingRequest(null);
+  };
 
   // Edit Student level states
   const [editingStudent, setEditingStudent] = useState<UserAccount | null>(null);
@@ -416,6 +446,56 @@ export default function EnrollmentManager({
                         <span>Pre-assigned Mentor: <strong className="text-amber-500 font-semibold">{getInstructorName(req.assignedInstructorId)}</strong></span>
                       </p>
 
+                      {/* Interview Schedule information */}
+                      <div className="p-3 rounded-xl bg-slate-50 dark:bg-[#161618] border dark:border-white/5 space-y-2 mt-2">
+                        <div className="flex items-center justify-between">
+                          <p className="text-[10.5px] font-bold uppercase tracking-wider text-slate-400 dark:text-gray-500 font-mono">Admission Interview</p>
+                          {req.interviewStatus === 'scheduled' ? (
+                            <span className="text-[9px] font-mono font-bold tracking-wider text-blue-500 bg-blue-500/10 border border-blue-500/20 px-2 py-0.5 rounded-full uppercase">
+                              Scheduled
+                            </span>
+                          ) : req.interviewStatus === 'completed' ? (
+                            <span className="text-[9px] font-mono font-bold tracking-wider text-emerald-500 bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded-full uppercase">
+                              Completed
+                            </span>
+                          ) : req.interviewStatus === 'cancelled' ? (
+                            <span className="text-[9px] font-mono font-bold tracking-wider text-rose-500 bg-rose-500/10 border border-rose-500/20 px-2 py-0.5 rounded-full uppercase">
+                              Cancelled
+                            </span>
+                          ) : (
+                            <span className="text-[9px] font-mono font-bold tracking-wider text-slate-400 bg-slate-550/10 border border-slate-500/25 px-2 py-0.5 rounded-full uppercase">
+                              Not Scheduled
+                            </span>
+                          )}
+                        </div>
+
+                        {req.interviewStatus && req.interviewStatus !== 'not_scheduled' ? (
+                          <div className="text-xs space-y-1">
+                            {req.interviewDate && (
+                              <p className="flex items-center gap-1.5 text-slate-600 dark:text-gray-300">
+                                <Calendar className="w-3.5 h-3.5 text-amber-500 flex-shrink-0" />
+                                <span>Date: <strong className="text-slate-800 dark:text-gray-200">{req.interviewDate}</strong></span>
+                              </p>
+                            )}
+                            {req.interviewTime && (
+                              <p className="flex items-center gap-1.5 text-slate-600 dark:text-gray-300">
+                                <Clock className="w-3.5 h-3.5 text-amber-500 flex-shrink-0" />
+                                <span>Time: <strong className="text-slate-800 dark:text-gray-200">{req.interviewTime}</strong></span>
+                              </p>
+                            )}
+                            {req.interviewNotes && (
+                              <p className="text-[10.5px] bg-white dark:bg-black/20 p-1.5 rounded-md text-slate-500 dark:text-gray-400 font-sans italic border border-slate-150/50 dark:border-white/5">
+                                "{req.interviewNotes}"
+                              </p>
+                            )}
+                          </div>
+                        ) : (
+                          <p className="text-[10px] text-slate-400 dark:text-gray-500 leading-snug">
+                            No interview details configured. Use the scheduler below to record interview slots or feedback.
+                          </p>
+                        )}
+                      </div>
+
                       <div className="p-2.5 rounded-xl bg-orange-500/[0.02] border border-amber-500/10 mt-2 font-mono text-[10px] space-y-1 select-none">
                         <p className="font-bold text-amber-500 text-[9px] uppercase tracking-wider">Security Credentials Drafted:</p>
                         <div className="flex justify-between text-slate-500 dark:text-gray-400 border-t dark:border-white/5 pt-1">
@@ -426,20 +506,28 @@ export default function EnrollmentManager({
                     </div>
                   </div>
 
-                  <div className="flex gap-2 justify-end pt-3 border-t border-slate-100 dark:border-white/5">
+                  <div className="flex gap-1.5 justify-end pt-3 border-t border-slate-100 dark:border-white/5">
+                    <button
+                      type="button"
+                      onClick={() => handleOpenInterviewScheduler(req)}
+                      className="px-2.5 py-1.5 border border-slate-200 dark:border-white/5 hover:bg-slate-50 dark:hover:bg-white/5 text-slate-600 dark:text-gray-300 transition rounded-xl text-xs font-bold cursor-pointer flex items-center gap-1"
+                    >
+                      <Clock className="w-3.5 h-3.5 text-amber-500" />
+                      Interview
+                    </button>
                     <button
                       type="button"
                       onClick={() => onRejectRequest(req.id)}
-                      className="px-3 py-1.5 border border-slate-200 dark:border-white/5 hover:bg-rose-500/10 hover:text-rose-500 dark:hover:text-rose-400 text-slate-500 transition rounded-xl text-xs font-bold cursor-pointer"
+                      className="px-2.5 py-1.5 border border-slate-200 dark:border-white/5 hover:bg-rose-500/10 hover:text-rose-500 dark:hover:text-rose-400 text-slate-500 transition rounded-xl text-xs font-bold cursor-pointer"
                     >
-                      Decline Request
+                      Decline
                     </button>
                     <button
                       type="button"
                       onClick={() => onApproveRequest(req.id)}
-                      className="px-3 py-1.5 bg-amber-500 hover:bg-amber-600 text-amber-950 font-bold rounded-xl text-xs flex items-center gap-1.5 transition cursor-pointer"
+                      className="px-3 py-1.5 bg-amber-500 hover:bg-amber-600 text-amber-955 font-bold rounded-xl text-xs flex items-center gap-1 transition cursor-pointer"
                     >
-                      <Check className="w-3.5 h-3.5" /> Accept & Enroll Student
+                      <Check className="w-3.5 h-3.5" /> Enroll Student
                     </button>
                   </div>
                 </div>
@@ -520,22 +608,18 @@ export default function EnrollmentManager({
                           type="file"
                           id="manual-avatar-upload"
                           accept="image/*"
-                          onChange={(e) => {
+                          onChange={async (e) => {
                             const file = e.target.files?.[0];
                             if (!file) return;
-                            const limit = 150 * 1024;
-                            if (file.size > limit) {
-                              setNewAvatarError("photo size more then 150kb please upload photo under 150kb");
+                            try {
+                              setNewAvatarError('');
+                              const compressedUrl = await compressImage(file);
+                              setNewAvatarUrl(compressedUrl);
+                            } catch (err) {
+                              setNewAvatarError("Could not process photo.");
                               setNewAvatarUrl('');
-                              e.target.value = '';
-                              return;
                             }
-                            setNewAvatarError('');
-                            const reader = new FileReader();
-                            reader.onloadend = () => {
-                              setNewAvatarUrl(reader.result as string);
-                            };
-                            reader.readAsDataURL(file);
+                            e.target.value = '';
                           }}
                           className="hidden"
                         />
@@ -1914,22 +1998,18 @@ export default function EnrollmentManager({
                           type="file"
                           id="edit-avatar-upload"
                           accept="image/*"
-                          onChange={(e) => {
+                          onChange={async (e) => {
                             const file = e.target.files?.[0];
                             if (!file) return;
-                            const limit = 150 * 1024;
-                            if (file.size > limit) {
-                              setEditAvatarError("Photo size more than 150KB. Please upload photo under 150KB.");
+                            try {
+                              setEditAvatarError('');
+                              const compressedUrl = await compressImage(file);
+                              setEditAvatarUrl(compressedUrl);
+                            } catch (err) {
+                              setEditAvatarError("Could not process photo.");
                               setEditAvatarUrl('');
-                              e.target.value = '';
-                              return;
                             }
-                            setEditAvatarError('');
-                            const reader = new FileReader();
-                            reader.onloadend = () => {
-                              setEditAvatarUrl(reader.result as string);
-                            };
-                            reader.readAsDataURL(file);
+                            e.target.value = '';
                           }}
                           className="hidden"
                         />
@@ -2085,9 +2165,147 @@ export default function EnrollmentManager({
                       setPendingStudentUpdate(null);
                       setEditingStudent(null);
                     }}
-                    className="px-5 py-2.5 text-xs bg-amber-500 hover:bg-amber-600 text-amber-950 font-bold rounded-xl cursor-pointer transition shadow-md active:scale-[0.98]"
+                    className="px-5 py-2.5 text-xs bg-amber-500 hover:bg-amber-600 text-amber-955 font-bold rounded-xl cursor-pointer transition shadow-md active:scale-[0.98]"
                   >
                     Confirm & Update
+                  </button>
+                </div>
+              </motion.div>
+            </div>
+          )}
+
+          {/* Interview Scheduler Modal */}
+          {schedulingRequest && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="absolute inset-0 bg-slate-900/60 backdrop-blur-xs cursor-default"
+                onClick={() => setSchedulingRequest(null)}
+              />
+
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95, y: 15 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.95, y: 15 }}
+                className="relative w-full max-w-md p-6 bg-white dark:bg-[#0C0D0E] border border-slate-200/80 dark:border-white/10 rounded-3xl shadow-xl overflow-hidden z-10"
+              >
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="p-3 bg-amber-500/10 rounded-2xl border border-amber-500/20">
+                    <Clock className="w-5 h-5 text-amber-500" />
+                  </div>
+                  <div>
+                    <h3 className="text-base font-serif font-bold text-slate-900 dark:text-gray-100 font-sans">
+                      Admission Interview Scheduler
+                    </h3>
+                    <p className="text-[10px] font-mono uppercase tracking-widest text-slate-400 font-bold">
+                      Prospect: {schedulingRequest.name}
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setSchedulingRequest(null)}
+                    className="absolute top-5 right-5 p-1 bg-slate-100 dark:bg-white/5 hover:bg-slate-200 dark:hover:bg-white/10 text-slate-400 hover:text-slate-600 dark:hover:text-white rounded-full transition cursor-pointer"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
+
+                <div className="space-y-4 my-4">
+                  {/* Status Selection */}
+                  <div className="space-y-1.5 animate-fadeIn">
+                    <label className="text-[10px] font-mono text-slate-400 dark:text-gray-500 uppercase font-semibold">Interview Status *</label>
+                    <div className="grid grid-cols-2 gap-2">
+                      <button
+                        type="button"
+                        onClick={() => setInterviewStatus('not_scheduled')}
+                        className={`px-3 py-2 text-xs font-semibold rounded-xl border text-center transition ${interviewStatus === 'not_scheduled' ? 'border-amber-500 bg-amber-500/10 text-amber-500 font-bold' : 'border-slate-200 dark:border-white/5 bg-slate-50 dark:bg-[#161618] text-slate-500 dark:text-gray-400'}`}
+                      >
+                        Not Scheduled
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setInterviewStatus('scheduled')}
+                        className={`px-3 py-2 text-xs font-semibold rounded-xl border text-center transition ${interviewStatus === 'scheduled' ? 'border-blue-500 bg-blue-500/10 text-blue-500 font-bold' : 'border-slate-200 dark:border-white/5 bg-slate-50 dark:bg-[#161618] text-slate-500 dark:text-gray-400'}`}
+                      >
+                        Scheduled
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setInterviewStatus('completed')}
+                        className={`px-3 py-2 text-xs font-semibold rounded-xl border text-center transition ${interviewStatus === 'completed' ? 'border-emerald-500 bg-emerald-500/10 text-emerald-500 font-bold' : 'border-slate-200 dark:border-white/5 bg-slate-50 dark:bg-[#161618] text-slate-500 dark:text-gray-400'}`}
+                      >
+                        Completed
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setInterviewStatus('cancelled')}
+                        className={`px-3 py-2 text-xs font-semibold rounded-xl border text-center transition ${interviewStatus === 'cancelled' ? 'border-rose-500 bg-rose-500/10 text-rose-500 font-bold' : 'border-slate-200 dark:border-white/5 bg-slate-50 dark:bg-[#161618] text-slate-500 dark:text-gray-400'}`}
+                      >
+                        Cancelled
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Date & Time */}
+                  {interviewStatus !== 'not_scheduled' && (
+                    <div className="grid grid-cols-2 gap-3 pb-1">
+                      <div className="space-y-1.5">
+                        <label className="text-[10px] font-mono text-slate-400 dark:text-gray-500 uppercase font-semibold">Interview Date</label>
+                        <input
+                          type="date"
+                          value={interviewDate}
+                          onChange={(e) => setInterviewDate(e.target.value)}
+                          className="w-full text-xs bg-slate-50 dark:bg-[#161618] border border-slate-200 dark:border-transparent rounded-xl px-3 py-2 text-slate-900 dark:text-gray-200 focus:outline-none focus:ring-1 focus:ring-amber-500"
+                        />
+                      </div>
+                      <div className="space-y-1.5">
+                        <label className="text-[10px] font-mono text-slate-400 dark:text-gray-500 uppercase font-semibold">Interview Time</label>
+                        <input
+                          type="time"
+                          value={interviewTime}
+                          onChange={(e) => setInterviewTime(e.target.value)}
+                          className="w-full text-xs bg-slate-50 dark:bg-[#161618] border border-slate-200 dark:border-transparent rounded-xl px-3 py-2 text-slate-900 dark:text-gray-200 focus:outline-none focus:ring-1 focus:ring-amber-500"
+                        />
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Interviewer Notes */}
+                  <div className="space-y-1.5">
+                    <label className="text-[10px] font-mono text-slate-400 dark:text-gray-500 uppercase font-semibold">Interviewer Comments / Notes</label>
+                    <textarea
+                      value={interviewNotes}
+                      onChange={(e) => setInterviewNotes(e.target.value)}
+                      rows={3}
+                      placeholder="Enter details such as interviewer name, questions checklist, or remarks from previous contact..."
+                      className="w-full text-xs bg-slate-50 dark:bg-[#161618] border border-slate-200 dark:border-white/5 rounded-xl p-3 text-slate-900 dark:text-gray-200 focus:outline-none focus:ring-1 focus:ring-amber-500 resize-none font-sans placeholder-slate-400 dark:placeholder-gray-600 leading-relaxed"
+                    />
+                  </div>
+
+                  {interviewStatus === 'scheduled' && (
+                    <div className="p-2.5 rounded-xl bg-blue-500/5 border border-blue-500/10 text-[10px] text-blue-500 dark:text-blue-400 flex gap-2">
+                      <Video className="w-3.5 h-3.5 flex-shrink-0 mt-0.5" />
+                      <span>Saving with 'Scheduled' status will trigger educational email notifications to {schedulingRequest.email}.</span>
+                    </div>
+                  )}
+                </div>
+
+                <div className="flex justify-end gap-3 pt-3 border-t border-slate-100 dark:border-white/5">
+                  <button
+                    type="button"
+                    onClick={() => setSchedulingRequest(null)}
+                    className="px-4 py-2.5 text-xs bg-slate-100 dark:bg-white/5 text-slate-705 dark:text-gray-300 font-bold hover:bg-slate-200 dark:hover:bg-white/10 rounded-xl cursor-pointer transition active:scale-[0.98]"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleSaveInterview}
+                    className="px-5 py-2.5 text-xs bg-amber-500 hover:bg-amber-600 text-amber-950 font-bold rounded-xl cursor-pointer transition shadow-md active:scale-[0.98]"
+                  >
+                    Save Schedule
                   </button>
                 </div>
               </motion.div>
