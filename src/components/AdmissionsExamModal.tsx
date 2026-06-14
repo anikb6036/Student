@@ -200,28 +200,15 @@ export default function AdmissionsExamModal({
   };
 
   return (
-    <div className="fixed inset-0 z-55 flex items-center justify-center p-4">
-      {/* Dark backdrop blur */}
+    <div className="fixed inset-0 z-55 bg-white dark:bg-[#0C0D0E] overflow-y-auto overflow-x-hidden flex flex-col">
       <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
-        className="absolute inset-0 bg-[#070708]/80 backdrop-blur-md cursor-default"
-        onClick={() => {
-          if (step === 'intro' || step === 'result') {
-            onClose();
-          }
-        }}
-      />
-
-      <motion.div
-        initial={{ opacity: 0, scale: 0.96, y: 30 }}
-        animate={{ opacity: 1, scale: 1, y: 0 }}
-        exit={{ opacity: 0, scale: 0.96, y: 30 }}
-        className="relative w-full max-w-2xl bg-white dark:bg-[#0C0D0E] border border-slate-200 dark:border-white/10 rounded-3xl shadow-2xl overflow-hidden z-10 flex flex-col max-h-[90vh]"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        exit={{ opacity: 0, y: 20 }}
+        className="relative w-full h-full min-h-screen flex flex-col mx-auto max-w-4xl"
       >
         {/* Banner with spark pattern */}
-        <div className="relative bg-gradient-to-r from-amber-600 to-amber-500 py-6 px-8 text-white select-none shrink-0 flex items-center justify-between">
+        <div className="relative bg-gradient-to-r from-amber-600 to-amber-500 py-6 px-8 text-white select-none shrink-0 flex items-center justify-between md:rounded-b-3xl shadow-md">
           <div className="flex items-center gap-3">
             <div className="p-2.5 bg-white/15 rounded-xl backdrop-blur-md border border-white/10">
               <Award className="w-5 h-5 text-white animate-bounce" />
