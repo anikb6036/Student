@@ -33,6 +33,12 @@ export default function AdmissionsExamModal({
   const [audioLevels, setAudioLevels] = useState<number[]>(new Array(15).fill(4));
   const timerRef = useRef<NodeJS.Timeout | null>(null);
 
+  // Monitoring state
+  const [monitoringStream, setMonitoringStream] = useState<MediaStream | null>(null);
+  const [monitoringError, setMonitoringError] = useState('');
+  const [isRequestingPermissions, setIsRequestingPermissions] = useState(false);
+  const videoRef = useRef<HTMLVideoElement>(null);
+
   // Analyzing screen state
   const [analysisText, setAnalysisText] = useState('Booting voice parsing ledger...');
   const [analysisProgress, setAnalysisProgress] = useState(0);
@@ -42,12 +48,21 @@ export default function AdmissionsExamModal({
   const [speakingScore, setSpeakingScore] = useState(0);
   const [totalScore, setTotalScore] = useState(0);
 
-  // Clear timer on unmout
+  // Clear timer and stream on unmount
   useEffect(() => {
     return () => {
       if (timerRef.current) clearInterval(timerRef.current);
+      if (monitoringStream) {
+        monitoringStream.getTracks().forEach(t => t.stop());
+      }
     };
-  }, []);
+  }, [monitoringStream]);
+
+  useEffect(() => {
+    if (videoRef.current && monitoringStream) {
+      videoRef.current.srcObject = monitoringStream;
+    }
+  }, [monitoringStream]);
 
   // Handle live microphone visualization and timer
   useEffect(() => {
@@ -122,8 +137,22 @@ export default function AdmissionsExamModal({
   const q1Correct = 'B';
   const q2Correct = 'C';
 
-  const handleStartExam = () => {
-    setStep('reading');
+  const handleStartExam = async () => {
+    setIsRequestingPermissions(true);
+    setMonitoringError('');
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: true,
+        audio: true
+      });
+      setMonitoringStream(stream);
+      setStep('reading');
+    } catch (err: any) {
+      console.error('Failed to get media permissions', err);
+      setMonitoringError('Microphone and Camera access is required to monitor for cheating during the exam. Please allow access.');
+    } finally {
+      setIsRequestingPermissions(false);
+    }
   };
 
   const handleProceedToSpeaking = () => {
@@ -232,7 +261,28 @@ export default function AdmissionsExamModal({
           </div>
         </div>
 
-        <div className="flex-1 w-full flex justify-center">
+        <div className="flex-1 w-full flex justify-center relative">
+          {/* Anti-cheat Monitoring Video Feed */}
+          {monitoringStream && (
+            <motion.div
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={{ opacity: 1, scale: 1 }}
+              className="absolute top-4 right-4 md:top-8 md:right-8 w-32 h-24 md:w-48 md:h-36 bg-black rounded-lg overflow-hidden border-2 border-amber-500 shadow-xl z-20 flex flex-col pointer-events-none"
+            >
+              <video
+                ref={videoRef}
+                autoPlay
+                playsInline
+                muted
+                className="w-full h-full object-cover"
+              />
+              <div className="absolute bottom-0 left-0 right-0 bg-black/60 backdrop-blur-sm p-1 md:p-1.5 flex items-center justify-center gap-1.5 border-t border-white/10">
+                <span className="w-1.5 h-1.5 md:w-2 md:h-2 rounded-full bg-red-500 animate-pulse" />
+                <span className="text-[8px] md:text-[10px] font-mono text-white tracking-widest uppercase font-bold">Proctoring</span>
+              </div>
+            </motion.div>
+          )}
+
           <div className="w-full max-w-4xl p-6 md:p-8 overflow-y-auto space-y-6 flex flex-col justify-between">
             <AnimatePresence mode="wait">
             {step === 'intro' && (
@@ -287,12 +337,18 @@ export default function AdmissionsExamModal({
                   </div>
                 </div>
 
-                <div className="pt-4 border-t border-slate-100 dark:border-white/5">
+                <div className="pt-4 border-t border-slate-100 dark:border-white/5 space-y-3">
+                  {monitoringError && (
+                    <div className="p-3 bg-red-50 dark:bg-rose-500/10 border border-red-200 dark:border-rose-500/20 rounded-xl text-xs text-red-600 dark:text-rose-400">
+                      {monitoringError}
+                    </div>
+                  )}
                   <button
                     onClick={handleStartExam}
-                    className="w-full py-3 bg-amber-500 hover:bg-amber-600 text-white font-bold rounded-xl text-xs flex items-center justify-center gap-2 transition cursor-pointer shadow-lg active:scale-[0.99]"
+                    disabled={isRequestingPermissions}
+                    className="w-full py-3 bg-amber-500 hover:bg-amber-600 disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold rounded-xl text-xs flex items-center justify-center gap-2 transition cursor-pointer shadow-lg active:scale-[0.99]"
                   >
-                    Start Exam &rarr;
+                    {isRequestingPermissions ? 'Requesting Camera & Mic Access...' : 'Start Exam \u2192'}
                   </button>
                 </div>
               </motion.div>
