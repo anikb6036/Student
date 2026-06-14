@@ -382,7 +382,7 @@ export default function AdmissionsExamModal({
                     onClick={handleProceedToSpeaking}
                     className={`py-2.5 px-6 font-bold rounded-xl text-xs flex items-center gap-1.5 transition cursor-pointer ${
                       q1Answer && q2Answer 
-                        ? 'bg-amber-500 hover:bg-amber-600 text-amber-970 shadow-md active:scale-[0.98]' 
+                        ? 'bg-amber-500 hover:bg-amber-600 text-white shadow-md active:scale-[0.98]' 
                         : 'bg-slate-100 dark:bg-white/5 text-slate-400 dark:text-gray-600 cursor-not-allowed border dark:border-white/5'
                     }`}
                   >
@@ -460,7 +460,7 @@ export default function AdmissionsExamModal({
                         <button
                           type="button"
                           onClick={handleStartRecording}
-                          className="px-6 py-3 bg-amber-500 hover:bg-amber-600 text-amber-970 font-bold rounded-2xl text-xs flex items-center gap-2 cursor-pointer shadow-lg active:scale-[0.98] transition"
+                          className="px-6 py-3 bg-amber-500 hover:bg-amber-600 text-white font-bold rounded-2xl text-xs flex items-center gap-2 cursor-pointer shadow-lg active:scale-[0.98] transition"
                         >
                           <Mic className="w-4 h-4" /> Permit Mic & Start Speak Test
                         </button>
@@ -569,7 +569,7 @@ export default function AdmissionsExamModal({
                   </button>
                   <button
                     onClick={handleCompleteAssessment}
-                    className="flex-1 py-3 bg-amber-500 hover:bg-amber-600 text-amber-970 font-bold rounded-xl text-xs flex items-center justify-center gap-2 transition cursor-pointer shadow-lg active:scale-[0.99]"
+                    className="flex-1 py-3 bg-amber-500 hover:bg-amber-600 text-white font-bold rounded-xl text-xs flex items-center justify-center gap-2 transition cursor-pointer shadow-lg active:scale-[0.99]"
                   >
                     Claim Automatic Admission & Let's Go &rarr;
                   </button>
