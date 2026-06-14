@@ -1919,96 +1919,33 @@ function AppContent() {
                       <motion.div
                         initial={{ opacity: 0, y: 10 }}
                         animate={{ opacity: 1, y: 0 }}
-                        className="p-6 rounded-2xl bg-slate-50 dark:bg-[#070709] border border-slate-200/60 dark:border-white/5 space-y-5 text-xs text-slate-700 dark:text-gray-300 shadow-xl"
+                        className="py-12 space-y-12 font-sans max-w-2xl text-slate-900 dark:text-white"
                       >
-                        <div className="flex items-center gap-2.5 text-emerald-500 font-extrabold text-sm font-sans uppercase tracking-wider">
-                          <span className="p-1.5 rounded-lg bg-emerald-500/10 border border-emerald-500/20">
-                            <Check className="w-4 h-4" />
-                          </span>
-                          <span>Admission Enrolled Successfully!</span>
-                        </div>
+                        <h2 className="text-4xl md:text-6xl font-semibold tracking-tighter leading-tight">
+                          Admission Enrolled
+                        </h2>
                         
-                        <div className="space-y-2 leading-relaxed">
+                        <div className="space-y-6 text-lg md:text-xl md:leading-relaxed text-slate-700 dark:text-slate-300">
                           <p>
-                            Student admission application details for <b className="text-slate-900 dark:text-white">{fastRegSuccess.name}</b> have been securely enqueued in the active admin queue.
+                            Student application details for <strong className="font-semibold text-slate-900 dark:text-white">{fastRegSuccess.name}</strong> have been securely enqueued in the active admin queue.
                           </p>
-                          <div className="p-3 bg-slate-100/50 dark:bg-white/[0.02] border border-slate-200/40 dark:border-white/5 rounded-xl font-mono text-[10.5px] space-y-1">
-                            <div><span className="text-slate-400 dark:text-gray-500 font-bold uppercase mr-2">Assigned Name:</span>{fastRegSuccess.name}</div>
-                            <div><span className="text-slate-400 dark:text-gray-500 font-bold uppercase mr-2">Email Address:</span>{fastRegSuccess.email}</div>
-                            <div><span className="text-slate-400 dark:text-gray-500 font-bold uppercase mr-2">Course Choice:</span>{fastRegSuccess.course || "Default"}</div>
-                          </div>
+                          <p>
+                            The assigned email address is <strong className="font-semibold text-slate-900 dark:text-white">{fastRegSuccess.email}</strong>, and the selected course track is <strong className="font-semibold text-slate-900 dark:text-white">{fastRegSuccess.course || "Default"}</strong>.
+                          </p>
                         </div>
 
-                        {/* Real-time Email Dispatch Ledger Section */}
-                        <div className="p-4 rounded-xl border border-slate-200 dark:border-white/5 bg-white dark:bg-[#0A0A0F] space-y-3 shadow-inner">
-                          <div className="flex items-center justify-between">
-                            <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-slate-400 dark:text-gray-500">
-                              Admission Welcome Packet Email
-                            </span>
-                            <span className="text-[9px] font-mono uppercase bg-slate-100 dark:bg-[#1C1C24] text-slate-500 px-2 py-0.5 rounded-full font-semibold border border-slate-200/20">
-                              Resend dispatch API
-                            </span>
-                          </div>
+                        <div className="pt-4 flex flex-col sm:flex-row gap-4 items-start sm:items-center">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setExamRequest(fastRegSuccess);
+                              setShowExamModal(true);
+                            }}
+                            className="bg-slate-900 dark:bg-white text-white dark:text-slate-900 font-medium text-base px-8 py-4 rounded-full transition-all cursor-pointer hover:opacity-90 w-full sm:w-auto"
+                          >
+                            Launch Exam Now
+                          </button>
 
-                          {lastEmailStatus?.sending && (
-                            <div className="flex items-center gap-2.5 py-1 text-slate-500 dark:text-gray-400 animate-pulse">
-                              <div className="w-2.5 h-2.5 rounded-full bg-amber-500 animate-ping" />
-                              <span className="font-medium">Contacting Resend server, generating secure English placement voucher...</span>
-                            </div>
-                          )}
-
-                          {lastEmailStatus && !lastEmailStatus.sending && lastEmailStatus.success && (
-                            <div className="space-y-2">
-                              <p className="text-emerald-500 font-bold flex items-center gap-1.5 font-sans">
-                                <Check className="w-4 h-4 shrink-0" /> Dispatch Completed successfully!
-                              </p>
-                              <p className="text-[11px] text-slate-500 dark:text-gray-400 font-normal">
-                                The real email welcome packet containing the placement exam link was sent via Resend. The student should receive it in their inbox shortly.
-                              </p>
-                            </div>
-                          )}
-
-                          {((lastEmailStatus && !lastEmailStatus.sending && !lastEmailStatus.success) || (!lastEmailStatus && !fastEmailError)) && (
-                            <div className="space-y-3">
-                              <p className="text-amber-500 font-bold flex items-center gap-1.5 font-sans uppercase tracking-wider text-[10px] bg-amber-500/10 border border-amber-500/20 px-2.5 py-1.5 rounded-lg w-fit">
-                                <AlertCircle className="w-4 h-4 shrink-0" /> Sandbox / Delivery Restriction Alert
-                              </p>
-                              <p className="text-[11px] text-slate-500 dark:text-gray-400 font-normal leading-relaxed">
-                                {lastEmailStatus?.error || "Your Resend API key is configured but restricted from delivering emails to unregistered inbox addresses."}
-                              </p>
-                              <div className="p-3 bg-amber-500/5 border border-amber-500/20 rounded-xl space-y-2">
-                                <p className="font-bold text-amber-500 text-[10.5px]">
-                                  🚀 Continue Testing without Interruption:
-                                </p>
-                                <p className="text-slate-600 dark:text-gray-300 font-normal">
-                                  Because this is a development preview on AI Studio, you don't need real emails! You can launch the student's mandatory exam screen directly within the workspace below:
-                                </p>
-                                <div className="flex flex-col sm:flex-row gap-2 mt-1.5">
-                                  <button
-                                    type="button"
-                                    onClick={() => {
-                                      setExamRequest(fastRegSuccess);
-                                      setShowExamModal(true);
-                                    }}
-                                    className="flex-1 bg-amber-500 hover:bg-amber-600 active:scale-95 text-amber-950 font-extrabold text-[11px] tracking-wide uppercase px-4 py-2.5 rounded-xl transition cursor-pointer text-center font-sans shadow-md shadow-amber-500/10"
-                                  >
-                                    ✍️ Launch English Admission Exam Now
-                                  </button>
-                                  <a
-                                    href={`/?examemail=${encodeURIComponent(fastRegSuccess.email)}`}
-                                    target="_blank"
-                                    rel="noreferrer"
-                                    className="px-4 py-2.5 bg-slate-100 dark:bg-[#1A1A22] border border-slate-200 dark:border-white/5 hover:bg-slate-200 dark:hover:bg-[#252530] text-slate-700 dark:text-gray-200 hover:text-slate-850 font-bold text-[11px] uppercase rounded-xl tracking-wide text-center transition block active:scale-95"
-                                  >
-                                    🌐 Open Exam in New Tab
-                                  </a>
-                                </div>
-                              </div>
-                            </div>
-                          )}
-                        </div>
-
-                        <div className="flex justify-between items-center pt-2">
                           <button
                             type="button"
                             onClick={() => {
@@ -2016,7 +1953,7 @@ function AppContent() {
                               setCurrentRegStep(1);
                               setLastEmailStatus(null);
                             }}
-                            className="bg-[#1C1C24] hover:bg-[#282834] border border-white/5 text-slate-300 px-4 py-2 rounded-xl text-[11.5px] font-bold cursor-pointer transition active:scale-95"
+                            className="text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white font-medium text-base px-6 py-4 transition-all w-full sm:w-auto text-left sm:text-center"
                           >
                             New Student Application &rarr;
                           </button>
