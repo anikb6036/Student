@@ -641,10 +641,30 @@ function AppContent() {
     };
     setUsers(prev => [...prev, newInstructor]);
 
+    const emailBodyTxt = `Dear ${newInstructor.name},\n\nWelcome to Learnora Institute! An administrator has manually created and registered your instructor profile in our directory.\n\nYour profile is now active and ready for managing schedules, conducting live classes, and tracking student progress.\n\nPlease find your secure system access credentials below:\n\n-----------------------------\nUSERNAME: ${newInstructor.username}\nPASSWORD: ${newInstructor.password}\n-----------------------------\n\nYou can use these credentials to sign in directly from the login tab. Keep this information confidential.\n\nBest regards,\nAnik Baidya,\nHead Administrator, Learnora Institute`;
+    sendSystemEmail(
+      newInstructor.email,
+      'Welcome to Learnora! - Instructor Access Credentials',
+      emailBodyTxt,
+      `<div style="font-family: sans-serif; max-w: 600px; margin: 0 auto; color: #333;">
+        <h2>Welcome to Learnora!</h2>
+        <p>Dear ${newInstructor.name},</p>
+        <p>Welcome to Learnora Institute! An administrator has manually created and registered your instructor profile in our directory.</p>
+        <p>Your profile is now active and ready for managing schedules, conducting live classes, and tracking student progress.</p>
+        <p>Please find your secure system access credentials below:</p>
+        <div style="background-color: #f1f5f9; padding: 15px; border-radius: 8px; margin: 20px 0; font-family: monospace;">
+          <p style="margin: 0;"><strong>USERNAME:</strong> ${newInstructor.username}</p>
+          <p style="margin: 0;"><strong>PASSWORD:</strong> ${newInstructor.password}</p>
+        </div>
+        <p>You can use these credentials to sign in directly from the login tab. Keep this information confidential.</p>
+        <p>Best regards,<br>Anik Baidya,<br>Head Administrator, Learnora Institute</p>
+      </div>`
+    );
+
     const notif: AppNotification = {
       id: generateUniqueId('notif'),
       title: 'Instructor Account Created',
-      message: `New Instructor account configured for ${newInstructor.name} (${newInstructor.specialization || 'General'}). Credentialed access is active.`,
+      message: `New Instructor account configured for ${newInstructor.name} (${newInstructor.specialization || 'General'}). Credentialed access is active and welcome email dispatched.`,
       timestamp: new Date().toISOString(),
       read: false,
       type: 'general',
@@ -663,10 +683,30 @@ function AppContent() {
     };
     setUsers(prev => [...prev, newSubAdmin]);
 
+    const emailBodyTxt = `Dear ${newSubAdmin.name},\n\nWelcome to Learnora Institute! An administrator has manually created and registered your sub-admin profile in our directory.\n\nYour professional access is now granted.\n\nPlease find your secure system access credentials below:\n\n-----------------------------\nUSERNAME: ${newSubAdmin.username}\nPASSWORD: ${newSubAdmin.password}\n-----------------------------\n\nYou can use these credentials to sign in directly from the login tab. Keep this information confidential.\n\nBest regards,\nAnik Baidya,\nHead Administrator, Learnora Institute`;
+    sendSystemEmail(
+      newSubAdmin.email,
+      'Welcome to Learnora! - Sub-Admin Access Credentials',
+      emailBodyTxt,
+      `<div style="font-family: sans-serif; max-w: 600px; margin: 0 auto; color: #333;">
+        <h2>Welcome to Learnora!</h2>
+        <p>Dear ${newSubAdmin.name},</p>
+        <p>Welcome to Learnora Institute! An administrator has manually created and registered your sub-admin profile in our directory.</p>
+        <p>Your professional access is now granted.</p>
+        <p>Please find your secure system access credentials below:</p>
+        <div style="background-color: #f1f5f9; padding: 15px; border-radius: 8px; margin: 20px 0; font-family: monospace;">
+          <p style="margin: 0;"><strong>USERNAME:</strong> ${newSubAdmin.username}</p>
+          <p style="margin: 0;"><strong>PASSWORD:</strong> ${newSubAdmin.password}</p>
+        </div>
+        <p>You can use these credentials to sign in directly from the login tab. Keep this information confidential.</p>
+        <p>Best regards,<br>Anik Baidya,<br>Head Administrator, Learnora Institute</p>
+      </div>`
+    );
+
     const notif: AppNotification = {
       id: generateUniqueId('notif'),
       title: 'Sub-Admin Account Created',
-      message: `New Sub-Admin account configured for ${newSubAdmin.name}. Professional access is granted.`,
+      message: `New Sub-Admin account configured for ${newSubAdmin.name}. Professional access is granted and welcome email dispatched.`,
       timestamp: new Date().toISOString(),
       read: false,
       type: 'general',
