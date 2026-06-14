@@ -200,39 +200,41 @@ export default function AdmissionsExamModal({
   };
 
   return (
-    <div className="fixed inset-0 z-55 bg-white dark:bg-[#0C0D0E] overflow-y-auto overflow-x-hidden flex flex-col">
+    <div className="fixed inset-0 z-55 bg-white dark:bg-[#0C0D0E] overflow-y-auto overflow-x-hidden flex flex-col items-center">
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         exit={{ opacity: 0, y: 20 }}
-        className="relative w-full h-full min-h-screen flex flex-col mx-auto max-w-4xl"
+        className="relative w-full h-full min-h-screen flex flex-col bg-slate-50 dark:bg-black"
       >
         {/* Banner with spark pattern */}
-        <div className="relative bg-gradient-to-r from-amber-600 to-amber-500 py-6 px-8 text-white select-none shrink-0 flex items-center justify-between md:rounded-b-3xl shadow-md">
-          <div className="flex items-center gap-3">
-            <div className="p-2.5 bg-white/15 rounded-xl backdrop-blur-md border border-white/10">
-              <Award className="w-5 h-5 text-white animate-bounce" />
+        <div className="relative bg-gradient-to-r from-amber-600 to-amber-500 py-6 px-8 text-white select-none shrink-0 flex justify-center shadow-md">
+          <div className="w-full max-w-4xl flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="p-2.5 bg-white/15 rounded-xl backdrop-blur-md border border-white/10">
+                <Award className="w-5 h-5 text-white animate-bounce" />
+              </div>
+              <div>
+                <h2 className="text-lg font-serif italic font-bold leading-tight">Learnora Official Admissions Gateway</h2>
+                <p className="text-[10px] uppercase font-mono tracking-widest text-amber-100 font-semibold opacity-90 mt-0.5">
+                  Qualified English Evaluation Node
+                </p>
+              </div>
             </div>
-            <div>
-              <h2 className="text-lg font-serif italic font-bold leading-tight">Learnora Official Admissions Gateway</h2>
-              <p className="text-[10px] uppercase font-mono tracking-widest text-amber-100 font-semibold opacity-90 mt-0.5">
-                Qualified English Evaluation Node
-              </p>
-            </div>
+            {(step === 'intro' || step === 'result') && (
+              <button
+                onClick={onClose}
+                className="p-1 px-3 bg-black/15 hover:bg-black/30 border border-white/10 text-white rounded-lg text-xs font-bold cursor-pointer transition active:scale-95 flex items-center gap-1"
+              >
+                <X className="w-3.5 h-3.5" /> Close
+              </button>
+            )}
           </div>
-          {(step === 'intro' || step === 'result') && (
-            <button
-              onClick={onClose}
-              className="p-1 px-3 bg-black/15 hover:bg-black/30 border border-white/10 text-white rounded-lg text-xs font-bold cursor-pointer transition active:scale-95 flex items-center gap-1"
-            >
-              <X className="w-3.5 h-3.5" /> Close
-            </button>
-          )}
         </div>
 
-        {/* Inner layout panel */}
-        <div className="p-6 md:p-8 overflow-y-auto space-y-6 flex-1 min-h-[380px] flex flex-col justify-between">
-          <AnimatePresence mode="wait">
+        <div className="flex-1 w-full flex justify-center">
+          <div className="w-full max-w-4xl p-6 md:p-8 overflow-y-auto space-y-6 flex flex-col justify-between">
+            <AnimatePresence mode="wait">
             {step === 'intro' && (
               <motion.div
                 key="intro"
@@ -288,9 +290,9 @@ export default function AdmissionsExamModal({
                 <div className="pt-4 border-t border-slate-100 dark:border-white/5">
                   <button
                     onClick={handleStartExam}
-                    className="w-full py-3 bg-amber-500 hover:bg-amber-600 text-amber-970 font-bold rounded-xl text-xs flex items-center justify-center gap-2 transition cursor-pointer shadow-lg active:scale-[0.99]"
+                    className="w-full py-3 bg-amber-500 hover:bg-amber-600 text-white font-bold rounded-xl text-xs flex items-center justify-center gap-2 transition cursor-pointer shadow-lg active:scale-[0.99]"
                   >
-                    Start Assessment Session &rarr;
+                    Start Exam &rarr;
                   </button>
                 </div>
               </motion.div>
@@ -575,6 +577,7 @@ export default function AdmissionsExamModal({
               </motion.div>
             )}
           </AnimatePresence>
+          </div>
         </div>
       </motion.div>
     </div>
